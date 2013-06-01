@@ -17,7 +17,7 @@ class MainHandler(webapp2.RequestHandler):
         self.response.write('<div>\n')
         self.response.write('Realm (US Only): <select name="realm" id="realm">\n')
         
-        q = Realm.query(namespace='Realms')
+        q = grouploader.Realm.query(namespace='Realms')
         realms = q.fetch()
         for r in realms:
             self.response.write('<option id="%s">%s\n' % (r.slug, r.realm))
@@ -53,7 +53,7 @@ class LoadRealms(webapp2.RequestHandler):
         jsondata = json.loads(response.content)
 
         for realm in jsondata['realms']:
-            r = groupinfo.Realm(realm=realm['name'], slug=realm['slug'],
+            r = grouploader.Realm(realm=realm['name'], slug=realm['slug'],
                                 namespace='Realms', id=realm['slug'])
             r.put()
 
