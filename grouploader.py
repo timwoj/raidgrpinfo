@@ -109,14 +109,19 @@ class Loader(webapp2.RequestHandler):
             else:
                 totalilvl = totalilvl + jsondata[i]['items']['averageItemLevel'];
                 totalilvleq = totalilvleq + jsondata[i]['items']['averageItemLevelEquipped']
-        
+        self.response.write('<div class="header">\n')
+        self.response.write('<div style="float:left">\n')
         self.response.write('<div style="font-size: 24px">%s</div>\n' % results.groupname)
         self.response.write('<div style="font-size: 20px">%s - US</div>\n' % frealm)
+        self.response.write('</div>\n')
+        self.response.write('<div style="float:right">\n')
         self.response.write('<form action="/edit/%s/%s">' %
                             (results.nrealm, results.ngroup))
         self.response.write('<input type="submit" value="Edit Group">\n')
         self.response.write('</form>')
-        self.response.write('</div><br/>\n')
+        self.response.write('</div>\n')
+        self.response.write('</div>\n')
+        self.response.write('</div>\n')
         self.response.write('Group Average ilvl: %d<br/>\n' % (totalilvl / len(toons)))
         self.response.write('Group Average equipped: %d<br/><br/>\n' % (totalilvleq / len(toons)))
         
