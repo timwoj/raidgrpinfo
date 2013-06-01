@@ -20,6 +20,10 @@ class Group(ndb.Model):
     def normalize(realm):
         return realm.lower().replace('\'','').replace(' ','-')
 
+class Realm(ndb.Model):
+    realm = ndb.StringProperty(indexed=True,required=True)
+    slug = ndb.StringProperty(indexed=True,required=True)
+
 class Loader(webapp2.RequestHandler):
     def get(self, nrealm, ngroup):
         
@@ -68,22 +72,26 @@ class Loader(webapp2.RequestHandler):
         self.loadGroup(group)
 
     def loadGroup(self, results):
+
+        # Get the group data from the results
+        toons = results.toons
+        realm = results.nrealm
         
+        # Query ndb for the full realm name based on the results
+        rq = Realm.query(Realm.slug == realm, namespace='Realms')
+        rqres = rq.fetch()
+        frealm = rqres[0].realm
+
         self.response.write('<!DOCTYPE html>\n')
         self.response.write('<html>\n')
         self.response.write('<head>\n')
-        self.response.write('<title>%s</title>' % results.groupname)
+        self.response.write('<title>%s - %s</title>' %
+                            (results.groupname, frealm))
         self.response.write('<link rel="stylesheet" type="text/css" href="/resources/raidgroup.css"/>\n')
         self.response.write('<script language="javascript" type="text/javascript" src="/resources/folder.js"></script>\n')
         self.response.write('<script language="javascript" type="text/javascript" src="/resources/creategroup.js"></script>\n')
         self.response.write('</head>\n')
         self.response.write('<body>\n')
-        
-        # Fill this in with the list of toons in your raid group.  It can include toon names with unicode characters
-        toons = results.toons
-        
-        # Fill this in with your realm name.  Spaces should be replaced with '-'
-        realm = results.nrealm
         
         jsondata = dict()
         
@@ -92,7 +100,6 @@ class Loader(webapp2.RequestHandler):
         
         for i in range(len(toons)):
             url = 'http://us.battle.net/api/wow/character/%s/%s?fields=items,guild,professions,progression' % (realm, toons[i]);
-            print url.encode('utf-8')
             response = urlfetch.fetch(url)
             jsondata[i] = json.loads(response.content)
             
@@ -103,7 +110,8 @@ class Loader(webapp2.RequestHandler):
                 totalilvl = totalilvl + jsondata[i]['items']['averageItemLevel'];
                 totalilvleq = totalilvleq + jsondata[i]['items']['averageItemLevelEquipped']
         
-        self.response.write('<div style="font-size: 24px">%s\n' % results.groupname)
+        self.response.write('<div style="font-size: 24px">%s</div>\n' % results.groupname)
+        self.response.write('<div style="font-size: 20px">%s - US</div>\n' % frealm)
         self.response.write('<form action="/edit/%s/%s">' %
                             (results.nrealm, results.ngroup))
         self.response.write('<input type="submit" value="Edit Group">\n')
