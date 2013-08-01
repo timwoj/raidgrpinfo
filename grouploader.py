@@ -104,7 +104,7 @@ class Loader(webapp2.RequestHandler):
             jsondata[i] = json.loads(response.content)
             
             if 'status' in jsondata[i] and jsondata[i]['status'] == 'nok':
-                print('Failed to find toon %s' % toons[i])
+                print('Failed to find toon %s' % toons[i].encode('utf-8'))
                 jsondata[i]['toon'] = toons[i]
             else:
                 totalilvl = totalilvl + jsondata[i]['items']['averageItemLevel'];
@@ -143,7 +143,7 @@ class Loader(webapp2.RequestHandler):
             self.response.write('<a href="http://us.battle.net/wow/en/character/%s/%s/simple">%s</a><br/>\n' % (realm.encode('utf-8'), char['name'].encode('utf-8'),char['name'].encode('utf-8')))
             
             self.response.write('<div style="margin-left:30px">\n')
-            self.response.write('%s<br/>\n' % char['guild']['name'])
+            self.response.write('%s<br/>\n' % char['guild']['name'].encode('utf-8'))
             self.response.write('Average ilvl: %d<br/>\n' % char['items']['averageItemLevel'])
             self.response.write('Average equipped: %d<br/>\n' % char['items']['averageItemLevelEquipped'])
             
