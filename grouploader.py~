@@ -120,65 +120,57 @@ class Loader(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('groupinfo-header.html')
         self.response.write(template.render(template_values))
 
-        self.response.write('        <div class="left">\n')
+        self.response.write('<div class="left">\n')
 
         for u in range(len(jsondata)):
                     
             char = jsondata[u]
                     
-            if (u == halfindex):
-                self.response.write('        </div>')
-                self.response.write('        <div class="right">\n')
+            if (u == halfgroup):
+                self.response.write('</div>')
+                self.response.write('<div class="right">\n')
             
             if 'status' in char and char['status'] == 'nok':
                 template_values = {
                     'name' : char['toon'],
                     'avgilvl' : 0
                 }
-            else:
-        
+            else
+                
                 items = char['items']
                 template_values = {
                     'name' : char['name'],
-                    'realm' : results.nrealm,
-                    'guild' : char['guild']['name'],
-                    'avgilvl' : char['items']['averageItemLevel'],
-                    'avgilvle' : char['items']['averageItemLevelEquipped'],
-                    'head' : items['head']['itemLevel'] if 'head' in items else None,
-                    'neck' : items['neck']['itemLevel'] if 'neck' in items else None,
-                    'shoulder' : items['shoulder']['itemLevel'] if 'shoulder' in items else None,
-                    'back' : items['back']['itemLevel'] if 'back' in items else None,
-                    'chest' : items['chest']['itemLevel'] if 'chest' in items else None,
-                    'wrist' : items['wrist']['itemLevel'] if 'wrist' in items else None,
-                    'hands' : items['hands']['itemLevel'] if 'hands' in items else None,
-                    'waist' : items['waist']['itemLevel'] if 'waist' in items else None,
-                    'legs' : items['legs']['itemLevel'] if 'legs' in items else None,
-                    'feet' : items['feet']['itemLevel'] if 'feet' in items else None,
-                    'finger1' : items['finger1']['itemLevel'] if 'finger1' in items else None,
-                    'finger2' : items['finger2']['itemLevel'] if 'finger2' in items else None,
-                    'trinket1' : items['trinket1']['itemLevel'] if 'trinket1' in items else None,
-                    'trinket2' : items['trinket2']['itemLevel'] if 'trinket2' in items else None,
-                    'mainHand' : items['mainHand']['itemLevel'] if 'mainHand' in items else None,
-                    'offHand' : items['offHand']['itemLevel'] if 'offHand' in items else None,
+                    'guild' : char['guild'],
+                    'avgilvl' : char['items']['averageItemLevel']
+                    'avgilvle' : char['items']['averageItemLevelEquipped']
+                    'head' : char['items']['head']['itemLevel'] if head in char['items'] else None,
+                    'neck' : char['items']['head']['itemLevel'] if head in char['items'] else None,
+                    'shoulder' : char['items']['head']['itemLevel'] if head in char['items'] else None,
+                    'back' : char['items']['head']['itemLevel'] if head in char['items'] else None,
+                    'chest' : char['items']['head']['itemLevel'] if head in char['items'] else None,
+                    'wrist' : char['items']['head']['itemLevel'] if head in char['items'] else None,
+                    'hands' : char['items']['head']['itemLevel'] if head in char['items'] else None,
+                    'waist' : char['items']['head']['itemLevel'] if head in char['items'] else None,
+                    'legs' : char['items']['head']['itemLevel'] if head in char['items'] else None,
+                    'feet' : char['items']['head']['itemLevel'] if head in char['items'] else None,
+                    'finger1' : char['items']['head']['itemLevel'] if head in char['items'] else None,
+                    'finger2' : char['items']['head']['itemLevel'] if head in char['items'] else None,
+                    'trinket1' : char['items']['head']['itemLevel'] if head in char['items'] else None,
+                    'trinket2' : char['items']['head']['itemLevel'] if head in char['items'] else None,
+                    'mainHand' : char['items']['head']['itemLevel'] if head in char['items'] else None,
                 }
 
-                priprof = char['professions']['primary']
-                if (len(priprof) == 2):
-                    template_values['prof1'] = priprof[0]['name']
-                    template_values['prof1skill'] = priprof[0]['rank']
-                    template_values['prof2'] = priprof[1]['name']
-                    template_values['prof2skill'] = priprof[1]['rank']
-                elif (len(priprof) == 1):
-                    template_values['prof1'] = priprof[0]['name']
-                    template_values['prof1skill'] = priprof[0]['rank']
-                    template_values['prof2'] = None
-                else:
-                    template_values['prof1'] = None
-                    template_values['prof2'] = None
-
-            template = JINJA_ENVIRONMENT.get_template('groupinfo-toon.html')
-            self.response.write(template.render(template_values))
-
+#        priprof = char['professions']['primary']
+#
+#        if (len(priprof) == 2):
+#            self.response.write('Profession #1: %s (%d)<br/>\n' % (priprof[0]['name'], priprof[0]['rank']))
+#            self.response.write('Profession #2: %s (%d)<br/>\n' % (priprof[1]['name'], priprof[1]['rank']))
+#        elif (len(priprof) == 1):
+#            self.response.write('Profession #1: %s (%d)<br/>\n' % (priprof[0]['name'], priprof[0]['rank']))
+#            self.response.write('Profession #2: none<br/>\n')
+#        else:
+#            self.response.write('Profession #1: none<br/>\n')
+#            self.response.write('Profession #2: none<br/>\n')
         self.response.write('</div><p/>\n');
         self.response.write('</body>\n</html>')
 

@@ -1,0 +1,43 @@
+{# macro for the title to avoid code duplication #}
+{%- macro title(results) -%}
+{% if results == none %}Creating New Group{% else %}Editing Group{% endif %}
+{%- endmacro -%}
+<!DOCTYPE html>
+{% autoescape true -%}
+<html>
+    <head>
+        <title>{{ title(results) }}</title>
+        <script language="javascript" type="text/javascript" src="/resources/creategroup.js"></script>
+    </head>
+    <body>
+        <h1>{{ title(results) }}</h1>
+        
+        <form action="/{{ realm }}/{{ group }}" method="post" autocomplete="off" onsubmit="selectAllToons();">
+            {% if results == none -%}
+            Group name: <input type="text" name="group" id="group"><p/>
+            {% else -%}
+            Group name: <input type="text" name="group" id="group" value="{{ results.groupname }}"><p/>
+            {% endif -%}
+
+            Group members:<br>
+            <select size="10" multiple="multiple" style="width: 300px" name="toons" id="toons">
+                {% if results != none -%}
+                {%- for toon in results.toons -%}
+                <option id="opt{{ toon }}">{{ toon }}
+                {% endfor %}
+                {%- endif %}
+            </select><br>
+            Add Toon: <input type="text" name="newtoon" id="newtoon"><br>
+            <input type="button" onclick="addToList()" value="Add">
+            <input type="button" onclick="removeFromList()" value="Remove" id="removebutton"><p/>
+            {% if results == none -%}
+            Enter a password to enable editing the group later:<br>
+            {% else -%}
+            Enter password to save changes:<br>
+            {% endif -%}
+            Password: <input type="password" name="pw"><p/>
+            <input type="submit" value="Save">
+        </form>
+    </body>
+</html>
+{% endautoescape -%}

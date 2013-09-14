@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+{% autoescape true -%}
+<html>
+    <head><title>Raid Group Info</title></head>
+    <body>
+        <form action="/groups" method="post">
+            <div>
+                Realm (US Only): <select name="realm" id="realm">
+                    {# dash at end removes extra linefeed #}
+                    {% for r in realms -%}
+                    <option id="{{ r.slug }}">{{ r.realm }}
+                    {% endfor %}
+                </select>
+            </div>
+            <div>Guild or Group name: <input type="text" name="group"></div>
+            <div><input type="submit" value="Load Group"></div>
+        </form>
+    </body>
+</html>
+{% endautoescape %}

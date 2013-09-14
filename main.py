@@ -3,30 +3,31 @@
 
 import cgi,json,pprint
 import webapp2
+import jinja2,os
 import grouploader
+
 from webapp2_extras import sessions
 from google.appengine.api import urlfetch
 from google.appengine.ext import ndb
 
+JINJA_ENVIRONMENT = jinja2.Environment(
+                                       loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
+                                       extensions=['jinja2.ext.autoescape'])
+
 class MainHandler(webapp2.RequestHandler):
     def get(self):
-        self.response.write('<html>\n')
-        self.response.write('<head><title>Raid Group Info</title></head>\n')
-        self.response.write('<body>\n')
-        self.response.write('<form action="/groups" method="post">\n')
-        self.response.write('<div>\n')
-        self.response.write('Realm (US Only): <select name="realm" id="realm">\n')
         
+        # load the list of realms from the datastore that was loaded by the
+        # /loadrealms service
         q = grouploader.Realm.query(namespace='Realms')
         realms = q.fetch()
-        for r in realms:
-            self.response.write('<option id="%s">%s\n' % (r.slug, r.realm))
-        self.response.write('</select></div>\n')
-        self.response.write('<div>Guild or Group name: <input type="text" name="group"></div>\n')
-        self.response.write('<div><input type="submit" value="Load Group"></div>\n')
-        self.response.write('</form>\n')
-        self.response.write('</body>\n')
-        self.response.write('</html>\n')
+
+        # throw them at jinja to generate the actual html
+        template_values = {
+            'realms': realms,
+        }
+        template = JINJA_ENVIRONMENT.get_template('frontpage.html')
+        self.response.write(template.render(template_values))
 
 # This class redirects using the input from the form to the right page
 # for the group.
@@ -38,8 +39,6 @@ class GroupRedir(webapp2.RequestHandler):
         group = self.request.get('group').strip()
         nrealm = grouploader.Group.normalize(realm)
         ngroup = grouploader.Group.normalize(group)
-        
-        # TODO: validate the realm against the armory
         
         self.redirect('/%s/%s' % (nrealm, ngroup))
 

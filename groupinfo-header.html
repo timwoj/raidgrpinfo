@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+{% autoescape true -%}
+<html>
+    <head>
+        <title>{{ group }} - {{ frealm }}</title>
+        <link rel="stylesheet" type="text/css" href="/resources/raidgroup.css"/>
+        <script language="javascript" type="text/javascript" src="/resources/folder.js"></script>
+        <script language="javascript" type="text/javascript" src="/resources/creategroup.js"></script>
+    </head>
+    <body>
+        <div class="header">
+            <div style="float:left">
+                <div style="font-size: 24px">{{ group }}</div>
+                <div style="font-size: 20px">{{ frealm }} - US</div>
+            </div>
+            <div style="float:right">
+                <form action="/edit/{{ nrealm }}/{{ ngroup }}">
+                    <input type="submit" value="Edit Group">
+                </form>
+            </div>
+        </div>
+        Group Average ilvl: {{ groupavgilvl }}<br/>
+        Group Average equipped: {{ groupavgeqp }}<br/><br/>
+{% endautoescape -%}

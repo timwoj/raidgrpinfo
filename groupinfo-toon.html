@@ -1,0 +1,54 @@
+{% autoescape true -%}
+{%- if avgilvl == 0 -%}
+            Failed to find toon {{ name }} (name change? server transfer?)
+{%- else %}
+            <a href="http://us.battle.net/wow/en/character/{{ realm }}/{{ name }}/simple">{{ name }}</a><br/>
+            <div style="margin-left:30px">
+                {{ guild }}<br/>
+                Average ilvl: {{ avgilvl }}<br/>
+                Average equipped: {{ avgilvle }}<br/>
+                
+    {%- if prof1 == none %}
+                Profession #1: None<br/>
+    {%- else %}
+                Profession #1: {{ prof1 }} ({{ prof1skill }})<br/>
+    {% endif -%}
+    {%- if prof2 == none %}
+                Profession #2: None<br/>
+    {%- else %}
+                Profession #2: {{ prof2 }} ({{ prof2skill }})<br/>
+    {% endif -%}
+                <div>
+                    <div onclick="togglePanelStatus('{{ name }}')" style="cursor: pointer">
+                        <img src="/resources/arrow_right.png" id="slotsimg{{ name }}">Gear Slot ilvls
+                    </div>
+                    <div id="slots{{ name }}" style="display: none;margin-left: 16px">
+                        <div class="left">
+                            Head: {{ head }}<br/>
+                            Neck: {{ neck }}<br/>
+                            Shoulder: {{ shoulder }}<br/>
+                            Back: {{ back }}<br/>
+                            Chest: {{ chest }}<br/>
+                            Wrist: {{ wrist }}<br/>
+                            Hands: {{ hands }}<br/>
+                            Waist: {{ waist }}<br/>
+                        </div>
+                        <div class="left">
+                            Legs: {{ legs }}<br/>
+                            Feet: {{ feet }}<br/>
+                            Ring 1: {{ finger1 }}<br/>
+                            Ring 2: {{ finger2 }}<br/>
+                            Trinket 1: {{ trinket1 }}<br/>
+                            Trinket 2: {{ trinket2 }}<br/>
+                            Main Hand: {{ mainHand }}<br/>
+{%- if offHand != 0 %}
+                            Off Hand: {{ offHand }}<br/>
+{% else %}
+                            Off Hand: none<br/>
+{% endif -%}
+                        </div>
+                    </div><br/>
+                </div>
+            </div>
+{% endif %}
+{% endautoescape -%}
