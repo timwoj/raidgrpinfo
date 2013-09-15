@@ -1,5 +1,5 @@
-{% autoescape true -%}
-{%- if avgilvl == 0 -%}
+{%- autoescape true %}
+{%- if avgilvl == 0 %}
             Failed to find toon {{ name }} (name change? server transfer?)
 {%- else %}
             <a href="http://us.battle.net/wow/en/character/{{ realm }}/{{ name }}/simple">{{ name }}</a><br/>
@@ -12,12 +12,12 @@
                 Profession #1: None<br/>
     {%- else %}
                 Profession #1: {{ prof1 }} ({{ prof1skill }})<br/>
-    {% endif -%}
+    {%- endif %}
     {%- if prof2 == none %}
                 Profession #2: None<br/>
     {%- else %}
                 Profession #2: {{ prof2 }} ({{ prof2skill }})<br/>
-    {% endif -%}
+    {%- endif %}
                 <div>
                     <div onclick="togglePanelStatus('{{ name }}')" style="cursor: pointer">
                         <img src="/resources/arrow_right.png" id="slotsimg{{ name }}">Gear Slot ilvls
@@ -43,12 +43,12 @@
                             Main Hand: {{ mainHand }}<br/>
 {%- if offHand != 0 %}
                             Off Hand: {{ offHand }}<br/>
-{% else %}
+{%- else %}
                             Off Hand: none<br/>
-{% endif -%}
+{%- endif %}
                         </div>
                     </div><br/>
                 </div>
             </div>
-{% endif %}
+{%- endif %}
 {% endautoescape -%}

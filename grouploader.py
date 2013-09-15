@@ -179,8 +179,9 @@ class Loader(webapp2.RequestHandler):
             template = JINJA_ENVIRONMENT.get_template('groupinfo-toon.html')
             self.response.write(template.render(template_values))
 
-        self.response.write('</div><p/>\n');
-        self.response.write('</body>\n</html>')
+        self.response.write('       </div>\n');
+        self.response.write('    </body>\n');
+        self.response.write('</html>')
 
 class Editor(webapp2.RequestHandler):
     def get(self, nrealm, ngroup):
