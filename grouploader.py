@@ -11,8 +11,7 @@ from google.appengine.api import urlfetch
 from passlib.hash import sha256_crypt
 
 
-JINJA_ENVIRONMENT = jinja2.Environment(
-                                       loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
+JINJA_ENVIRONMENT = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
                                        extensions=['jinja2.ext.autoescape'])
 
 class Group(ndb.Model):
@@ -88,11 +87,33 @@ class Loader(webapp2.RequestHandler):
         rq = Realm.query(Realm.slug == realm, namespace='Realms')
         rqres = rq.fetch()
         frealm = rqres[0].realm
+        
+        # TODO: move this stuff to be part of the realm loader since it shouldn't change
+        # very often
+        response = urlfetch.fetch('http://us.battle.net/api/wow/data/character/classes')
+        rawclasses = json.loads(response.content)
+        sortedclasses = sorted(rawclasses['classes'], key=lambda k: k['id'])
+        
+        classes = dict()
+        for c in sortedclasses:
+            classes[c['id']] = c['name']
 
         jsondata = dict()
         
         totalilvl = 0
         totalilvleq = 0
+        
+        clothcount = 0
+        leathercount = 0
+        mailcount = 0
+        platecount = 0
+        
+        # rogue/mage/druid/dk tokens
+        vanqcount = 0
+        # paladin/priest/warlock tokens
+        conqcount = 0
+        # warrior/hunter/shaman/monk tokens
+        protcount = 0
         
         for i in range(len(toons)):
             url = 'http://us.battle.net/api/wow/character/%s/%s?fields=items,guild,professions,progression' % (realm, toons[i]);
@@ -105,7 +126,24 @@ class Loader(webapp2.RequestHandler):
             else:
                 totalilvl = totalilvl + jsondata[i]['items']['averageItemLevel'];
                 totalilvleq = totalilvleq + jsondata[i]['items']['averageItemLevelEquipped']
-    
+                
+                toonclass = classes[jsondata[i]['class']]
+                if toonclass in ['Paladin','Warrior','Death Knight']:
+                    platecount += 1
+                elif toonclass in ['Mage','Priest','Warlock']:
+                    clothcount += 1
+                elif toonclass in ['Druid','Monk','Rogue']:
+                    leathercount += 1
+                elif toonclass in ['Hunter','Shaman']:
+                    mailcount += 1
+                
+                if toonclass in ['Paladin','Priest','Warlock']:
+                    conqcount += 1
+                elif toonclass in ['Warrior','Hunter','Shaman','Monk']:
+                    protcount += 1
+                elif toonclass in ['Death Knight','Druid','Mage','Rogue']:
+                    vanqcount += 1
+
         halfindex = math.ceil(len(jsondata) / 2.0)
 
         # throw them at jinja to generate the actual html
@@ -118,6 +156,18 @@ class Loader(webapp2.RequestHandler):
             'groupavgeqp' : totalilvleq / len(toons),
         }
         template = JINJA_ENVIRONMENT.get_template('groupinfo-header.html')
+        self.response.write(template.render(template_values))
+
+        template_values = {
+            'clothcount' : clothcount,
+            'leathercount' : leathercount,
+            'mailcount' : mailcount,
+            'platecount' : platecount,
+            'conqcount' : conqcount,
+            'protcount' : protcount,
+            'vanqcount' : vanqcount,
+        }
+        template = JINJA_ENVIRONMENT.get_template('groupinfo-armortokens.html')
         self.response.write(template.render(template_values))
 
         self.response.write('        <div class="left">\n')
@@ -142,6 +192,7 @@ class Loader(webapp2.RequestHandler):
                     'name' : char['name'],
                     'realm' : results.nrealm,
                     'guild' : char['guild']['name'],
+                    'class' : classes[char['class']],
                     'avgilvl' : char['items']['averageItemLevel'],
                     'avgilvle' : char['items']['averageItemLevelEquipped'],
                     'head' : items['head']['itemLevel'] if 'head' in items else None,
