@@ -157,6 +157,8 @@ class Loader(webapp2.RequestHandler):
         }
         template = JINJA_ENVIRONMENT.get_template('groupinfo-header.html')
         self.response.write(template.render(template_values))
+        
+        self.response.write('        <hr style="width:90%"/><br/>\n')
 
         template_values = {
             'clothcount' : clothcount,
@@ -170,6 +172,10 @@ class Loader(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('groupinfo-armortokens.html')
         self.response.write(template.render(template_values))
 
+        self.response.write('        <hr style="width:90%"/><br/>\n')
+
+        self.response.write('        <div style="font-size: 20px">Characters in Group</div>\n')
+        self.response.write('        <br/>\n')
         self.response.write('        <div class="left">\n')
 
         for u in range(len(jsondata)):

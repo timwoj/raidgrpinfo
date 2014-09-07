@@ -1,16 +1,15 @@
 {%- autoescape true %}
-        <div>
-            <div onclick="togglePanelStatus('armortokens')" style="cursor: pointer">
-                <img src="/resources/arrow_right.png" id="slotsimgarmortokens">Armor Types/Tokens
-            </div>
-            <div id="slotsarmortokens" style="display: none;margin-left: 16px">
-                Cloth Wearers: {{ clothcount }}<br/>
-                Leather Wearers: {{ leathercount }}<br/>
-                Mail Wearers: {{ mailcount }}<br/>
-                Plate Wearers: {{ platecount }}<br/><br/>
-                Conqueror Tokens (Paladin/Priest/Warlock): {{ conqcount }}<br/>
-                Protector Tokens (Warrior/Hunter/Shaman/Monk): {{ protcount }}<br/>
-                Vanquisher Tokens (Rogue/Mage/Druid/DK): {{ vanqcount }}<br/><br/>
-            </div><br/>
+        <div style="font-size: 20px">Armor Types/Tokens</div><br/>
+        
+        <div class="left">
+            Cloth Wearers: {{ clothcount }}<br/>
+            Leather Wearers: {{ leathercount }}<br/>
+            Mail Wearers: {{ mailcount }}<br/>
+            Plate Wearers: {{ platecount }}<br/><br/>
         </div>
+        <div class="right">
+            Conqueror Tokens (Paladin/Priest/Warlock): {{ conqcount }}<br/>
+            Protector Tokens (Warrior/Hunter/Shaman/Monk): {{ protcount }}<br/>
+            Vanquisher Tokens (Rogue/Mage/Druid/DK): {{ vanqcount }}<br/><br/>
+        </div><br/>
 {% endautoescape -%}
