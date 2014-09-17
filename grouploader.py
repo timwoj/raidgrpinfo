@@ -197,7 +197,7 @@ class Loader(webapp2.RequestHandler):
                 template_values = {
                     'name' : char['name'],
                     'realm' : results.nrealm,
-                    'guild' : char['guild']['name'],
+                    'guild' : char['guild']['name'] if 'guild' in char else None,
                     'class' : classes[char['class']],
                     'avgilvl' : char['items']['averageItemLevel'],
                     'avgilvle' : char['items']['averageItemLevelEquipped'],
