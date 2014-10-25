@@ -116,13 +116,28 @@ class Loader(webapp2.RequestHandler):
         protcount = 0
         
         for i in range(len(toons)):
-            url = 'http://us.battle.net/api/wow/character/%s/%s?fields=items,guild,professions,progression' % (realm, toons[i]);
+            if '-' in toons[i]:
+               toonname = toons[i].split('-')[0]
+               toonrealm = Group.normalize(toons[i].split('-')[1])
+               rq2 = Realm.query(Realm.slug == toonrealm, namespace='Realms')
+               rq2res = rq2.fetch()
+               toonfrealm = rq2res[0].realm
+            else:
+               toonname = toons[i]
+               toonrealm = realm
+               toonfrealm = frealm
+            url = 'http://us.battle.net/api/wow/character/%s/%s?fields=items,guild,professions,progression' % (toonrealm, toonname);
             response = urlfetch.fetch(url)
             jsondata[i] = json.loads(response.content)
-            
+
+            # a realm is received in the json data from the API, but we need to pass the
+            # normalized value to the next stages.  ignore this one.
+            jsondata[i]['toonrealm'] = toonrealm
+            jsondata[i]['toonfrealm'] = toonfrealm
+
             if 'status' in jsondata[i] and jsondata[i]['status'] == 'nok':
-                print('Failed to find toon %s' % toons[i].encode('utf-8'))
-                jsondata[i]['toon'] = toons[i]
+                print('Failed to find toon %s' % toonname.encode('utf-8'))
+                jsondata[i]['toon'] = toonname
             else:
                 totalilvl = totalilvl + jsondata[i]['items']['averageItemLevel'];
                 totalilvleq = totalilvleq + jsondata[i]['items']['averageItemLevelEquipped']
@@ -192,11 +207,13 @@ class Loader(webapp2.RequestHandler):
                     'avgilvl' : 0
                 }
             else:
-        
+               
                 items = char['items']
                 template_values = {
                     'name' : char['name'],
-                    'realm' : results.nrealm,
+                    'frealm' : char['toonfrealm'],   # full realm name
+                    'nrealm' : results.nrealm,  # realm for group
+                    'realm' : char['toonrealm'],  # realm for toon (might not be == to nrealm)
                     'guild' : char['guild']['name'] if 'guild' in char else None,
                     'class' : classes[char['class']],
                     'avgilvl' : char['items']['averageItemLevel'],

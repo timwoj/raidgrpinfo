@@ -5,9 +5,9 @@ function addToList()
     var newtoon = document.getElementById("newtoon");
     var toonname = newtoon.value.trim();
 
-    if ((toonname.length <= 1) || (toonname.length > 12))
+    if ((toonname.length <= 1) || (toonname.length > 30))
     {
-        alert("Invalid toon name.  Must be between 2 and 12 characters long")
+        alert("Invalid toon name.  Must be between 2 and 30 characters long")
     }
     else
     {
@@ -16,7 +16,6 @@ function addToList()
         {
             var newopt = new Option(toonname, toonname)
             newopt.setAttribute("id", "opt"+toonname)
-            // TODO: double check the value isn't in the list yet
             toons.add(newopt, null)
         }
         
