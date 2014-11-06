@@ -1,4 +1,3 @@
-{# macro for the title to avoid code duplication #}
 {%- macro title(results) -%}
 {% if results == none %}Creating New Group{% else %}Editing Group{% endif %}
 {%- endmacro -%}
@@ -12,22 +11,32 @@
     <body>
         <h1>{{ title(results) }}</h1>
         
-        <form action="/{{ realm }}/{{ group }}" method="post" autocomplete="off" onsubmit="selectAllToons();">
+        <form action="/{{ realm }}/{{ group }}" method="post" autocomplete="off"
+              onsubmit="selectAllToons();">
+            <input type="input" name="subfield" id="subfield" style="display: none" value="{{ subs|join(',') }}"/>
+            <input type="input" name="crfield" id="crfield" style="display: none" value="{{ crs|join(',') }}"/>
             {% if results == none -%}
             Group name: <input type="text" name="group" id="group"><p/>
             {% else -%}
-            Group name: <input type="text" name="group" id="group" value="{{ results.groupname }}"><p/>
+            Group name: <input type="text" name="group" id="group" value="{{ group }}"><p/>
             {% endif -%}
 
             Group members:<br>
             <select size="10" multiple="multiple" style="width: 300px" name="toons" id="toons">
-                {% if results != none -%}
-                {%- for toon in results.toons -%}
-                <option id="opt{{ toon }}">{{ toon }}
+                {% if toons != none -%}
+                {%- for toon in toons -%}
+                <option id="opt{{ toon }}">{{ toon }}{%- if crs[loop.index] != '0' -%} - {{ crs[loop.index] }}{%- endif -%}{%- if subs[loop.index] == '1' -%} (Sub){%- endif -%}
                 {% endfor %}
                 {%- endif %}
             </select><br>
             Add Toon: <input type="text" name="newtoon" id="newtoon"><br>
+            <input type="checkbox" name="sub" id="sub"> Sub<br>
+            <input type="checkbox" name="crossrealm" id="crossrealm" onclick="crossRealmClicked(this)">
+            Cross-realm    Realm: <select name="realm" id="realm" disabled="true">
+                    {% for r in realms -%}
+                    <option id="{{ r.slug }}">{{ r.realm }}
+                    {% endfor %}
+                </select><br>
             <input type="button" onclick="addToList()" value="Add">
             <input type="button" onclick="removeFromList()" value="Remove" id="removebutton"><p/>
             {% if results == none -%}

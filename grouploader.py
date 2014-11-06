@@ -69,10 +69,22 @@ class Loader(webapp2.RequestHandler):
         group.nrealm = nrealm
         group.ngroup = ngroup
         group.groupname = self.request.get('group').strip()
+        
         group.password = sha256_crypt.encrypt(self.request.get('pw'))
         toons = self.request.POST.getall('toons')
+        subs = self.request.get('subfield').split(',')
+        crossrealms = self.request.get('crfield').split(',')
         print 'number of toons saved: %d' % len(toons)
-        group.toons = sorted(self.request.POST.getall('toons'), key=unicode.lower)
+        print toons
+
+        # clear the old toon information and recreate it from the data from
+        # the form
+        del group.toons[:]
+        for i in range(len(toons)):
+            toon = toons[i]+','+crossrealms[i]+','+subs[i]
+            group.toons.append(toon)
+
+        group.toons.sort()
         group.put()
 
         self.loadGroup(group)
@@ -116,16 +128,23 @@ class Loader(webapp2.RequestHandler):
         protcount = 0
         
         for i in range(len(toons)):
-            if '-' in toons[i]:
-               toonname = toons[i].split('-')[0]
-               toonrealm = Group.normalize(toons[i].split('-')[1])
-               rq2 = Realm.query(Realm.slug == toonrealm, namespace='Realms')
-               rq2res = rq2.fetch()
-               toonfrealm = rq2res[0].realm
+            if ',' in toons[i]:
+                toonname,toonrealm,toonsub = toons[i].split(',')
+                if (toonrealm == '0'):
+                    toonrealm = realm
+                    toonfrealm = frealm
+                else:
+                    toonrealm = realm
+                    rq2 = Realm.query(
+                        Realm.slug == toonrealm, namespace='Realms')
+                    rq2res = rq2.fetch()
+                    toonfrealm = rq2res[0].realm
             else:
-               toonname = toons[i]
-               toonrealm = realm
-               toonfrealm = frealm
+                toonname = toons[i]
+                toonsub = '0'
+                toonrealm = realm
+                toonfrealm = frealm
+                
             url = 'http://us.battle.net/api/wow/character/%s/%s?fields=items,guild,professions,progression' % (toonrealm, toonname);
             response = urlfetch.fetch(url)
             jsondata[i] = json.loads(response.content)
@@ -134,6 +153,7 @@ class Loader(webapp2.RequestHandler):
             # normalized value to the next stages.  ignore this one.
             jsondata[i]['toonrealm'] = toonrealm
             jsondata[i]['toonfrealm'] = toonfrealm
+            jsondata[i]['sub'] = toonsub
 
             if 'status' in jsondata[i] and jsondata[i]['status'] == 'nok':
                 print('Failed to find toon %s' % toonname.encode('utf-8'))
@@ -216,6 +236,7 @@ class Loader(webapp2.RequestHandler):
                     'realm' : char['toonrealm'],  # realm for toon (might not be == to nrealm)
                     'guild' : char['guild']['name'] if 'guild' in char else None,
                     'class' : classes[char['class']],
+                    'sub'   : char['sub'],
                     'avgilvl' : char['items']['averageItemLevel'],
                     'avgilvle' : char['items']['averageItemLevelEquipped'],
                     'head' : items['head']['itemLevel'] if 'head' in items else None,
@@ -263,6 +284,11 @@ class Editor(webapp2.RequestHandler):
     
     def editGroup(self, nrealm, ngroup):
         
+        # load the list of realms from the datastore that was loaded by the
+        # /loadrealms service
+        q = Realm.query(namespace='Realms')
+        realms = q.fetch()
+
         # try to load the group info from the database
         db_query = Group.query(Group.nrealm==nrealm, Group.ngroup==ngroup)
         queryresults = db_query.fetch(5)
@@ -270,12 +296,37 @@ class Editor(webapp2.RequestHandler):
         results = None
         if (len(queryresults) != 0):
             results = queryresults[0]
-        
+        print results
+
+        # TODO: create the list of toons, subs, and crossrealm information
+        # here.
+        names = []
+        subs = []
+        crs = []
+        if results != None:
+            for toon in results.toons:
+                if ',' in toon:
+                    name,realm,sub = toon.split(',')
+                    names.append(name)
+                    subs.append(sub)
+                    crs.append(realm)
+                else:
+                    names.append(toon)
+                    subs.append('0')
+                    crs.append('0')
+        else:
+            names = None
+            subs = None
+            crs = None
+
         # throw them at jinja to generate the actual html
         template_values = {
             'group' : ngroup,
             'realm' : nrealm,
-            'results' : results,
+            'names' : names,
+            'realms' : realms,
+            'subs' : subs,
+            'crs' : crs,
         }
         template = JINJA_ENVIRONMENT.get_template('editor.html')
         self.response.write(template.render(template_values))

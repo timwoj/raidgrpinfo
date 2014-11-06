@@ -2,9 +2,9 @@
 {%- if avgilvl == 0 %}
             Failed to find toon {{ name }} (name change? server transfer?)<p/>
 {%- else %}
-            <a href="http://us.battle.net/wow/en/character/{{ realm }}/{{ name }}/simple">{{ name }}</a> - {{ class }} <a href="http://askmrrobot.com/wow/gear/usa/{% print realm.replace('-','_') %}/{{ name }}" style="font-size: 12px">(AMR)</a>
+            <a href="http://us.battle.net/wow/en/character/{{ realm }}/{{ name }}/simple">{{ name }}</a> - {{ class }} <a href="http://askmrrobot.com/wow/gear/usa/{% print realm.replace('-','_') %}/{{ name }}" style="font-size: 12px">(AMR)</a>{% if sub == '1' %} - SUB{%- endif -%}
 {%- if class == "Rogue" -%}
- <a href="http://shadowcraft.mmo-mumble.com/us/{{ realm }}/{{ name }}" style="font-size: 12px">(SC)</a>
+<a href="http://shadowcraft.mmo-mumble.com/us/{{ realm }}/{{ name }}" style="font-size: 12px">(SC)</a>
 {%- endif -%}
 <br/>
             <div style="margin-left:30px">
