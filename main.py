@@ -73,11 +73,24 @@ class SetAPIKey(webapp2.RequestHandler):
             k.put()
             self.response.write("API Key Stored.")
 
+class UpdateToons(webapp2.RequestHandler):
+    def get(self):
+
+        groups = grouploader.Group.query()
+        for group in groups:
+            if group.ngroup == 'tlm20-wod' or group.ngroup == 'tlm20':
+                for i in range(len(group.toons)):
+                    if ',' not in group.toons[i]:
+                        self.response.write("Updated toon %s in group %s\n" % (group.toons[i], group.ngroup))
+                        group.toons[i] = group.toons[i]+',0,0'
+            group.put()
+
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
     ('/groups', GroupRedir),
     ('/loadrealms', LoadRealms),
     ('/setapikey', SetAPIKey),
+    ('/updatetoons', UpdateToons),
     webapp2.Route('/edit/<:([^/]+)>/<:([^/]+)>', grouploader.Editor),
     webapp2.Route('/<:([^/]+)>/<:([^/]+)>', grouploader.Loader),
 ], debug=True)
