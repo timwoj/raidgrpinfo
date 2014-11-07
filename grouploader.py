@@ -81,10 +81,10 @@ class Loader(webapp2.RequestHandler):
         # the form
         del group.toons[:]
         for i in range(len(toons)):
-            toon = toons[i]+','+crossrealms[i]+','+subs[i]
+            toon = "%s,%s,%s" % (toons[i], crossrealms[i], subs[i])
             group.toons.append(toon)
 
-        group.toons.sort()
+        group.toons = sorted(group.toons)#, key=lambda s: s.lower())
         group.put()
 
         self.loadGroup(group)
@@ -113,11 +113,13 @@ class Loader(webapp2.RequestHandler):
         for c in sortedclasses:
             classes[c['id']] = c['name']
 
-        jsondata = dict()
+        jsondata = list()
         
         totalilvl = 0
         totalilvleq = 0
-        
+        totalmains = 0
+        totalsubs = 0
+
         clothcount = 0
         leathercount = 0
         mailcount = 0
@@ -130,9 +132,12 @@ class Loader(webapp2.RequestHandler):
         # warrior/hunter/shaman/monk tokens
         protcount = 0
         
-        for i in range(len(toons)):
-            if ',' in toons[i]:
-                toonname,toonrealm,toonsub = toons[i].split(',')
+        # Request all of the toon data from the blizzard API and determine the group's ilvls,
+        # armor type counts and token type counts.  subs are not included in the counts, since
+        # they're not really part of the main group.
+        for toon in toons:
+            if ',' in toon:
+                toonname,toonrealm,toonsub = toon.split(',')
                 if (toonrealm == '0'):
                     toonrealm = realm
                     toonfrealm = frealm
@@ -142,46 +147,51 @@ class Loader(webapp2.RequestHandler):
                     rq2res = rq2.fetch()
                     toonfrealm = rq2res[0].realm
             else:
-                toonname = toons[i]
+                toonname = toon
                 toonsub = '0'
                 toonrealm = realm
                 toonfrealm = frealm
                 
             url = 'https://us.api.battle.net/wow/character/%s/%s?fields=items,guild&locale=en_US&apikey=%s' % (toonrealm, toonname, apikey.key)
+            print url
             response = urlfetch.fetch(url)
-            jsondata[i] = json.loads(response.content)
+            data = json.loads(response.content)
 
             # a realm is received in the json data from the API, but we need to pass the
             # normalized value to the next stages.  ignore this one.
-            jsondata[i]['toonrealm'] = toonrealm
-            jsondata[i]['toonfrealm'] = toonfrealm
-            jsondata[i]['sub'] = toonsub
-
-            if 'status' in jsondata[i] and jsondata[i]['status'] == 'nok':
+            data['toonrealm'] = toonrealm
+            data['toonfrealm'] = toonfrealm
+            data['sub'] = toonsub
+            
+            if 'status' in data and data['status'] == 'nok':
                 print('Failed to find toon %s' % toonname.encode('utf-8'))
-                jsondata[i]['toon'] = toonname
+                data['toon'] = toonname
             else:
-                totalilvl = totalilvl + jsondata[i]['items']['averageItemLevel']
-                totalilvleq = totalilvleq + jsondata[i]['items']['averageItemLevelEquipped']
-                
-                toonclass = classes[jsondata[i]['class']]
-                if toonclass in ['Paladin','Warrior','Death Knight']:
-                    platecount += 1
-                elif toonclass in ['Mage','Priest','Warlock']:
-                    clothcount += 1
-                elif toonclass in ['Druid','Monk','Rogue']:
-                    leathercount += 1
-                elif toonclass in ['Hunter','Shaman']:
-                    mailcount += 1
-                
-                if toonclass in ['Paladin','Priest','Warlock']:
-                    conqcount += 1
-                elif toonclass in ['Warrior','Hunter','Shaman','Monk']:
-                    protcount += 1
-                elif toonclass in ['Death Knight','Druid','Mage','Rogue']:
-                    vanqcount += 1
+                if toonsub == '0':
+                    totalmains += 1
+                    totalilvl += data['items']['averageItemLevel']
+                    totalilvleq += data['items']['averageItemLevelEquipped']
+                    
+                    toonclass = classes[data['class']]
+                    if toonclass in ['Paladin','Warrior','Death Knight']:
+                        platecount += 1
+                    elif toonclass in ['Mage','Priest','Warlock']:
+                        clothcount += 1
+                    elif toonclass in ['Druid','Monk','Rogue']:
+                        leathercount += 1
+                    elif toonclass in ['Hunter','Shaman']:
+                        mailcount += 1
+                    
+                    if toonclass in ['Paladin','Priest','Warlock']:
+                        conqcount += 1
+                    elif toonclass in ['Warrior','Hunter','Shaman','Monk']:
+                        protcount += 1
+                    elif toonclass in ['Death Knight','Druid','Mage','Rogue']:
+                        vanqcount += 1
+                else:
+                    totalsubs += 1
 
-        halfindex = math.ceil(len(jsondata) / 2.0)
+            jsondata.append(data)
 
         # throw them at jinja to generate the actual html
         template_values = {
@@ -189,8 +199,8 @@ class Loader(webapp2.RequestHandler):
             'frealm' : frealm,
             'ngroup' : results.ngroup,
             'nrealm' : results.nrealm,
-            'groupavgilvl' : totalilvl / len(toons),
-            'groupavgeqp' : totalilvleq / len(toons),
+            'groupavgilvl' : totalilvl / totalmains,
+            'groupavgeqp' : totalilvleq / totalmains,
         }
         template = JINJA_ENVIRONMENT.get_template('groupinfo-header.html')
         self.response.write(template.render(template_values))
@@ -210,61 +220,95 @@ class Loader(webapp2.RequestHandler):
         self.response.write(template.render(template_values))
 
         self.response.write('        <hr style="width:90%;clear: both"/><br/>\n')
-
-        self.response.write('        <div style="font-size: 20px">Characters in Group</div>\n')
+        self.response.write('        <div style="font-size: 20px">Main Group</div>\n')
         self.response.write('        <br/>\n')
+
+        
         self.response.write('        <div class="left">\n')
 
-        for u in range(len(jsondata)):
-                    
-            char = jsondata[u]
-                    
-            if (u == halfindex):
+        # Not a huge fan of looping through the data twice.  There's probably
+        # a better way to do this.  Maybe store the individual sections in
+        # lists of strings then dump them out to the respective sections later?
+        # That just seems like trading two passes through this data for two
+        # more passes through some other data.  I wish there was a way to
+        # write different parts of the response at the same time, but I don't
+        # think there is.
+        halfindex = math.ceil(totalmains / 2.0)
+        for idx, char in enumerate(jsondata):
+
+            # if this is a sub, ignore it until later.  we display the main group then the subs
+            # in a group at the end
+            if (char['sub'] == '1'):
+                continue
+            
+            if (idx == halfindex):
                 self.response.write('        </div>')
                 self.response.write('        <div class="right">\n')
             
-            if 'status' in char and char['status'] == 'nok':
-                template_values = {
-                    'name' : char['toon'],
-                    'avgilvl' : 0
-                }
-            else:
-               
-                items = char['items']
-                template_values = {
-                    'name' : char['name'],
-                    'frealm' : char['toonfrealm'],   # full realm name
-                    'nrealm' : results.nrealm,  # realm for group
-                    'realm' : char['toonrealm'],  # realm for toon (might not be == to nrealm)
-                    'guild' : char['guild']['name'] if 'guild' in char else None,
-                    'class' : classes[char['class']],
-                    'sub'   : char['sub'],
-                    'avgilvl' : char['items']['averageItemLevel'],
-                    'avgilvle' : char['items']['averageItemLevelEquipped'],
-                    'head' : items['head']['itemLevel'] if 'head' in items else None,
-                    'neck' : items['neck']['itemLevel'] if 'neck' in items else None,
-                    'shoulder' : items['shoulder']['itemLevel'] if 'shoulder' in items else None,
-                    'back' : items['back']['itemLevel'] if 'back' in items else None,
-                    'chest' : items['chest']['itemLevel'] if 'chest' in items else None,
-                    'wrist' : items['wrist']['itemLevel'] if 'wrist' in items else None,
-                    'hands' : items['hands']['itemLevel'] if 'hands' in items else None,
-                    'waist' : items['waist']['itemLevel'] if 'waist' in items else None,
-                    'legs' : items['legs']['itemLevel'] if 'legs' in items else None,
-                    'feet' : items['feet']['itemLevel'] if 'feet' in items else None,
-                    'finger1' : items['finger1']['itemLevel'] if 'finger1' in items else None,
-                    'finger2' : items['finger2']['itemLevel'] if 'finger2' in items else None,
-                    'trinket1' : items['trinket1']['itemLevel'] if 'trinket1' in items else None,
-                    'trinket2' : items['trinket2']['itemLevel'] if 'trinket2' in items else None,
-                    'mainHand' : items['mainHand']['itemLevel'] if 'mainHand' in items else None,
-                    'offHand' : items['offHand']['itemLevel'] if 'offHand' in items else None,
-                }
-
-            template = JINJA_ENVIRONMENT.get_template('groupinfo-toon.html')
-            self.response.write(template.render(template_values))
+            self.addCharacter(char, results, classes)
 
         self.response.write('       </div>\n')
+    
+        # Now add the subs in the same way as above
+        self.response.write('        <div style="font-size: 20px">Subs</div>\n')
+        self.response.write('        <br/>\n')
+        self.response.write('        <div class="left">\n')
+
+        halfindex = math.ceil(totalsubs / 2.0)
+        for idx, char in enumerate(jsondata):
+            
+            if (char['sub'] == '0'):
+                continue
+            
+            if (idx == halfindex):
+                self.response.write('        </div>')
+                self.response.write('        <div class="right">\n')
+            
+            self.addCharacter(char, results, classes)
+
+        self.response.write('       </div>\n')
+        
         self.response.write('    </body>\n')
         self.response.write('</html>')
+        
+    def addCharacter(self, char, results, classes):
+        if 'status' in char and char['status'] == 'nok':
+            template_values = {
+                'name' : char['toon'],
+                'avgilvl' : 0
+            }
+        else:
+           
+            items = char['items']
+            template_values = {
+                'name' : char['name'],
+                'frealm' : char['toonfrealm'],   # full realm name
+                'nrealm' : results.nrealm,  # realm for group
+                'realm' : char['toonrealm'],  # realm for toon (might not be == to nrealm)
+                'guild' : char['guild']['name'] if 'guild' in char else None,
+                'class' : classes[char['class']],
+                'avgilvl' : char['items']['averageItemLevel'],
+                'avgilvle' : char['items']['averageItemLevelEquipped'],
+                'head' : items['head']['itemLevel'] if 'head' in items else None,
+                'neck' : items['neck']['itemLevel'] if 'neck' in items else None,
+                'shoulder' : items['shoulder']['itemLevel'] if 'shoulder' in items else None,
+                'back' : items['back']['itemLevel'] if 'back' in items else None,
+                'chest' : items['chest']['itemLevel'] if 'chest' in items else None,
+                'wrist' : items['wrist']['itemLevel'] if 'wrist' in items else None,
+                'hands' : items['hands']['itemLevel'] if 'hands' in items else None,
+                'waist' : items['waist']['itemLevel'] if 'waist' in items else None,
+                'legs' : items['legs']['itemLevel'] if 'legs' in items else None,
+                'feet' : items['feet']['itemLevel'] if 'feet' in items else None,
+                'finger1' : items['finger1']['itemLevel'] if 'finger1' in items else None,
+                'finger2' : items['finger2']['itemLevel'] if 'finger2' in items else None,
+                'trinket1' : items['trinket1']['itemLevel'] if 'trinket1' in items else None,
+                'trinket2' : items['trinket2']['itemLevel'] if 'trinket2' in items else None,
+                'mainHand' : items['mainHand']['itemLevel'] if 'mainHand' in items else None,
+                'offHand' : items['offHand']['itemLevel'] if 'offHand' in items else None,
+            }
+
+        template = JINJA_ENVIRONMENT.get_template('groupinfo-toon.html')
+        self.response.write(template.render(template_values))
 
 class Editor(webapp2.RequestHandler):
     def get(self, nrealm, ngroup):
