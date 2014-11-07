@@ -29,6 +29,9 @@ class Realm(ndb.Model):
     realm = ndb.StringProperty(indexed=True,required=True)
     slug = ndb.StringProperty(indexed=True,required=True)
 
+class APIKey(ndb.Model):
+    key = ndb.StringProperty(indexed=True,required=True)
+
 class Loader(webapp2.RequestHandler):
     def get(self, nrealm, ngroup):
         print 'Loader.get'
@@ -100,9 +103,12 @@ class Loader(webapp2.RequestHandler):
         rqres = rq.fetch()
         frealm = rqres[0].realm
         
+        q = APIKey.query()
+        apikey = q.fetch()[0]
+
         # TODO: move this stuff to be part of the realm loader since it shouldn't change
         # very often
-        response = urlfetch.fetch('http://us.battle.net/api/wow/data/character/classes')
+        response = urlfetch.fetch('https://us.api.battle.net/wow/data/character/classes?locale=en_US&apikey=%s' % apikey.key)
         rawclasses = json.loads(response.content)
         sortedclasses = sorted(rawclasses['classes'], key=lambda k: k['id'])
         
@@ -145,7 +151,7 @@ class Loader(webapp2.RequestHandler):
                 toonrealm = realm
                 toonfrealm = frealm
                 
-            url = 'http://us.battle.net/api/wow/character/%s/%s?fields=items,guild,professions,progression' % (toonrealm, toonname);
+            url = 'https://us.api.battle.net/wow/character/%s/%s?fields=items,guild&locale=en_US&apikey=%s' % (toonrealm, toonname, apikey.key)
             response = urlfetch.fetch(url)
             jsondata[i] = json.loads(response.content)
 
@@ -159,7 +165,7 @@ class Loader(webapp2.RequestHandler):
                 print('Failed to find toon %s' % toonname.encode('utf-8'))
                 jsondata[i]['toon'] = toonname
             else:
-                totalilvl = totalilvl + jsondata[i]['items']['averageItemLevel'];
+                totalilvl = totalilvl + jsondata[i]['items']['averageItemLevel']
                 totalilvleq = totalilvleq + jsondata[i]['items']['averageItemLevelEquipped']
                 
                 toonclass = classes[jsondata[i]['class']]
@@ -257,25 +263,11 @@ class Loader(webapp2.RequestHandler):
                     'offHand' : items['offHand']['itemLevel'] if 'offHand' in items else None,
                 }
 
-                priprof = char['professions']['primary']
-                if (len(priprof) == 2):
-                    template_values['prof1'] = priprof[0]['name']
-                    template_values['prof1skill'] = priprof[0]['rank']
-                    template_values['prof2'] = priprof[1]['name']
-                    template_values['prof2skill'] = priprof[1]['rank']
-                elif (len(priprof) == 1):
-                    template_values['prof1'] = priprof[0]['name']
-                    template_values['prof1skill'] = priprof[0]['rank']
-                    template_values['prof2'] = None
-                else:
-                    template_values['prof1'] = None
-                    template_values['prof2'] = None
-
             template = JINJA_ENVIRONMENT.get_template('groupinfo-toon.html')
             self.response.write(template.render(template_values))
 
-        self.response.write('       </div>\n');
-        self.response.write('    </body>\n');
+        self.response.write('       </div>\n')
+        self.response.write('    </body>\n')
         self.response.write('</html>')
 
 class Editor(webapp2.RequestHandler):

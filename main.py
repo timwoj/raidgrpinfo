@@ -46,8 +46,12 @@ class GroupRedir(webapp2.RequestHandler):
 # the realm list on the front page gets populated
 class LoadRealms(webapp2.RequestHandler):
     def get(self):
+
+        q = grouploader.APIKey.query()
+        apikey = q.fetch()[0]
+
         # retrieve a list of realms from the blizzard API
-        url = 'http://us.battle.net/api/wow/realm/status'
+        url = 'https://us.api.battle.net/wow/realm/status?locale=en_US&apikey=%s' % apikey.key
         response = urlfetch.fetch(url)
         jsondata = json.loads(response.content)
 
@@ -56,10 +60,24 @@ class LoadRealms(webapp2.RequestHandler):
                                 namespace='Realms', id=realm['slug'])
             r.put()
 
+        self.response.write("Loaded %d realms into datastore" % len(jsondata['realms']))
+
+class SetAPIKey(webapp2.RequestHandler):
+    def get(self):
+
+        argkey = self.request.get('key')
+        if ((argkey == None) or (len(argkey) == 0)):
+            self.response.write("Must pass API with 'key' argument in url")
+        else:
+            k = grouploader.APIKey(key=self.request.get('key'))
+            k.put()
+            self.response.write("API Key Stored.")
+
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
     ('/groups', GroupRedir),
     ('/loadrealms', LoadRealms),
+    ('/setapikey', SetAPIKey),
     webapp2.Route('/edit/<:([^/]+)>/<:([^/]+)>', grouploader.Editor),
     webapp2.Route('/<:([^/]+)>/<:([^/]+)>', grouploader.Loader),
 ], debug=True)
