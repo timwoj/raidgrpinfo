@@ -132,7 +132,7 @@ class Loader(webapp2.RequestHandler):
                toonname = toons[i]
                toonrealm = realm
                toonfrealm = frealm
-            url = 'https://us.api.battle.net/wow/character/%s/%s?fields=items,guild?locale=en_US&apikey=%s' % (toonrealm, toonname, apikey.key)
+            url = 'https://us.api.battle.net/wow/character/%s/%s?fields=items,guild&locale=en_US&apikey=%s' % (toonrealm, toonname, apikey.key)
             response = urlfetch.fetch(url)
             jsondata[i] = json.loads(response.content)
 
