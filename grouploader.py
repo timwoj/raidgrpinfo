@@ -34,7 +34,6 @@ class APIKey(ndb.Model):
 
 class Loader(webapp2.RequestHandler):
     def get(self, nrealm, ngroup):
-        print 'Loader.get'
         # try to load the group info from the database
         db_query = Group.query(Group.nrealm==nrealm, Group.ngroup==ngroup)
         results = db_query.fetch(5)
@@ -52,8 +51,6 @@ class Loader(webapp2.RequestHandler):
             self.loadGroup(results[0])
 
     def post(self, nrealm, ngroup):
-        
-        print 'Loader.post'
         # try to load the group info from the database
         db_query = Group.query(Group.nrealm==nrealm, Group.ngroup==ngroup)
         results = db_query.fetch(5)
@@ -140,7 +137,6 @@ class Loader(webapp2.RequestHandler):
                     toonrealm = realm
                     toonfrealm = frealm
                 else:
-                    toonrealm = realm
                     rq2 = Realm.query(
                         Realm.slug == toonrealm, namespace='Realms')
                     rq2res = rq2.fetch()

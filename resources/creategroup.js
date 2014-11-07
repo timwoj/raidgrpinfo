@@ -5,9 +5,10 @@ function addToList()
     var newtoon = document.getElementById("newtoon");
     var toonname = newtoon.value.trim();
 
-    if ((toonname.length <= 1) || (toonname.length > 30))
+    if ((toonname.length <= 1) || (toonname.length > 30) ||
+        (toonname.indexOf(" ") > 0) || (toonname.indexOf(",") > -1))
     {
-        alert("Invalid toon name.  Must be between 2 and 30 characters long")
+        alert("Invalid toon name.  Must be between 2 and 30 characters long, and cannot contain spaces or commas")
     }
     else
     {

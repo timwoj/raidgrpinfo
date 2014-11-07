@@ -23,11 +23,9 @@
 
             Group members:<br>
             <select size="10" multiple="multiple" style="width: 300px" name="toons" id="toons">
-                {% if toons != none -%}
-                {%- for toon in toons -%}
-                <option id="opt{{ toon }}">{{ toon }}{%- if crs[loop.index] != '0' -%} - {{ crs[loop.index] }}{%- endif -%}{%- if subs[loop.index] == '1' -%} (Sub){%- endif -%}
+                {%- for toon in names -%}
+                <option id="opt{{ toon }}">{{ toon }}
                 {% endfor %}
-                {%- endif %}
             </select><br>
             Add Toon: <input type="text" name="newtoon" id="newtoon"><br>
             <input type="checkbox" name="sub" id="sub"> Sub<br>
