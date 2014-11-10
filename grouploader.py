@@ -352,7 +352,7 @@ class Editor(webapp2.RequestHandler):
 
         # throw them at jinja to generate the actual html
         template_values = {
-            'group' : ngroup,
+            'group' : results.groupname,
             'realm' : nrealm,
             'names' : names,
             'realms' : realms,
