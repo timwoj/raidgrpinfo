@@ -43,8 +43,9 @@ class GroupRedir(webapp2.RequestHandler):
         self.redirect('/%s/%s' % (nrealm, ngroup))
 
 # Loads the list of realms into the datastore from the blizzard API so that
-# the realm list on the front page gets populated
-class LoadRealms(webapp2.RequestHandler):
+# the realm list on the front page gets populated.  Also loads the list of classes
+# into a table on the DB so that we don't have to request it 
+class InitDB(webapp2.RequestHandler):
     def get(self):
 
         q = grouploader.APIKey.query()
@@ -57,10 +58,19 @@ class LoadRealms(webapp2.RequestHandler):
 
         for realm in jsondata['realms']:
             r = grouploader.Realm(realm=realm['name'], slug=realm['slug'],
-                                namespace='Realms', id=realm['slug'])
+                                  namespace='Realms', id=realm['slug'])
             r.put()
 
         self.response.write("Loaded %d realms into datastore" % len(jsondata['realms']))
+
+        url = 'https://us.api.battle.net/wow/data/character/classes?locale=en_US&apikey=%s' % apikey.key
+        response = urlfetch.fetch(url)
+        rawclasses = json.loads(response.content)
+        cd = grouploader.ClassData()
+        for c in rawclasses['classes']:
+            ce = grouploader.ClassEntry(classId=c['id'], mask=c['mask'], powerType=c['powerType'], name=c['name'])
+            cd.entries.append(ce)
+        cd.put()
 
 class SetAPIKey(webapp2.RequestHandler):
     def get(self):
@@ -88,7 +98,7 @@ class UpdateToons(webapp2.RequestHandler):
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
     ('/groups', GroupRedir),
-    ('/loadrealms', LoadRealms),
+    ('/initdb', InitDB),
     ('/setapikey', SetAPIKey),
     ('/updatetoons', UpdateToons),
     webapp2.Route('/edit/<:([^/]+)>/<:([^/]+)>', grouploader.Editor),

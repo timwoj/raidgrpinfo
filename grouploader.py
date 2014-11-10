@@ -3,13 +3,12 @@
 #!/usr/bin/env python
 
 import webapp2
-import json,math,sys,pprint,os
+import json,math,sys,os
 import jinja2
 from google.appengine.ext import ndb
 from google.appengine.api.memcache import Client
 from google.appengine.api import urlfetch
 from passlib.hash import sha256_crypt
-
 
 JINJA_ENVIRONMENT = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
                                        extensions=['jinja2.ext.autoescape'])
@@ -31,6 +30,15 @@ class Realm(ndb.Model):
 
 class APIKey(ndb.Model):
     key = ndb.StringProperty(indexed=True,required=True)
+
+class ClassEntry(ndb.Model):
+    classId = ndb.IntegerProperty()
+    mask = ndb.IntegerProperty()
+    powerType = ndb.StringProperty()
+    name = ndb.StringProperty()
+
+class ClassData(ndb.Model):
+    entries = ndb.StructuredProperty(ClassEntry, repeated=True)
 
 class Loader(webapp2.RequestHandler):
     def get(self, nrealm, ngroup):
@@ -75,7 +83,6 @@ class Loader(webapp2.RequestHandler):
         subs = self.request.get('subfield').split(',')
         crossrealms = self.request.get('crfield').split(',')
         print 'number of toons saved: %d' % len(toons)
-        print toons
 
         # clear the old toon information and recreate it from the data from
         # the form
@@ -84,7 +91,7 @@ class Loader(webapp2.RequestHandler):
             toon = "%s,%s,%s" % (toons[i], crossrealms[i], subs[i])
             group.toons.append(toon)
 
-        group.toons = sorted(group.toons)#, key=lambda s: s.lower())
+        group.toons = sorted(group.toons, key=lambda s: s.lower())
         group.put()
 
         self.loadGroup(group)
@@ -103,15 +110,12 @@ class Loader(webapp2.RequestHandler):
         q = APIKey.query()
         apikey = q.fetch()[0]
 
-        # TODO: move this stuff to be part of the realm loader since it shouldn't change
-        # very often
-        response = urlfetch.fetch('https://us.api.battle.net/wow/data/character/classes?locale=en_US&apikey=%s' % apikey.key)
-        rawclasses = json.loads(response.content)
-        sortedclasses = sorted(rawclasses['classes'], key=lambda k: k['id'])
+        q = ClassData.query()
+        res = q.fetch()
         
         classes = dict()
-        for c in sortedclasses:
-            classes[c['id']] = c['name']
+        for c in res[0].entries:
+            classes[c.classId] = c.name
 
         jsondata = list()
         
@@ -151,11 +155,13 @@ class Loader(webapp2.RequestHandler):
                 toonsub = '0'
                 toonrealm = realm
                 toonfrealm = frealm
-                
-            url = 'https://us.api.battle.net/wow/character/%s/%s?fields=items,guild&locale=en_US&apikey=%s' % (toonrealm, toonname, apikey.key)
-            print url
-            response = urlfetch.fetch(url)
-            data = json.loads(response.content)
+
+            try:
+                url = 'https://us.api.battle.net/wow/character/%s/%s?fields=items,guild&locale=en_US&apikey=%s' % (toonrealm, toonname, apikey.key)
+                response = urlfetch.fetch(url)
+                data = json.loads(response.content)
+            except DeadlineExceededError:
+                data = { 'toon': toonname, 'status' : 'rgi-url-timeout' }
 
             # a realm is received in the json data from the API, but we need to pass the
             # normalized value to the next stages.  ignore this one.
@@ -226,21 +232,13 @@ class Loader(webapp2.RequestHandler):
         
         self.response.write('        <div class="left">\n')
 
-        # Not a huge fan of looping through the data twice.  There's probably
-        # a better way to do this.  Maybe store the individual sections in
-        # lists of strings then dump them out to the respective sections later?
-        # That just seems like trading two passes through this data for two
-        # more passes through some other data.  I wish there was a way to
-        # write different parts of the response at the same time, but I don't
-        # think there is.
+        # Loop through the data twice here to display the separate sections,
+        # but don't actually loop through all of the data.  The lambda filters
+        # filter the character data down to just the parts that are needed
+        # for each loop.
         halfindex = math.ceil(totalmains / 2.0)
-        for idx, char in enumerate(jsondata):
+        for idx, char in enumerate(filter(lambda x: x['sub'] == '0', jsondata)):
 
-            # if this is a sub, ignore it until later.  we display the main group then the subs
-            # in a group at the end
-            if (char['sub'] == '1'):
-                continue
-            
             if (idx == halfindex):
                 self.response.write('        </div>')
                 self.response.write('        <div class="right">\n')
@@ -250,15 +248,12 @@ class Loader(webapp2.RequestHandler):
         self.response.write('       </div>\n')
     
         # Now add the subs in the same way as above
-        self.response.write('        <div style="font-size: 20px">Subs</div>\n')
+        self.response.write('        <div style="font-size: 20px;clear: both">Subs</div>\n')
         self.response.write('        <br/>\n')
         self.response.write('        <div class="left">\n')
 
         halfindex = math.ceil(totalsubs / 2.0)
-        for idx, char in enumerate(jsondata):
-            
-            if (char['sub'] == '0'):
-                continue
+        for idx, char in enumerate(filter(lambda x: x['sub'] == '1', jsondata)):
             
             if (idx == halfindex):
                 self.response.write('        </div>')
@@ -276,6 +271,11 @@ class Loader(webapp2.RequestHandler):
             template_values = {
                 'name' : char['toon'],
                 'avgilvl' : 0
+            }
+        elif 'status' in char and char['status'] == 'rgi-url-timeout':
+            template_values = {
+                'name' : char['toon'],
+                'avgilvl' : -1
             }
         else:
            
@@ -328,7 +328,6 @@ class Editor(webapp2.RequestHandler):
         results = None
         if (len(queryresults) != 0):
             results = queryresults[0]
-        print results
 
         # TODO: create the list of toons, subs, and crossrealm information
         # here.
