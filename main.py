@@ -11,8 +11,8 @@ from google.appengine.api import urlfetch
 from google.appengine.ext import ndb
 
 JINJA_ENVIRONMENT = jinja2.Environment(
-                                       loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
-                                       extensions=['jinja2.ext.autoescape'])
+    loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
+    extensions=['jinja2.ext.autoescape'])
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):
@@ -72,6 +72,8 @@ class InitDB(webapp2.RequestHandler):
             cd.entries.append(ce)
         cd.put()
 
+# The new Battle.net Mashery API requires an API key when using it.  This
+# method stores an API in the datastore so it can used in later page requests.
 class SetAPIKey(webapp2.RequestHandler):
     def get(self):
 

@@ -8,10 +8,12 @@ import jinja2
 from google.appengine.ext import ndb
 from google.appengine.api.memcache import Client
 from google.appengine.api import urlfetch
+from google.appengine.api import urlfetch_errors
 from passlib.hash import sha256_crypt
 
-JINJA_ENVIRONMENT = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
-                                       extensions=['jinja2.ext.autoescape'])
+JINJA_ENVIRONMENT = jinja2.Environment(
+    loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
+    extensions=['jinja2.ext.autoescape'])
 
 class Group(ndb.Model):
     nrealm = ndb.StringProperty(indexed=True)
@@ -160,7 +162,7 @@ class Loader(webapp2.RequestHandler):
                 url = 'https://us.api.battle.net/wow/character/%s/%s?fields=items,guild&locale=en_US&apikey=%s' % (toonrealm, toonname, apikey.key)
                 response = urlfetch.fetch(url)
                 data = json.loads(response.content)
-            except DeadlineExceededError:
+            except urlfetch_errors.DeadlineExceededError:
                 data = { 'toon': toonname, 'status' : 'rgi-url-timeout' }
 
             # a realm is received in the json data from the API, but we need to pass the
@@ -329,11 +331,13 @@ class Editor(webapp2.RequestHandler):
         if (len(queryresults) != 0):
             results = queryresults[0]
 
-        # TODO: create the list of toons, subs, and crossrealm information
-        # here.
-        names = []
-        subs = []
-        crs = []
+        # Loop through the results from the data store and create a list
+        # of toon names, the markers for subs, and the markers for
+        # cross-realm.  If there weren't any results, blank lists will be
+        # passed to the template.
+        names = list()
+        subs = list()
+        crs = list()
         if results != None:
             for toon in results.toons:
                 if ',' in toon:
@@ -345,14 +349,10 @@ class Editor(webapp2.RequestHandler):
                     names.append(toon)
                     subs.append('0')
                     crs.append('0')
-        else:
-            names = None
-            subs = None
-            crs = None
 
         # throw them at jinja to generate the actual html
         template_values = {
-            'group' : results.groupname,
+            'group' : ngroup,
             'realm' : nrealm,
             'names' : names,
             'realms' : realms,
