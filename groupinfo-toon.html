@@ -1,10 +1,8 @@
 {%- autoescape true %}
-{%- if avgilvl == 0 %}
-            Failed to find toon {{ name }} (name change? server transfer?)<p/>
-{%- elif avgilvl == -1 %}
-            Timeout retrieving data from Battle.net for toon {{ name }}.  Refresh to try again.
+{%- if status == 'nok' %}
+            {{ reason }}<p/>
 {%- else %}
-            <a href="http://us.battle.net/wow/en/character/{{ realm }}/{{ name }}/simple">{{ name }}</a> - {{ class }} <a href="http://askmrrobot.com/wow/gear/usa/{% print realm.replace('-','_') %}/{{ name }}" style="font-size: 12px">(AMR)</a>
+            <a href="http://us.battle.net/wow/en/character/{{ realm }}/{{ name }}/simple">{{ name }}</a> - {{ class }} (Level {{ level }}) <a href="http://askmrrobot.com/wow/gear/usa/{% print realm.replace('-','_') %}/{{ name }}" style="font-size: 12px">(AMR)</a>
 {%- if class == "Rogue" -%}
 <a href="http://shadowcraft.mmo-mumble.com/us/{{ realm }}/{{ name }}" style="font-size: 12px">(SC)</a>
 {%- endif -%}

@@ -103,6 +103,7 @@ app = webapp2.WSGIApplication([
     ('/initdb', InitDB),
     ('/setapikey', SetAPIKey),
     ('/updatetoons', UpdateToons),
+    ('/testrpc', grouploader.Tester),
     webapp2.Route('/edit/<:([^/]+)>/<:([^/]+)>', grouploader.Editor),
     webapp2.Route('/<:([^/]+)>/<:([^/]+)>', grouploader.Loader),
 ], debug=True)
