@@ -186,7 +186,11 @@ class Loader(webapp2.RequestHandler):
             newdata['sub'] = toonsub
 
             url = 'https://us.api.battle.net/wow/character/%s/%s?fields=items,guild&locale=en_US&apikey=%s' % (toonrealm, toonname, apikey.key)
-            rpc = urlfetch.create_rpc()
+            # create the rpc object for the fetch method.  the deadline
+            # defaults to 5 seconds, but that seems to be too short for the
+            # Blizzard API site sometimes.  setting it to 10 helps a little
+            # but it makes page loads a little slower.
+            rpc = urlfetch.create_rpc(10)
             rpc.callback = self.create_callback(rpc, toonname, newdata, groupstats, classes)
             urlfetch.make_fetch_call(rpc, url)
             newdata['rpc'] = rpc
@@ -278,6 +282,8 @@ class Loader(webapp2.RequestHandler):
             self.addCharacter(char, results, classes)
 
         self.response.write('       </div>\n')
+
+        self.response.write("        <div style='clear: both;font-size: 12px;text-align:center'>Site code by Tamen - Aerie Peak(US) &#149; <a href='http://github.com/timwoj/raidgrpinfo'>http://github.com/timwoj/raidgrpinfo<a/></div>")
 
         self.response.write('    </body>\n')
         self.response.write('</html>')
