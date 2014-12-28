@@ -1,0 +1,34 @@
+{%- macro itemtd(item) -%}
+<td class="" style="">{%- if item.itemLevel != 0 %}<a href="http://wowhead.com/item={{ item.id }}">{%- endif -%}{{ item.itemLevel }}{% if item.itemLevel != 0 -%}</a>{%- endif -%}</td>
+{%- endmacro -%}
+<tr>
+  <td class="" style=""><a href="http://us.battle.net/wow/en/character/{{ realm }}/{{ name }}/advanced" target="_blank">{{ name }}</a></td>
+{%- if status == 'nok' %}
+  <td class="" style="" colspan="0">{{ reason }}</td>
+{%- else %}
+  <td class="{{ class|replace(" ","")|lower() }}" style="">{{ class }}</td>
+{%- if sub == '1' %}
+  <td class="" style="">Sub</td>
+{%- else %}
+  <td class="" style="">Main</td>
+{%- endif %}
+  {{ itemtd(head) }}
+  {{ itemtd(shoulder) }}
+  {{ itemtd(chest) }}
+  {{ itemtd(hands) }}
+  {{ itemtd(legs) }}
+  {{ itemtd(neck) }}
+  {{ itemtd(back) }}
+  {{ itemtd(wrist) }}
+  {{ itemtd(waist) }}
+  {{ itemtd(feet) }}
+  {{ itemtd(finger1) }}
+  {{ itemtd(finger2) }}
+  {{ itemtd(trinket1) }}
+  {{ itemtd(trinket2) }}
+  {{ itemtd(mainHand) }}
+  {{ itemtd(offHand) }}
+  <td class="" style="">{{ avgilvle }}</td>
+  <td class="" style="">{{ avgilvl }}</td>
+{% endif -%}
+</tr>

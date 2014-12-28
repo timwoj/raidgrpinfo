@@ -14,7 +14,60 @@
     padding-bottom: 20px;
 }
 
-.content {
-    float: left;
-    width: 100%;
+td, th {
+    text-align:center;
+    padding:2px 5px;
+    font-size:12px;
+    background:#f4f4f4;
+}
+
+th {
+    cursor:pointer;
+}
+
+.deathknight {
+    background:#C41F3B;
+    color:#FFFFFF;
+}
+
+.druid {
+    background:#FF7D0A;
+}
+
+.hunter {
+    background:#ABD473;
+}
+
+.mage {
+    background:#69CCF0;
+}
+
+.monk {
+    background:#00FF96;
+}
+
+.paladin {
+    background:#F58CBA;
+}
+
+.priest {
+    background:#FFFFFF;
+}
+
+.rogue {
+    background:#FFF569;
+}
+
+.shaman {
+    background:#0070DE;
+    color:#FFFFFF;
+}
+
+.warlock {
+    background:#9482C9;
+    color:#FFFFFF;
+}
+
+.warrior {
+    background:#C79C6E;
 }
