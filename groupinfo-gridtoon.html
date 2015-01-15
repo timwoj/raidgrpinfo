@@ -1,5 +1,5 @@
 {%- macro itemtd(item) -%}
-<td class="" style="">{%- if item.itemLevel != 0 %}<a href="http://wowhead.com/item={{ item.id }}" rel="bonus={{ item.bonusLists|join(':') }}">{{ item.itemLevel }}</a>{%- else -%}{{ item.itemlevel }}{%- endif -%}</td>
+<td class="" style="{{ item.itemLevel | ilvlcolor }}">{%- if item.itemLevel != 0 %}<a href="http://wowhead.com/item={{ item.id }}" rel="bonus={{ item.bonusLists|join(':') }}">{{ item.itemLevel }}</a>{%- else -%}{{ item.itemlevel }}{%- endif -%}</td>
 {%- endmacro -%}
 <tr>
   <td class="user" style="">

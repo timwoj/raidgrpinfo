@@ -11,9 +11,22 @@ from google.appengine.api import urlfetch
 from google.appengine.api import urlfetch_errors
 from passlib.hash import sha256_crypt
 
+# This is used to color the table cells on the grid display based on the ilvl
+# of the item.  It gets put into the jinja environment as a filter.
+def ilvlcolor(ilvl):
+    if (ilvl == 0):
+        return ''
+    elif (ilvl <= 640):
+        return 'background-color:#FFB2B2'
+    elif ilvl > 640 and ilvl <= 655:
+        return 'background-color:#FFFFB2'
+    elif ilvl > 655:
+        return 'background-color:#B2FFB2'
+
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
     extensions=['jinja2.ext.autoescape'])
+JINJA_ENVIRONMENT.filters['ilvlcolor'] = ilvlcolor
 
 class Group(ndb.Model):
     nrealm = ndb.StringProperty(indexed=True)
@@ -794,5 +807,3 @@ class GridLoader(webapp2.RequestHandler):
 
     def create_callback(self, rpc, name, toondata, groupstats, classes):
         return lambda: self.handle_result(rpc, name, toondata, groupstats, classes)
-
-        
