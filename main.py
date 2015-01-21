@@ -105,6 +105,6 @@ app = webapp2.WSGIApplication([
     ('/updatetoons', UpdateToons),
     ('/testrpc', grouploader.Tester),
     webapp2.Route('/edit/<:([^/]+)>/<:([^/]+)>', grouploader.Editor),
-    webapp2.Route('/<:([^/]+)>/<:([^/]+)>', grouploader.Loader),
+    webapp2.Route('/<:([^/]+)>/<:([^/]+)>', grouploader.GridLoader),
     webapp2.Route('/<:([^/]+)>/<:([^/]+)>/grid', grouploader.GridLoader),
 ], debug=True)
