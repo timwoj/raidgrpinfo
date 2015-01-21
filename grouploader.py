@@ -672,6 +672,7 @@ class GridLoader(webapp2.RequestHandler):
             self.addCharacter(char, results, classes)
             
         self.response.write('</table><p/>\n')
+        self.response.write('<table style="clear:both;width:auto;margin-left:auto;margin-right:auto"><tr><td colspan="3">Color legend:</td></tr></tr><td class="" style="background-color:#FFB2B2"><= 640 (LFR)</td><td class="" style="background-color:#FFFFB2">641-669 (Normal Mode)</td><td class="" style="background-color:#B2FFB2">>= 670 (Heroic or better)</td></tr></table><p/>\n')
 
         self.response.write("        <div style='clear: both;font-size: 12px;text-align:center'>Site code by Tamen - Aerie Peak(US) &#149; <a href='http://github.com/timwoj/raidgrpinfo'>http://github.com/timwoj/raidgrpinfo<a/></div>")
 
