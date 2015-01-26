@@ -11,17 +11,24 @@ from google.appengine.api import urlfetch
 from google.appengine.api import urlfetch_errors
 from passlib.hash import sha256_crypt
 
+# Minimum ilvls and colors for the ilvl grid
+MIN_NORMAL=655
+MIN_HEROIC=670
+COLOR_LFR="#FFB2B2"
+COLOR_NORMAL="#FFFFB2"
+COLOR_HEROIC="#B2FFB2"
+
 # This is used to color the table cells on the grid display based on the ilvl
 # of the item.  It gets put into the jinja environment as a filter.
 def ilvlcolor(ilvl):
     if (ilvl == 0):
         return ''
-    elif (ilvl <= 640):
-        return 'background-color:#FFB2B2'
-    elif ilvl > 640 and ilvl <= 655:
-        return 'background-color:#FFFFB2'
-    elif ilvl > 655:
-        return 'background-color:#B2FFB2'
+    elif (ilvl < MIN_NORMAL):
+        return 'background-color:'+COLOR_LFR
+    elif ilvl >= MIN_NORMAL and ilvl < MIN_HEROIC:
+        return 'background-color:'+COLOR_NORMAL
+    elif ilvl >= MIN_HEROIC:
+        return 'background-color:'+COLOR_HEROIC
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
@@ -97,7 +104,6 @@ class APIImporter:
         # group's ilvls, armor type counts and token type counts.  subs are not
         # included in the counts, since they're not really part of the main
         # group.
-        start = time.time()
         for toon in toonlist:
             if ',' in toon:
                 toonname,toonrealm,toonsub = toon.split(',')
@@ -139,8 +145,6 @@ class APIImporter:
             # The Blizzard API has a limit of 10 calls per second.  Sleep here
             # for a very brief time to avoid hitting that limit.
             time.sleep(0.1)
-        end = time.time()
-        print "Time spent creating rpc calls: %f seconds" % (end-start)
 
         # Now that all of the RPC calls have been created, loop through the data
         # dictionary one more time and wait for each fetch to be completed. Once
@@ -459,7 +463,15 @@ class GridLoader(webapp2.RequestHandler):
             self.addCharacter(char, results, classes)
             
         self.response.write('</table><p/>\n')
-        self.response.write('<table style="clear:both;width:auto;margin-left:auto;margin-right:auto"><tr><td colspan="3">Color legend:</td></tr></tr><td class="" style="background-color:#FFB2B2"><= 640 (LFR)</td><td class="" style="background-color:#FFFFB2">641-669 (Normal Mode)</td><td class="" style="background-color:#B2FFB2">>= 670 (Heroic or better)</td></tr></table><p/>\n')
+        template = JINJA_ENVIRONMENT.get_template('groupinfo-colorlegend.html')
+        template_values = {
+            'min_normal' : MIN_NORMAL,
+            'min_heroic' : MIN_HEROIC,
+            'color_lfr' : COLOR_LFR,
+            'color_normal' : COLOR_NORMAL,
+            'color_heroic' : COLOR_HEROIC,
+        }
+        self.response.write(template.render(template_values))
 
         self.response.write("        <div style='clear: both;font-size: 12px;text-align:center'>Site code by Tamen - Aerie Peak(US) &#149; <a href='http://github.com/timwoj/raidgrpinfo'>http://github.com/timwoj/raidgrpinfo<a/></div>")
 
@@ -477,7 +489,6 @@ class GridLoader(webapp2.RequestHandler):
             }
         elif 'items' in char:
 
-            print char['sub']
             items = char['items']
             template_values = {
                 'status' : 'ok',
