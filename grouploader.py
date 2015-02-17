@@ -501,23 +501,22 @@ class GridLoader(webapp2.RequestHandler):
                 'sub' : char['sub'],
                 'avgilvl' : char['items']['averageItemLevel'],
                 'avgilvle' : char['items']['averageItemLevelEquipped'],
-                'head' : items['head'] if 'head' in items else {'itemLevel': 0},
-                'neck' : items['neck'] if 'neck' in items else {'itemLevel': 0},
-                'shoulder' : items['shoulder'] if 'shoulder' in items else {'itemLevel': 0},
-                'back' : items['back'] if 'back' in items else {'itemLevel': 0},
-                'chest' : items['chest'] if 'chest' in items else {'itemLevel': 0},
-                'wrist' : items['wrist'] if 'wrist' in items else {'itemLevel': 0},
-                'hands' : items['hands'] if 'hands' in items else {'itemLevel': 0},
-                'waist' : items['waist'] if 'waist' in items else {'itemLevel': 0},
-                'legs' : items['legs'] if 'legs' in items else {'itemLevel': 0},
-                'feet' : items['feet'] if 'feet' in items else {'itemLevel': 0},
-                'finger1' : items['finger1'] if 'finger1' in items else {'itemLevel': 0},
-                'finger2' : items['finger2'] if 'finger2' in items else {'itemLevel': 0},
-                'trinket1' : items['trinket1'] if 'trinket1' in items else {'itemLevel': 0},
-                'trinket2' : items['trinket2'] if 'trinket2' in items else {'itemLevel': 0},
-                'mainHand' : items['mainHand'] if 'mainHand' in items else {'itemLevel': 0},
-                'offHand' : items['offHand'] if 'offHand' in items else {'itemLevel': 0},
             }
+
+            itemTypes = ['head','neck','shoulder','back','chest','wrist','hands','waist','legs','feet','finger1','finger2','trinket1','trinket2','mainHand','offHand']
+            for itype in itemTypes:
+                template_values[itype] = {}
+                if itype in items:
+                    template_values[itype]['id'] = items[itype]['id']
+                    template_values[itype]['itemLevel'] = items[itype]['itemLevel']
+                    if 'tooltipParams' in items[itype]:
+                        if 'set' in items[itype]['tooltipParams']:
+                            template_values[itype]['set'] = True
+                    else:
+                        template_values[itype]['set'] = False
+                else:
+                    template_values[itype]['itemLevel'] = 0
+                    template_values[itype]['set'] = False
 
         else:
 
