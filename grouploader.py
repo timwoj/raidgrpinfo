@@ -12,6 +12,7 @@ from google.appengine.api import urlfetch_errors
 from passlib.hash import sha256_crypt
 
 # Minimum ilvls and colors for the ilvl grid
+LFR_ILVL=655
 MIN_NORMAL=665
 MIN_HEROIC=680
 COLOR_LFR="#FFB2B2"
@@ -501,22 +502,44 @@ class GridLoader(webapp2.RequestHandler):
                 'sub' : char['sub'],
                 'avgilvl' : char['items']['averageItemLevel'],
                 'avgilvle' : char['items']['averageItemLevelEquipped'],
+                'lfrcount' : 0,
+                'tiercount' : 0
             }
 
-            itemTypes = ['head','neck','shoulder','back','chest','wrist','hands','waist','legs','feet','finger1','finger2','trinket1','trinket2','mainHand','offHand']
-            for itype in itemTypes:
+            # yes, feet are not part of normal tier gear, but they are part
+            # of the lfr set.
+            tierItems = ['head','shoulder','chest','hands','legs','feet']
+            nonTierItems = ['neck','back','wrist','waist','feet','finger1','finger2','trinket1','trinket2','mainHand','offHand']
+            
+            for itype in tierItems:
                 template_values[itype] = {}
                 if itype in items:
                     template_values[itype]['id'] = items[itype]['id']
                     template_values[itype]['itemLevel'] = items[itype]['itemLevel']
                     if 'tooltipParams' in items[itype]:
                         if 'set' in items[itype]['tooltipParams']:
-                            template_values[itype]['set'] = True
+                            if items[itype]['itemLevel'] == LFR_ILVL or items[itype]['itemLevel'] == LFR_ILVL+6:
+                                template_values[itype]['set'] = 'lfr'
+                                template_values['lfrcount'] += 1
+                            elif items[itype]['itemLevel'] >= MIN_NORMAL:
+                                template_values[itype]['set'] = 'norm'
+                                template_values['tiercount'] += 1
+                            else:
+                                template_values[itype]['set'] = 'no'
                     else:
-                        template_values[itype]['set'] = False
+                        template_values[itype]['set'] = 'no'
                 else:
                     template_values[itype]['itemLevel'] = 0
                     template_values[itype]['set'] = False
+
+            for itype in nonTierItems:
+                template_values[itype] = {}
+                if itype in items:
+                    template_values[itype]['id'] = items[itype]['id']
+                    template_values[itype]['itemLevel'] = items[itype]['itemLevel']
+                else:
+                    template_values[itype]['itemLevel'] = 0
+                    template_values[itype]['set'] = 'no'
 
         else:
 

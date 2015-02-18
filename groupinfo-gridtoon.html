@@ -1,5 +1,5 @@
 {%- macro itemtd(item) -%}
-<td class="" style="{{ item.itemLevel | ilvlcolor }}">{%- if item.itemLevel != 0 %}<a href="http://wowhead.com/item={{ item.id }}" rel="bonus={{ item.bonusLists|join(':') }}">{{ item.itemLevel }}{% if item.set == True %}*{%- endif -%}</a>{%- endif -%}</td>
+<td class="" style="{{ item.itemLevel | ilvlcolor }}">{%- if item.itemLevel != 0 %}<a href="http://wowhead.com/item={{ item.id }}" rel="bonus={{ item.bonusLists|join(':') }}">{{ item.itemLevel }}</a>{% if item.set == 'norm' %}<sup>T</sup>{% elif item.set == 'lfr' %}<sup>L</sup>{%- endif -%}{%- endif -%}</td>
 {%- endmacro -%}
 <tr>
   <td class="user" style="">
@@ -45,5 +45,7 @@
   {{ itemtd(trinket2) }}
   {{ itemtd(mainHand) }}
   {{ itemtd(offHand) }}
+  <td class="" style="">{{ tiercount }}/4</td>
+  <td class="" style="">{{ lfrcount }}/4</td>
 {% endif -%}
 </tr>
