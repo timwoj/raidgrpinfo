@@ -11,15 +11,17 @@
       {%- else %}
       {{ guild }} - {{ frealm }}
       {%- endif %}<p/>
+      {%- if status != 'nok' -%}
       <a href="http://askmrrobot.com/wow/player/us/{% print
                realm.replace('-','_') %}/{{ name }}" target="_blank">AskMrRobot</a><br/>
       {%- if class == "Rogue" -%}
       <a href="http://shadowcraft.mmo-mumble.com/us/{{ realm }}/{{ name }}" target="_blank">ShadowCraft</a><br/>
       {%- endif -%}
+      {%- endif -%}
     </span>
   </td>
 {%- if status == 'nok' %}
-  <td class="" style="" colspan="0">{{ reason }}</td>
+  <td class="" style="text-align:left" colspan="12">{{ reason }}</td>
 {%- else %}
   <td class="{{ class|replace(" ","")|lower() }}" style="">{{ class }}</td>
 {%- if sub == '1' %}
