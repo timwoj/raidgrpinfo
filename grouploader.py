@@ -516,6 +516,7 @@ class GridLoader(webapp2.RequestHandler):
                 if itype in items:
                     template_values[itype]['id'] = items[itype]['id']
                     template_values[itype]['itemLevel'] = items[itype]['itemLevel']
+                    template_values[itype]['bonusLists'] = items[itype]['bonusLists']
                     if 'tooltipParams' in items[itype]:
                         if 'set' in items[itype]['tooltipParams']:
                             if items[itype]['itemLevel'] == LFR_ILVL or items[itype]['itemLevel'] == LFR_ILVL+6:
