@@ -281,7 +281,7 @@ class Editor(webapp2.RequestHandler):
             'subs' : subs,
             'crs' : crs,
         }
-        template = JINJA_ENVIRONMENT.get_template('editor.html')
+        template = JINJA_ENVIRONMENT.get_template('templates/editor.html')
         self.response.write(template.render(template_values))
 
 class Tester(webapp2.RequestHandler):
@@ -433,7 +433,7 @@ class GridLoader(webapp2.RequestHandler):
             'groupavgilvl' : avgilvl,
             'groupavgeqp' : avgeqp,
         }
-        template = JINJA_ENVIRONMENT.get_template('groupinfo-header.html')
+        template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-header.html')
         self.response.write(template.render(template_values))
 
         self.response.write('        <hr style="width:90%;clear: both"/><br/>\n')
@@ -447,12 +447,12 @@ class GridLoader(webapp2.RequestHandler):
             'protcount' : groupstats.prot,
             'vanqcount' : groupstats.vanq,
         }
-        template = JINJA_ENVIRONMENT.get_template('groupinfo-armortokens.html')
+        template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-armortokens.html')
         self.response.write(template.render(template_values))
 
         self.response.write('        <hr style="width:90%;clear: both"/><br/>\n')
 
-        template = JINJA_ENVIRONMENT.get_template('groupinfo-gridheader.html')
+        template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-gridheader.html')
         self.response.write(template.render(template_values))
         self.response.write('<tbody>\n')
 
@@ -464,7 +464,7 @@ class GridLoader(webapp2.RequestHandler):
             self.addCharacter(char, results, classes)
             
         self.response.write('</table><p/>\n')
-        template = JINJA_ENVIRONMENT.get_template('groupinfo-colorlegend.html')
+        template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-colorlegend.html')
         template_values = {
             'min_normal' : MIN_NORMAL,
             'min_heroic' : MIN_HEROIC,
@@ -552,7 +552,7 @@ class GridLoader(webapp2.RequestHandler):
                 'reason' : 'Unknown error retrieving data for %s.  Refresh to try again' % char['toon'],
             }
             
-        template = JINJA_ENVIRONMENT.get_template('groupinfo-gridtoon.html')
+        template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-gridtoon.html')
         self.response.write(template.render(template_values))
 
     # Callback that handles the result of the call to the Blizzard API.  This will fill in

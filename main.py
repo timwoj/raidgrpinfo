@@ -26,7 +26,7 @@ class MainHandler(webapp2.RequestHandler):
         template_values = {
             'realms': realms,
         }
-        template = JINJA_ENVIRONMENT.get_template('frontpage.html')
+        template = JINJA_ENVIRONMENT.get_template('templates/frontpage.html')
         self.response.write(template.render(template_values))
 
 # This class redirects using the input from the form to the right page
