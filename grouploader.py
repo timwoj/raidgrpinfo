@@ -510,7 +510,8 @@ class GridLoader(webapp2.RequestHandler):
             # of the lfr set.
             tierItems = ['head','shoulder','chest','hands','legs','feet']
             nonTierItems = ['neck','back','wrist','waist','feet','finger1','finger2','trinket1','trinket2','mainHand','offHand']
-            
+
+            # TODO: combine these two loops into one?
             for itype in tierItems:
                 template_values[itype] = {}
                 if itype in items:
@@ -538,6 +539,7 @@ class GridLoader(webapp2.RequestHandler):
                 if itype in items:
                     template_values[itype]['id'] = items[itype]['id']
                     template_values[itype]['itemLevel'] = items[itype]['itemLevel']
+                    template_values[itype]['bonusLists'] = items[itype]['bonusLists']
                 else:
                     template_values[itype]['itemLevel'] = 0
                     template_values[itype]['set'] = 'no'
