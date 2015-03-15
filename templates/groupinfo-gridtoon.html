@@ -24,11 +24,15 @@
   <td class="" style="text-align:left" colspan="12">{{ reason }}</td>
 {%- else %}
   <td class="{{ class|replace(" ","")|lower() }}" style="">{{ class }}</td>
-{%- if main == False %}
-  <td class="" style="">Bench</td>
-{%- else %}
-  <td class="" style="">Main</td>
-{%- endif %}
+  <td class="" style="white-space: nowrap">
+    {%- if role == "tank" -%}
+    <img src="/resources/icon-tank.png"/>
+    {%- elif role == "healer" -%}
+    <img src="/resources/icon-healer.png"/>
+    {%- else -%}
+    <img src="/resources/icon-dps.png"/>
+    {%- endif -%}
+    {%- if main == False %} Bench{%- else %} Main{% endif %}</td>
   <td class="" style="">{{ avgilvle }}</td>
   <td class="" style="">{{ avgilvl }}</td>
   {{ itemtd(head) }}

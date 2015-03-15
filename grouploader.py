@@ -120,7 +120,6 @@ class APIImporter:
         for toon in toonlist:
             toonname = toon.name
             toonrealm = toon.realm
-            toonmain = toon.main
             if (toonrealm == realm):
                 toonfrealm = frealm
             else:
@@ -138,7 +137,8 @@ class APIImporter:
             # from the data.
             newdata['toonrealm'] = toonrealm
             newdata['toonfrealm'] = toonfrealm
-            newdata['main'] = toonmain
+            newdata['main'] = toon.main
+            newdata['role'] = toon.role
 
             url = 'https://us.api.battle.net/wow/character/%s/%s?fields=items,guild&locale=en_US&apikey=%s' % (toonrealm, toonname, apikey.key)
             # create the rpc object for the fetch method.  the deadline
@@ -323,8 +323,9 @@ class GridLoader(webapp2.RequestHandler):
         group.password = sha256_crypt.encrypt(self.request.get('pw'))
 
         # load the json data that includes the toon data
-        print self.request.get('json').strip()
-        jsondata = json.loads(self.request.get('json').strip())
+        jsontext = self.request.get('json').strip()
+        print jsontext.encode('ascii','ignore')
+        jsondata = json.loads(jsontext)
         print 'number of toons saved: %d' % len(jsondata['toons'])
 
         # clear the old toon information and recreate it from the data from
@@ -462,6 +463,7 @@ class GridLoader(webapp2.RequestHandler):
                 'guild' : char['guild']['name'] if 'guild' in char else None,
                 'class' : classes[char['class']],
                 'main' : char['main'],
+                'role' : char['role'],
                 'avgilvl' : char['items']['averageItemLevel'],
                 'avgilvle' : char['items']['averageItemLevelEquipped'],
                 'lfrcount' : 0,

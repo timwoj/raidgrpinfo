@@ -123,7 +123,6 @@ app = webapp2.WSGIApplication([
 #    ('/', MaintenanceHandler),
 #    ('/initdb', InitDB),
 #    ('/setapikey', SetAPIKey),
-#    ('/updatedb', grouploader.UpdateDB),
 #    webapp2.Route('/edit/<:([^/]+)>/<:([^/]+)>', MaintenanceHandler),
 #    webapp2.Route('/<:([^/]+)>/<:([^/]+)>', MaintenanceHandler),
 #], debug=True)
