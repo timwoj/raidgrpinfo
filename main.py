@@ -89,6 +89,12 @@ class InitDB(webapp2.RequestHandler):
 class SetAPIKey(webapp2.RequestHandler):
     def get(self):
 
+        # Delete all of the entities out of the apikey datastore so fresh entities
+        # can be loaded.
+        q = grouploader.APIKey.query()
+        for r in q.fetch():
+            r.key.delete()
+
         argkey = self.request.get('key')
         if ((argkey == None) or (len(argkey) == 0)):
             self.response.write("Must pass API with 'key' argument in url")
@@ -97,12 +103,27 @@ class SetAPIKey(webapp2.RequestHandler):
             k.put()
             self.response.write("API Key Stored.")
 
+class MaintenanceHandler(webapp2.RequestHandler):
+    def get(self):
+        self.response.write("Raidgrpinfo is in maintenance mode and will return soon.")
+    def get(self, nrealm, ngroup):
+        self.response.write("Raidgrpinfo is in maintenance mode and will return soon.")
+            
 app = webapp2.WSGIApplication([
-    ('/', MainHandler),
-    ('/groups', GroupRedir),
-    ('/initdb', InitDB),
-    ('/setapikey', SetAPIKey),
-    ('/updatedb', grouploader.UpdateDB),
-    webapp2.Route('/edit/<:([^/]+)>/<:([^/]+)>', grouploader.Editor),
-    webapp2.Route('/<:([^/]+)>/<:([^/]+)>', grouploader.GridLoader),
+   ('/', MainHandler),
+   ('/groups', GroupRedir),
+   ('/initdb', InitDB),
+   ('/setapikey', SetAPIKey),
+   webapp2.Route('/edit/<:([^/]+)>/<:([^/]+)>', grouploader.Editor),
+   webapp2.Route('/<:([^/]+)>/<:([^/]+)>', grouploader.GridLoader),
 ], debug=True)
+
+# Maintenance mode stuff for when messing with the database
+#app = webapp2.WSGIApplication([
+#    ('/', MaintenanceHandler),
+#    ('/initdb', InitDB),
+#    ('/setapikey', SetAPIKey),
+#    ('/updatedb', grouploader.UpdateDB),
+#    webapp2.Route('/edit/<:([^/]+)>/<:([^/]+)>', MaintenanceHandler),
+#    webapp2.Route('/<:([^/]+)>/<:([^/]+)>', MaintenanceHandler),
+#], debug=True)
