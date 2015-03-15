@@ -43,13 +43,19 @@ class GroupRedir(webapp2.RequestHandler):
         self.redirect('/%s/%s' % (nrealm, ngroup))
 
 # Loads the list of realms into the datastore from the blizzard API so that
-# the realm list on the front page gets populated.  Also loads the list of classes
-# into a table on the DB so that we don't have to request it 
+# the realm list on the front page gets populated.  Also loads the list of
+# classes into a table on the DB so that we don't have to request it 
 class InitDB(webapp2.RequestHandler):
     def get(self):
 
         q = grouploader.APIKey.query()
         apikey = q.fetch()[0]
+
+        # Delete all of the entities out of the realm datastore so fresh entities
+        # can be loaded.
+        q = grouploader.Realm.query()
+        for r in q.fetch():
+            r.key.delete()
 
         # retrieve a list of realms from the blizzard API
         url = 'https://us.api.battle.net/wow/realm/status?locale=en_US&apikey=%s' % apikey.key
@@ -61,16 +67,22 @@ class InitDB(webapp2.RequestHandler):
                                   namespace='Realms', id=realm['slug'])
             r.put()
 
-        self.response.write("Loaded %d realms into datastore" % len(jsondata['realms']))
+        self.response.write("Loaded %d realms into datastore<br/>" % len(jsondata['realms']))
+        
+        # Delete all of the entities out of the class datastore so fresh entities
+        # can be loaded.
+        q = grouploader.ClassEntry.query()
+        for r in q.fetch():
+            r.key.delete()
 
+        # retrieve a list of classes from the blizzard API
         url = 'https://us.api.battle.net/wow/data/character/classes?locale=en_US&apikey=%s' % apikey.key
         response = urlfetch.fetch(url)
         rawclasses = json.loads(response.content)
-        cd = grouploader.ClassData()
         for c in rawclasses['classes']:
             ce = grouploader.ClassEntry(classId=c['id'], mask=c['mask'], powerType=c['powerType'], name=c['name'])
-            cd.entries.append(ce)
-        cd.put()
+            ce.put();
+        self.response.write("Loaded %d classes into datastore" % len(rawclasses['classes']))
 
 # The new Battle.net Mashery API requires an API key when using it.  This
 # method stores an API in the datastore so it can used in later page requests.
@@ -85,26 +97,12 @@ class SetAPIKey(webapp2.RequestHandler):
             k.put()
             self.response.write("API Key Stored.")
 
-class UpdateToons(webapp2.RequestHandler):
-    def get(self):
-
-        groups = grouploader.Group.query()
-        for group in groups:
-            if group.ngroup == 'tlm20-wod' or group.ngroup == 'tlm20':
-                for i in range(len(group.toons)):
-                    if ',' not in group.toons[i]:
-                        self.response.write("Updated toon %s in group %s\n" % (group.toons[i], group.ngroup))
-                        group.toons[i] = group.toons[i]+',0,0'
-            group.put()
-
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
     ('/groups', GroupRedir),
     ('/initdb', InitDB),
     ('/setapikey', SetAPIKey),
-    ('/updatetoons', UpdateToons),
-    ('/testrpc', grouploader.Tester),
+    ('/updatedb', grouploader.UpdateDB),
     webapp2.Route('/edit/<:([^/]+)>/<:([^/]+)>', grouploader.Editor),
     webapp2.Route('/<:([^/]+)>/<:([^/]+)>', grouploader.GridLoader),
-    webapp2.Route('/<:([^/]+)>/<:([^/]+)>/grid', grouploader.GridLoader),
 ], debug=True)

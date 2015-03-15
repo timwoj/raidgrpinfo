@@ -4,3 +4,4 @@ passlib/handlers/*.pyc
 passlib/utils/*.pyc
 .DS_Store
 resources/.DS_Store
+*~

@@ -25,6 +25,31 @@ th {
     cursor:pointer;
 }
 
+/* These two rules are used for the realm selection popup on the group
+ * editor page */
+#realmSelectDiv{
+    z-index: 100;
+    position: absolute;
+    background-color: rgba(123, 123,123, 0.8);
+    display: none;
+    top: 0;
+    left: 0;
+    width: 300px;
+    height: 300px;
+}
+#realmSelect{
+    z-index: 1000;
+    position: absolute;
+    top: 130px;
+    left: 40px;
+}
+#realmCancel{
+    z-index: 1000;
+    position:absolute;
+    top: 130px;
+    left: 190px;
+}
+
 /* Colors for the display on the class column */
 .deathknight {
     background:#C41F3B;

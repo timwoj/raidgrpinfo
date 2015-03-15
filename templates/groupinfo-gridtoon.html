@@ -24,8 +24,8 @@
   <td class="" style="text-align:left" colspan="12">{{ reason }}</td>
 {%- else %}
   <td class="{{ class|replace(" ","")|lower() }}" style="">{{ class }}</td>
-{%- if sub == '1' %}
-  <td class="" style="">Sub</td>
+{%- if main == False %}
+  <td class="" style="">Bench</td>
 {%- else %}
   <td class="" style="">Main</td>
 {%- endif %}

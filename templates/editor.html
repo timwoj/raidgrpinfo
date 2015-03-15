@@ -4,47 +4,88 @@
 <!DOCTYPE html>
 {% autoescape true -%}
 <html>
-    <head>
-        <title>{{ title(results) }}</title>
-        <script language="javascript" type="text/javascript" src="/resources/creategroup.js"></script>
-    </head>
-    <body>
-        <h1>{{ title(results) }}</h1>
-        
-        <form action="/{{ realm }}/{{ group }}" method="post" autocomplete="off"
-              onsubmit="selectAllToons();">
-            <input type="input" name="subfield" id="subfield" style="display: none" value="{{ subs|join(',') }}"/>
-            <input type="input" name="crfield" id="crfield" style="display: none" value="{{ crs|join(',') }}"/>
-            {% if results == none -%}
-            Group name: <input type="text" name="group" id="group"><p/>
-            {% else -%}
-            Group name: <input type="text" name="group" id="group" value="{{ group }}"><p/>
-            {% endif -%}
-
-            Group members:<br>
-            <select size="10" multiple="multiple" style="width: 300px" name="toons" id="toons">
-                {%- for toon in names -%}
-                <option id="opt{{ toon }}">{{ toon }}
-                {% endfor %}
-            </select><br>
-            Add Toon: <input type="text" name="newtoon" id="newtoon"><br>
-            <input type="checkbox" name="sub" id="sub"> Sub<br>
-            <input type="checkbox" name="crossrealm" id="crossrealm" onclick="crossRealmClicked(this)">
-            Cross-realm    Realm: <select name="realm" id="realm" disabled="true">
-                    {% for r in realms -%}
-                    <option id="{{ r.slug }}">{{ r.realm }}
-                    {% endfor %}
-                </select><br>
-            <input type="button" onclick="addToList()" value="Add">
-            <input type="button" onclick="removeFromList()" value="Remove" id="removebutton"><p/>
-            {% if results == none -%}
-            Enter a password to enable editing the group later:<br>
-            {% else -%}
-            Enter password to save changes:<br>
-            {% endif -%}
-            Password: <input type="password" name="pw"><p/>
-            <input type="submit" value="Save">
-        </form>
-    </body>
+  <head>
+      <title>{{ title(results) }}</title>
+      <script src="/resources/jquery-1.11.2.min.js"></script>
+      <script src="/resources/editor.js"></script>
+      <link rel="stylesheet" type="text/css" href="/resources/raidgroup.css"/>
+  </head>
+  <body>
+    <h1>{{ title(results) }}</h1>
+    
+    <form action="/{{ nrealm }}/{{ group }}" method="post" autocomplete="off" id="toonform">
+      <input type="hidden" id="nrealm" value="{{ nrealm }}"/>
+      {% if results == none -%}
+      Group name: <input type="text" name="group" id="group"><p/>
+      {% else -%}
+      Group name: <input type="text" name="group" id="group" value="{{ group }}"><p/>
+      {% endif -%}
+      
+      Group members: <input type="button" id="btnAdd" value="Add"/><br>
+      <table id="membersTable">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Role</th>
+            <th>Group</th>
+            <th>Realm</th>
+          </tr>
+        </thead>
+        <tbody id="tablebody">
+          {%- for toon in toons -%}
+          <tr>
+            <td><input type="text" value="{{ toon.name }}"/></td>
+            <td><select>
+                <option{% if toon.role == 'tank' %} selected{% endif -%}>Tank</option>
+                <option{% if toon.role == 'healer' %} selected{% endif -%}>Healer</option>
+                <option{% if toon.role == 'dps' %} selected{% endif -%}>DPS</option>
+              </select>
+            </td>
+            <td><select>
+                <option{% if toon.main == True %} selected{% endif -%}>Main</option>
+                <option{% if toon.main == False %} selected{% endif -%}>Bench</option>
+              </select>
+            </td>
+            <td><div class="changeRealm">{{ toon.realm }}</div></td>
+            <td><img src='/resources/delete.png' height='24' width='24' class='btnDelete'/></td>
+          </tr>
+          {% endfor %}
+          <tr>
+            <td><input type="text" value=""/></td>
+            <td><select>
+                <option>Tank</option>
+                <option>Healer</option>
+                <option selected>DPS</option>
+              </select>
+            </td>
+            <td><select>
+                <option>Main</option>
+                <option>Bench</option>
+              </select>
+            </td>
+            <td><div class="changeRealm">{{realm}}</div></td>
+            <td><img src='/resources/delete.png' height='24' width='24' class='btnDelete'/></td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <p/>
+      {% if results == none -%}
+      Enter a password to enable editing the group later:<br>
+      {% else -%}
+      Enter password to save changes:<br>
+      {% endif -%}
+      Password: <input type="password" name="pw"><p/>
+      <input type="submit" value="Save" id="submit">
+    </form>
+    <div id="realmSelectDiv">
+      <select id="realmSelect">
+        {% for r in realms -%}
+        <option id="{{ r.slug }}">{{ r.realm }}</option>
+        {% endfor -%}
+      </select>
+      <input type="button" id="realmCancel" value="Cancel"/>
+    </div>
+  </body>
 </html>
 {% endautoescape -%}

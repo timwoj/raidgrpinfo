@@ -5,6 +5,7 @@
 import webapp2,jinja2
 import json,math,sys,os,time
 import pprint
+from datetime import datetime
 from google.appengine.ext import ndb
 from google.appengine.api.memcache import Client
 from google.appengine.api import urlfetch
@@ -47,6 +48,24 @@ class Group(ndb.Model):
     def normalize(realm):
         return realm.lower().replace('\'','').replace(' ','-')
 
+class Toonv2(ndb.Model):
+    name = ndb.StringProperty(indexed=True)
+    role = ndb.StringProperty()
+    main = ndb.BooleanProperty()
+    realm = ndb.StringProperty()
+    
+class Groupv2(ndb.Model):
+    nrealm = ndb.StringProperty(indexed=True)
+    ngroup = ndb.StringProperty(indexed=True)
+    groupname = ndb.StringProperty()
+    password = ndb.StringProperty()
+    toons = ndb.StructuredProperty(Toonv2, repeated=True)
+    lastvisited = ndb.DateTimeProperty()
+
+    @staticmethod
+    def normalize(realm):
+        return realm.lower().replace('\'','').replace(' ','-')
+
 class Realm(ndb.Model):
     realm = ndb.StringProperty(indexed=True,required=True)
     slug = ndb.StringProperty(indexed=True,required=True)
@@ -60,14 +79,7 @@ class ClassEntry(ndb.Model):
     powerType = ndb.StringProperty()
     name = ndb.StringProperty()
 
-class ClassData(ndb.Model):
-    entries = ndb.StructuredProperty(ClassEntry, repeated=True)
-
 class GroupStats:
-    # total number of mains and subs from the list of toons.  these are used for
-    # page layout information only.
-    totalmains = 0
-    totalsubs = 0
 
     # the number of mains that should be used to calculate the group average
     # ilvl and equipped ilvls.  this may be different from the total number of
@@ -94,11 +106,11 @@ class APIImporter:
         q = APIKey.query()
         apikey = q.fetch()[0]
 
-        q = ClassData.query()
+        q = ClassEntry.query()
         res = q.fetch()
 
         classes = dict()
-        for c in res[0].entries:
+        for c in res:
             classes[c.classId] = c.name
 
         # Request all of the toon data from the blizzard API and determine the
@@ -106,22 +118,17 @@ class APIImporter:
         # included in the counts, since they're not really part of the main
         # group.
         for toon in toonlist:
-            if ',' in toon:
-                toonname,toonrealm,toonsub = toon.split(',')
-                if (toonrealm == '0'):
-                    toonrealm = realm
-                    toonfrealm = frealm
-                else:
-                    rq2 = Realm.query(
-                        Realm.slug == toonrealm, namespace='Realms')
-                    rq2res = rq2.fetch()
-                    toonfrealm = rq2res[0].realm
-            else:
-                toonname = toon
-                toonsub = '0'
-                toonrealm = realm
+            toonname = toon.name
+            toonrealm = toon.realm
+            toonmain = toon.main
+            if (toonrealm == realm):
                 toonfrealm = frealm
-
+            else:
+                rq2 = Realm.query(
+                    Realm.slug == toonrealm, namespace='Realms')
+                rq2res = rq2.fetch()
+                toonfrealm = rq2res[0].realm
+            
             # TODO: this object can probably be a class instead of another dict
             newdata = dict()
             data.append(newdata)
@@ -131,7 +138,7 @@ class APIImporter:
             # from the data.
             newdata['toonrealm'] = toonrealm
             newdata['toonfrealm'] = toonfrealm
-            newdata['sub'] = toonsub
+            newdata['main'] = toonmain
 
             url = 'https://us.api.battle.net/wow/character/%s/%s?fields=items,guild&locale=en_US&apikey=%s' % (toonrealm, toonname, apikey.key)
             # create the rpc object for the fetch method.  the deadline
@@ -161,13 +168,6 @@ class APIImporter:
     # the toondata dict for the requested toon with either data from Battle.net or with an
     # error message to display on the page.
     def handle_result(self, rpc, name, toondata, groupstats, classes):
-
-        # These values have to be updated whether or not the data was retrieved
-        # correctly in order to keep the page layout consistent.
-        if toondata['sub'] == '0':
-            groupstats.totalmains += 1
-        else:
-            groupstats.totalsubs += 1
 
         try:
             response = rpc.get_result()
@@ -209,7 +209,7 @@ class APIImporter:
         print "got good results for %s" % name.encode('ascii','ignore')
 
         # For each toon, update the statistics for the group as a whole
-        if toondata['sub'] == '0':
+        if toondata['main'] == True:
             groupstats.ilvlmains += 1
             groupstats.totalilvl += jsondata['items']['averageItemLevel']
             groupstats.totalilvleq += jsondata['items']['averageItemLevelEquipped']
@@ -246,8 +246,8 @@ class Editor(webapp2.RequestHandler):
         realms = q.fetch()
 
         # try to load the group info from the database
-        db_query = Group.query(Group.nrealm==nrealm, Group.ngroup==ngroup)
-        queryresults = db_query.fetch(5)
+        db_query = Groupv2.query(Groupv2.nrealm==nrealm, Groupv2.ngroup==ngroup)
+        queryresults = db_query.fetch()
 
         results = None
         if (len(queryresults) != 0):
@@ -257,83 +257,32 @@ class Editor(webapp2.RequestHandler):
         # of toon names, the markers for subs, and the markers for
         # cross-realm.  If there weren't any results, blank lists will be
         # passed to the template.
-        names = list()
-        subs = list()
-        crs = list()
+        print realms
+        toons = list()
         if results != None:
-            for toon in results.toons:
-                if ',' in toon:
-                    name,realm,sub = toon.split(',')
-                    names.append(name)
-                    subs.append(sub)
-                    crs.append(realm)
-                else:
-                    names.append(toon)
-                    subs.append('0')
-                    crs.append('0')
+           for toon in results.toons:
+               t = dict()
+               t['name'] = toon.name
+               t['role'] = toon.role
+               t['main'] = toon.main
+               t['realm'] = str([x.realm for x in realms if x.slug==toon.realm][0])
+               toons.append(t)
 
         # throw them at jinja to generate the actual html
         template_values = {
             'group' : ngroup,
-            'realm' : nrealm,
-            'names' : names,
+            'nrealm' : nrealm,
+            'realm' : str([x.realm for x in realms if x.slug==nrealm][0]),
+            'toons' : toons,
             'realms' : realms,
-            'subs' : subs,
-            'crs' : crs,
         }
         template = JINJA_ENVIRONMENT.get_template('templates/editor.html')
         self.response.write(template.render(template_values))
 
-class Tester(webapp2.RequestHandler):
-
-    def handle_result(self, rpc, i, data):
-        print "got results for %s" % i
-        response = rpc.get_result()
-        data.update(json.loads(response.content))
-
-    def create_callback(self, rpc, i, data):
-        return lambda: self.handle_result(rpc, i, data)
-
-    def get(self):
-
-        localdata = list()
-
-        pp = pprint.PrettyPrinter(indent=3)
-
-        q = APIKey.query()
-        apikey = q.fetch()[0]
-
-        print "Data before loading"
-        pp.pprint(localdata)
-
-        names = ['Tamen', 'Alg']
-        for i in names:
-            newdata = dict()
-            newdata = dict()
-            newdata['realm'] = 'aerie-peak'
-            newdata['frealm'] = 'Aerie Peak'
-            newdata['sub'] = '0'
-            localdata.append(newdata)
-
-            print "creating request for %s" % i
-            url = 'https://us.api.battle.net/wow/character/aerie-peak/%s?fields=items,guild&locale=en_US&apikey=%s' % (i, apikey.key)
-            rpc = urlfetch.create_rpc()
-            rpc.callback = self.create_callback(rpc, i, newdata)
-            urlfetch.make_fetch_call(rpc, url)
-            newdata['rpc'] = rpc
-
-        pp.pprint(localdata)
-
-        for d in localdata:
-            pp.pprint(d)
-            d['rpc'].wait()
-
-        pp.pprint(localdata)
-
 class GridLoader(webapp2.RequestHandler):
     def get(self, nrealm, ngroup):
         # try to load the group info from the database
-        db_query = Group.query(Group.nrealm==nrealm, Group.ngroup==ngroup)
+        db_query = Groupv2.query(Groupv2.nrealm==nrealm, Groupv2.ngroup==ngroup)
         results = db_query.fetch(5)
 
         # if the group doesn't exist, drop into the interface to make a new
@@ -344,11 +293,15 @@ class GridLoader(webapp2.RequestHandler):
         # if the group exists, load the group from the blizzard API and display
         # it.
         else:
+            results[0].lastvisited = datetime.now()
+            results[0].put()
             self.loadGroup(results[0])
 
     def post(self, nrealm, ngroup):
-        # try to load the group info from the database
-        db_query = Group.query(Group.nrealm==nrealm, Group.ngroup==ngroup)
+        
+        # try to load the group info from the database.  this is only necessary
+        # to get the password from the database to verify that it's correct.
+        db_query = Groupv2.query(Groupv2.nrealm==nrealm, Groupv2.ngroup==ngroup)
         results = db_query.fetch(5)
 
         if ((len(results) != 0) and
@@ -361,26 +314,35 @@ class GridLoader(webapp2.RequestHandler):
         if (len(results) != 0):
             group = results[0]
         else:
-            group = Group()
+            group = Groupv2()
 
         group.nrealm = nrealm
         group.ngroup = ngroup
         group.groupname = self.request.get('group').strip()
 
         group.password = sha256_crypt.encrypt(self.request.get('pw'))
-        toons = self.request.POST.getall('toons')
-        subs = self.request.get('subfield').split(',')
-        crossrealms = self.request.get('crfield').split(',')
-        print 'number of toons saved: %d' % len(toons)
+
+        # load the json data that includes the toon data
+        print self.request.get('json').strip()
+        jsondata = json.loads(self.request.get('json').strip())
+        print 'number of toons saved: %d' % len(jsondata['toons'])
 
         # clear the old toon information and recreate it from the data from
         # the form
         del group.toons[:]
-        for i in range(len(toons)):
-            toon = "%s,%s,%s" % (toons[i], crossrealms[i], subs[i])
-            group.toons.append(toon)
+        for j in jsondata['toons']:
+            toon = Toonv2()
+            toon.name = j['name']
+            toon.role = j['role']
+            if (j['group'] == 'main'):
+                toon.main = True
+            else:
+                toon.main = False
+            toon.realm = j['realm']
+            group.toons.append(toon);
 
-        group.toons = sorted(group.toons, key=lambda s: s.lower())
+        group.toons = sorted(group.toons, key=lambda s: s.name.lower())
+        group.lastvisited = datetime.now()
         group.put()
 
         self.loadGroup(group)
@@ -396,11 +358,11 @@ class GridLoader(webapp2.RequestHandler):
         rqres = rq.fetch()
         frealm = rqres[0].realm
 
-        q = ClassData.query()
+        q = ClassEntry.query()
         res = q.fetch()
 
         classes = dict()
-        for c in res[0].entries:
+        for c in res:
             classes[c.classId] = c.name
 
         groupstats = GroupStats()
@@ -499,7 +461,7 @@ class GridLoader(webapp2.RequestHandler):
                 'realm' : char['toonrealm'],  # realm for toon (might not be == to nrealm)
                 'guild' : char['guild']['name'] if 'guild' in char else None,
                 'class' : classes[char['class']],
-                'sub' : char['sub'],
+                'main' : char['main'],
                 'avgilvl' : char['items']['averageItemLevel'],
                 'avgilvle' : char['items']['averageItemLevelEquipped'],
                 'lfrcount' : 0,
@@ -559,13 +521,6 @@ class GridLoader(webapp2.RequestHandler):
     # the toondata dict for the requested toon with either data from Battle.net or with an
     # error message to display on the page.
     def handle_result(self, rpc, name, toondata, groupstats, classes):
-
-        # These values have to be updated whether or not the data was retrieved
-        # correctly in order to keep the page layout consistent.
-        if toondata['sub'] == '0':
-            groupstats.totalmains += 1
-        else:
-            groupstats.totalsubs += 1
 
         try:
             response = rpc.get_result()
@@ -631,3 +586,42 @@ class GridLoader(webapp2.RequestHandler):
 
     def create_callback(self, rpc, name, toondata, groupstats, classes):
         return lambda: self.handle_result(rpc, name, toondata, groupstats, classes)
+
+class UpdateDB(webapp2.RequestHandler):
+    def get(self):
+        # query the NDB for the old data
+        db_query = Group.query()
+        oldresults = db_query.fetch()
+
+        for old in oldresults:
+            new = Groupv2()
+            new.groupname = old.groupname
+            new.ngroup = old.ngroup
+            new.nrealm = old.nrealm
+            new.password = old.password
+            new.lastvisited = datetime.now()
+            for oldt in old.toons:
+                newt = Toonv2()
+                if ',' in oldt:
+                    toonname,toonrealm,toonsub = oldt.split(',')
+                    newt.name = toonname
+                    newt.role = 'dps'
+                    
+                    if (toonrealm == '0'):
+                        newt.realm = old.nrealm
+                    else:
+                        newt.realm = toonrealm
+
+                    if (toonsub == '0'):
+                        newt.main = True
+                    else:
+                        newt.main = False
+                else:
+                    newt.name = oldt
+                    newt.role = 'dps'
+                    newt.main = True
+                    newt.realm = old.nrealm
+                new.toons.append(newt);
+            new.toons = sorted(new.toons, key=lambda s: s.name.lower())
+                
+            new.put()
