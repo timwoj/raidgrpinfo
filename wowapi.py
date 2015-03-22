@@ -66,7 +66,8 @@ class Importer:
             # Blizzard API site sometimes.  setting it to 10 helps a little
             # but it makes page loads a little slower.
             rpc = urlfetch.create_rpc(10)
-            rpc.callback = self.create_callback(rpc, toonname, newdata, groupstats, classes)
+            rpc.callback = self.create_callback(rpc, toonname, newdata,
+                                                groupstats, classes)
             urlfetch.make_fetch_call(rpc, url)
             newdata['rpc'] = rpc
 
@@ -153,3 +154,61 @@ class Importer:
 
     def create_callback(self, rpc, name, toondata, groupstats, classes):
         return lambda: self.handle_result(rpc, name, toondata, groupstats, classes)
+
+class Setup:
+    # Loads the list of realms into the datastore from the blizzard API so that
+    # the realm list on the front page gets populated.  Also loads the list of
+    # classes into a table on the DB so that we don't have to request it 
+    def initdb(self):
+
+        q = APIKey.query()
+        apikey = q.fetch()[0]
+
+        # Delete all of the entities out of the realm datastore so fresh entities
+        # can be loaded.
+        q = Realm.query()
+        for r in q.fetch():
+            r.key.delete()
+
+        # retrieve a list of realms from the blizzard API
+        url = 'https://us.api.battle.net/wow/realm/status?locale=en_US&apikey=%s' % apikey.key
+        response = urlfetch.fetch(url)
+        jsondata = json.loads(response.content)
+
+        for realm in jsondata['realms']:
+            r = Realm(realm=realm['name'], slug=realm['slug'],
+                      namespace='Realms', id=realm['slug'])
+            r.put()
+
+        # Delete all of the entities out of the class datastore so fresh entities
+        # can be loaded.
+        q = ClassEntry.query()
+        for r in q.fetch():
+            r.key.delete()
+
+        # retrieve a list of classes from the blizzard API
+        url = 'https://us.api.battle.net/wow/data/character/classes?locale=en_US&apikey=%s' % apikey.key
+        response = urlfetch.fetch(url)
+        rawclasses = json.loads(response.content)
+        for c in rawclasses['classes']:
+            ce = ClassEntry(classId=c['id'], mask=c['mask'],
+                            powerType=c['powerType'], name=c['name'])
+            ce.put();
+
+        return [len(jsondata['realms']), len(rawclasses['classes'])]
+
+    # The new Battle.net Mashery API requires an API key when using it.  This
+    # method stores an API in the datastore so it can used in later page requests.
+    def setkey(self,apikey):
+
+        # Delete all of the entities out of the apikey datastore so fresh entities
+        # can be loaded.
+        q = APIKey.query()
+        result = q.fetch();
+        if (len(result) == 0):
+            k = APIKey(key = apikey)
+            k.put()
+        else:
+            k = result[0]
+            k.key = apikey
+            k.put()
