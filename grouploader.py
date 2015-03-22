@@ -3,13 +3,12 @@
 #!/usr/bin/env python
 
 import webapp2,jinja2
-import json,math,sys,os,time
-import pprint
+import json,sys,os
+import wowapi
+
 from datetime import datetime
 from google.appengine.ext import ndb
 from google.appengine.api.memcache import Client
-from google.appengine.api import urlfetch
-from google.appengine.api import urlfetch_errors
 from passlib.hash import sha256_crypt
 
 # Minimum ilvls and colors for the ilvl grid
@@ -66,19 +65,6 @@ class Groupv2(ndb.Model):
     def normalize(realm):
         return realm.lower().replace('\'','').replace(' ','-')
 
-class Realm(ndb.Model):
-    realm = ndb.StringProperty(indexed=True,required=True)
-    slug = ndb.StringProperty(indexed=True,required=True)
-
-class APIKey(ndb.Model):
-    key = ndb.StringProperty(indexed=True,required=True)
-
-class ClassEntry(ndb.Model):
-    classId = ndb.IntegerProperty()
-    mask = ndb.IntegerProperty()
-    powerType = ndb.StringProperty()
-    name = ndb.StringProperty()
-
 class GroupStats:
 
     # the number of mains that should be used to calculate the group average
@@ -100,140 +86,6 @@ class GroupStats:
     # warrior/hunter/shaman/monk tokens
     prot = 0
 
-class APIImporter:
-
-    def load(self, realm, frealm, toonlist, data, groupstats):
-        q = APIKey.query()
-        apikey = q.fetch()[0]
-
-        q = ClassEntry.query()
-        res = q.fetch()
-
-        classes = dict()
-        for c in res:
-            classes[c.classId] = c.name
-
-        # Request all of the toon data from the blizzard API and determine the
-        # group's ilvls, armor type counts and token type counts.  subs are not
-        # included in the counts, since they're not really part of the main
-        # group.
-        for toon in toonlist:
-            toonname = toon.name
-            toonrealm = toon.realm
-            if (toonrealm == realm):
-                toonfrealm = frealm
-            else:
-                rq2 = Realm.query(
-                    Realm.slug == toonrealm, namespace='Realms')
-                rq2res = rq2.fetch()
-                toonfrealm = rq2res[0].realm
-            
-            # TODO: this object can probably be a class instead of another dict
-            newdata = dict()
-            data.append(newdata)
-
-            # a realm is received in the json data from the API, but we need to
-            # pass the normalized value to the next stages.  ignore this field
-            # from the data.
-            newdata['toonrealm'] = toonrealm
-            newdata['toonfrealm'] = toonfrealm
-            newdata['main'] = toon.main
-            newdata['role'] = toon.role
-
-            url = 'https://us.api.battle.net/wow/character/%s/%s?fields=items,guild&locale=en_US&apikey=%s' % (toonrealm, toonname, apikey.key)
-            # create the rpc object for the fetch method.  the deadline
-            # defaults to 5 seconds, but that seems to be too short for the
-            # Blizzard API site sometimes.  setting it to 10 helps a little
-            # but it makes page loads a little slower.
-            rpc = urlfetch.create_rpc(10)
-            rpc.callback = self.create_callback(rpc, toonname, newdata, groupstats, classes)
-            urlfetch.make_fetch_call(rpc, url)
-            newdata['rpc'] = rpc
-
-            # The Blizzard API has a limit of 10 calls per second.  Sleep here
-            # for a very brief time to avoid hitting that limit.
-            time.sleep(0.1)
-
-        # Now that all of the RPC calls have been created, loop through the data
-        # dictionary one more time and wait for each fetch to be completed. Once
-        # all of the waits finish, then we have all of the data from the
-        # Blizzard API and can loop through all of it and build the page.
-        start = time.time()
-        for d in data:
-            d['rpc'].wait()
-        end = time.time()
-        print "Time spent retrieving data: %f seconds" % (end-start)
-
-    # Callback that handles the result of the call to the Blizzard API.  This will fill in
-    # the toondata dict for the requested toon with either data from Battle.net or with an
-    # error message to display on the page.
-    def handle_result(self, rpc, name, toondata, groupstats, classes):
-
-        try:
-            response = rpc.get_result()
-        except urlfetch_errors.DeadlineExceededError:
-            print('urlfetch threw DeadlineExceededError on toon %s' % name.encode('ascii','ignore'))
-            toondata['toon'] = name
-            toondata['status'] = 'nok'
-            toondata['reason'] = 'Timeout retrieving data from Battle.net for %s.  Refresh page to try again.' % name
-            return
-        except urlfetch_errors.DownloadError:
-            print('urlfetch threw DownloadError on toon %s' % name.encode('ascii','ignore'))
-            toondata['toon'] = name
-            toondata['status'] = 'nok'
-            toondata['reason'] = 'Network error retrieving data from Battle.net for toon %s.  Refresh page to try again.' % name
-            return
-        except:
-            print('urlfetch threw unknown exception on toon %s' % name.encode('ascii','ignore'))
-            toondata['toon'] = name
-            toondata['status'] = 'nok'
-            toondata['reason'] = 'Unknown error retrieving data from Battle.net for toon %s.  Refresh page to try again.' % name
-            return
-
-        # change the json from the response into a dict of data and store it
-        # into the toondata object that was passed in.
-        jsondata = json.loads(response.content)
-        toondata.update(jsondata);
-
-        # Blizzard's API will return an error if it couldn't retrieve the data
-        # for some reason.  Check for this and log it if it fails.  Note that
-        # this response doesn't contain the toon's name so it has to be added
-        # in afterwards.
-        if 'status' in jsondata and jsondata['status'] == 'nok':
-            print('Blizzard API failed to find toon %s for reason: %s' %
-                  (name.encode('ascii','ignore'), jsondata['reason']))
-            toondata['toon'] = name
-            toondata['reason'] = "Error retrieving data for %s from Blizzard API: %s" % (name, jsondata['reason'])
-            return
-
-        print "got good results for %s" % name.encode('ascii','ignore')
-
-        # For each toon, update the statistics for the group as a whole
-        if toondata['main'] == True:
-            groupstats.ilvlmains += 1
-            groupstats.totalilvl += jsondata['items']['averageItemLevel']
-            groupstats.totalilvleq += jsondata['items']['averageItemLevelEquipped']
-
-            toonclass = classes[jsondata['class']]
-            if toonclass in ['Paladin','Warrior','Death Knight']:
-                groupstats.plate += 1
-            elif toonclass in ['Mage','Priest','Warlock']:
-                groupstats.cloth += 1
-            elif toonclass in ['Druid','Monk','Rogue']:
-                groupstats.leather += 1
-            elif toonclass in ['Hunter','Shaman']:
-                groupstats.mail += 1
-
-            if toonclass in ['Paladin','Priest','Warlock']:
-                groupstats.conq += 1
-            elif toonclass in ['Warrior','Hunter','Shaman','Monk']:
-                groupstats.prot += 1
-            elif toonclass in ['Death Knight','Druid','Mage','Rogue']:
-                groupstats.vanq += 1
-
-    def create_callback(self, rpc, name, toondata, groupstats, classes):
-        return lambda: self.handle_result(rpc, name, toondata, groupstats, classes)
-
 class Editor(webapp2.RequestHandler):
     def get(self, nrealm, ngroup):
         self.editGroup(nrealm, ngroup)
@@ -242,7 +94,7 @@ class Editor(webapp2.RequestHandler):
 
         # load the list of realms from the datastore that was loaded by the
         # /loadrealms service
-        q = Realm.query(namespace='Realms')
+        q = wowapi.Realm.query(namespace='Realms')
         realms = q.fetch()
 
         # try to load the group info from the database
@@ -257,7 +109,6 @@ class Editor(webapp2.RequestHandler):
         # of toon names, the markers for subs, and the markers for
         # cross-realm.  If there weren't any results, blank lists will be
         # passed to the template.
-        print realms
         toons = list()
         if results != None:
            for toon in results.toons:
@@ -302,12 +153,17 @@ class GridLoader(webapp2.RequestHandler):
         # try to load the group info from the database.  this is only necessary
         # to get the password from the database to verify that it's correct.
         db_query = Groupv2.query(Groupv2.nrealm==nrealm, Groupv2.ngroup==ngroup)
-        results = db_query.fetch(5)
+        results = db_query.fetch(1)
+        print 'pw' + self.request.get('pw')
 
         if ((len(results) != 0) and
             sha256_crypt.verify(self.request.get('pw'),
                                 results[0].password) != True):
-            self.response.write('Password did not match for this group!')
+            self.response.write('<html><head><title>Password failure</title></head>\n')
+            self.response.write('<body>\n')
+            self.response.write('Password did not match for this group!<p/>')
+            self.response.write('<a href="javascript:history.back()">Go Back</a>\n')
+            self.response.write('</body></html>')
             return
 
         group = None
@@ -355,27 +211,24 @@ class GridLoader(webapp2.RequestHandler):
         realm = results.nrealm
 
         # Query ndb for the full realm name based on the results
-        rq = Realm.query(Realm.slug == realm, namespace='Realms')
+        rq = wowapi.Realm.query(wowapi.Realm.slug == realm, namespace='Realms')
         rqres = rq.fetch()
         frealm = rqres[0].realm
 
-        q = ClassEntry.query()
+        q = wowapi.ClassEntry.query()
         res = q.fetch()
 
         classes = dict()
         for c in res:
             classes[c.classId] = c.name
 
+        data = list()
         groupstats = GroupStats()
 
-        # Loop through the list of toons and start building up a list of dicts
-        # with all of the data for each toon.  While doing so, set up a bunch
-        # of async urlfetches to get the detailed data from the Blizzard API.
-        # We'll loop back through and get all of the data once the fetches have
-        # been created.
-        data = list()
-
-        importer = APIImporter()
+        # Use the API importer to load the data for the group into a list of
+        # entries for each toon.  We'll loop through this data to build up
+        # the page once all of the fetches are finished.
+        importer = wowapi.Importer()
         importer.load(realm, frealm, toonlist, data, groupstats)
 
         # Catch the case where no mains were found in the data so we don't
@@ -518,73 +371,3 @@ class GridLoader(webapp2.RequestHandler):
             
         template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-gridtoon.html')
         self.response.write(template.render(template_values))
-
-    # Callback that handles the result of the call to the Blizzard API.  This will fill in
-    # the toondata dict for the requested toon with either data from Battle.net or with an
-    # error message to display on the page.
-    def handle_result(self, rpc, name, toondata, groupstats, classes):
-
-        try:
-            response = rpc.get_result()
-        except urlfetch_errors.DeadlineExceededError:
-            print('urlfetch threw DeadlineExceededError on toon %s' % name.encode('ascii','ignore'))
-            toondata['toon'] = name
-            toondata['status'] = 'nok'
-            toondata['reason'] = 'Timeout retrieving data from Battle.net for %s.  Refresh page to try again.' % name
-            return
-        except urlfetch_errors.DownloadError:
-            print('urlfetch threw DownloadError on toon %s' % name.encode('ascii','ignore'))
-            toondata['toon'] = name
-            toondata['status'] = 'nok'
-            toondata['reason'] = 'Network error retrieving data from Battle.net for toon %s.  Refresh page to try again.' % name
-            return
-        except:
-            print('urlfetch threw unknown exception on toon %s' % name.encode('ascii','ignore'))
-            toondata['toon'] = name
-            toondata['status'] = 'nok'
-            toondata['reason'] = 'Unknown error retrieving data from Battle.net for toon %s.  Refresh page to try again.' % name
-            return
-
-        # change the json from the response into a dict of data and store it
-        # into the toondata object that was passed in.
-        jsondata = json.loads(response.content)
-        toondata.update(jsondata);
-
-        # Blizzard's API will return an error if it couldn't retrieve the data
-        # for some reason.  Check for this and log it if it fails.  Note that
-        # this response doesn't contain the toon's name so it has to be added
-        # in afterwards.
-        if 'status' in jsondata and jsondata['status'] == 'nok':
-            print('Blizzard API failed to find toon %s for reason: %s' %
-                  (name.encode('ascii','ignore'), jsondata['reason']))
-            toondata['toon'] = name
-            toondata['reason'] = "Error retrieving data for %s from Blizzard API: %s" % (name, jsondata['reason'])
-            return
-
-        print "got good results for %s" % name.encode('ascii','ignore')
-
-        # For each toon, update the statistics for the group as a whole
-        if toondata['sub'] == '0':
-            groupstats.ilvlmains += 1
-            groupstats.totalilvl += jsondata['items']['averageItemLevel']
-            groupstats.totalilvleq += jsondata['items']['averageItemLevelEquipped']
-
-            toonclass = classes[jsondata['class']]
-            if toonclass in ['Paladin','Warrior','Death Knight']:
-                groupstats.plate += 1
-            elif toonclass in ['Mage','Priest','Warlock']:
-                groupstats.cloth += 1
-            elif toonclass in ['Druid','Monk','Rogue']:
-                groupstats.leather += 1
-            elif toonclass in ['Hunter','Shaman']:
-                groupstats.mail += 1
-
-            if toonclass in ['Paladin','Priest','Warlock']:
-                groupstats.conq += 1
-            elif toonclass in ['Warrior','Hunter','Shaman','Monk']:
-                groupstats.prot += 1
-            elif toonclass in ['Death Knight','Druid','Mage','Rogue']:
-                groupstats.vanq += 1
-
-    def create_callback(self, rpc, name, toondata, groupstats, classes):
-        return lambda: self.handle_result(rpc, name, toondata, groupstats, classes)

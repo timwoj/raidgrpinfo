@@ -4,7 +4,7 @@
 import cgi,json,pprint
 import webapp2
 import jinja2,os
-import grouploader
+import grouploader,wowapi
 
 from webapp2_extras import sessions
 from google.appengine.api import urlfetch
@@ -19,7 +19,7 @@ class MainHandler(webapp2.RequestHandler):
         
         # load the list of realms from the datastore that was loaded by the
         # /loadrealms service
-        q = grouploader.Realm.query(namespace='Realms')
+        q = wowapi.Realm.query(namespace='Realms')
         realms = q.fetch()
 
         # throw them at jinja to generate the actual html
@@ -53,7 +53,7 @@ class InitDB(webapp2.RequestHandler):
 
         # Delete all of the entities out of the realm datastore so fresh entities
         # can be loaded.
-        q = grouploader.Realm.query()
+        q = wowapi.Realm.query()
         for r in q.fetch():
             r.key.delete()
 
@@ -63,15 +63,15 @@ class InitDB(webapp2.RequestHandler):
         jsondata = json.loads(response.content)
 
         for realm in jsondata['realms']:
-            r = grouploader.Realm(realm=realm['name'], slug=realm['slug'],
-                                  namespace='Realms', id=realm['slug'])
+            r = wowapi.Realm(realm=realm['name'], slug=realm['slug'],
+                             namespace='Realms', id=realm['slug'])
             r.put()
 
         self.response.write("Loaded %d realms into datastore<br/>" % len(jsondata['realms']))
         
         # Delete all of the entities out of the class datastore so fresh entities
         # can be loaded.
-        q = grouploader.ClassEntry.query()
+        q = wowapi.ClassEntry.query()
         for r in q.fetch():
             r.key.delete()
 
@@ -80,7 +80,8 @@ class InitDB(webapp2.RequestHandler):
         response = urlfetch.fetch(url)
         rawclasses = json.loads(response.content)
         for c in rawclasses['classes']:
-            ce = grouploader.ClassEntry(classId=c['id'], mask=c['mask'], powerType=c['powerType'], name=c['name'])
+            ce = wowapi.ClassEntry(classId=c['id'], mask=c['mask'],
+                                   powerType=c['powerType'], name=c['name'])
             ce.put();
         self.response.write("Loaded %d classes into datastore" % len(rawclasses['classes']))
 
