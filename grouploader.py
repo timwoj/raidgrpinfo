@@ -3,8 +3,9 @@
 #!/usr/bin/env python
 
 import webapp2,jinja2
-import json,sys,os
+import json,os,time
 import wowapi
+import logging
 
 from datetime import datetime
 from google.appengine.ext import ndb
@@ -52,7 +53,7 @@ class Toonv2(ndb.Model):
     role = ndb.StringProperty()
     main = ndb.BooleanProperty()
     realm = ndb.StringProperty()
-    
+
 class Groupv2(ndb.Model):
     nrealm = ndb.StringProperty(indexed=True)
     ngroup = ndb.StringProperty(indexed=True)
@@ -134,7 +135,7 @@ class GridLoader(webapp2.RequestHandler):
     def get(self, nrealm, ngroup):
         # try to load the group info from the database
         db_query = Groupv2.query(Groupv2.nrealm==nrealm, Groupv2.ngroup==ngroup)
-        results = db_query.fetch(5)
+        results = db_query.fetch(1)
 
         # if the group doesn't exist, drop into the interface to make a new
         # group
@@ -149,12 +150,11 @@ class GridLoader(webapp2.RequestHandler):
             self.loadGroup(results[0])
 
     def post(self, nrealm, ngroup):
-        
+
         # try to load the group info from the database.  this is only necessary
         # to get the password from the database to verify that it's correct.
         db_query = Groupv2.query(Groupv2.nrealm==nrealm, Groupv2.ngroup==ngroup)
         results = db_query.fetch(1)
-        print 'pw' + self.request.get('pw')
 
         if ((len(results) != 0) and
             sha256_crypt.verify(self.request.get('pw'),
@@ -164,6 +164,7 @@ class GridLoader(webapp2.RequestHandler):
             self.response.write('Password did not match for this group!<p/>')
             self.response.write('<a href="javascript:history.back()">Go Back</a>\n')
             self.response.write('</body></html>')
+            self.response.status = 401
             return
 
         group = None
@@ -180,9 +181,9 @@ class GridLoader(webapp2.RequestHandler):
 
         # load the json data that includes the toon data
         jsontext = self.request.get('json').strip()
-        print jsontext.encode('ascii','ignore')
+        logging.debug(jsontext.encode('ascii','ignore'))
         jsondata = json.loads(jsontext)
-        print 'number of toons saved: %d' % len(jsondata['toons'])
+        logging.info('number of toons saved: %d' % len(jsondata['toons']))
 
         # clear the old toon information and recreate it from the data from
         # the form
@@ -202,7 +203,18 @@ class GridLoader(webapp2.RequestHandler):
         group.lastvisited = datetime.now()
         group.put()
 
-        self.loadGroup(group)
+        # this is absolutely terrible, but sleep here for a second or two.
+        # the reasoning is that the call from the editor page returns there
+        # too quickly and will try to redirect to a page that doesn't exist
+        # in the datastore yet.  that causes it to redirect back to the
+        # editor page (see the get() function above).  sleeping here ensures
+        # that the data was written before the redirection happens.
+        results = list()
+        while (len(results) == 0):
+            time.sleep(0.5)
+            db_query = Groupv2.query(Groupv2.nrealm==nrealm,
+                                     Groupv2.ngroup==ngroup)
+            results = db_query.fetch(1)
 
     def loadGroup(self, results):
 
@@ -239,7 +251,7 @@ class GridLoader(webapp2.RequestHandler):
         else:
             avgilvl = groupstats.totalilvl / groupstats.ilvlmains
             avgeqp = groupstats.totalilvleq / groupstats.ilvlmains
-            
+
         # Build the page header with the group name, realm, and ilvl stats
         template_values = {
             'group' : results.groupname,
@@ -278,7 +290,7 @@ class GridLoader(webapp2.RequestHandler):
         # for each loop.
         for idx, char in enumerate(data):
             self.addCharacter(char, results, classes)
-            
+
         self.response.write('</table><p/>\n')
         template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-colorlegend.html')
         template_values = {
@@ -368,6 +380,25 @@ class GridLoader(webapp2.RequestHandler):
                 'status' : 'nok',
                 'reason' : 'Unknown error retrieving data for %s.  Refresh to try again' % char['toon'],
             }
-            
+
         template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-gridtoon.html')
         self.response.write(template.render(template_values))
+
+class PasswordValidator(webapp2.RequestHandler):
+    def post(self):
+        ngroup = self.request.get('group')
+        nrealm = self.request.get('realm')
+        pw = self.request.get('pw')
+
+        db_query = Groupv2.query(Groupv2.nrealm==nrealm, Groupv2.ngroup==ngroup)
+        results = db_query.fetch(1)
+        if (len(results) != 0):
+            if sha256_crypt.verify(pw, results[0].password) == False:
+                self.response.status = 401
+                self.response.write('Invalid')
+            else:
+                self.response.status = 200
+                self.response.write('Valid')
+        else:
+            self.response.status = 200
+            self.response.write('Valid')

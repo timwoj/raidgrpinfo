@@ -30,24 +30,37 @@ th {
 #realmSelectDiv{
     z-index: 100;
     position: absolute;
-    background-color: rgba(123, 123,123, 0.8);
+    background-color: rgba(123, 123, 123, 0.9);
     display: none;
-    top: 0;
-    left: 0;
+    top: 10px;
+    left: 10px;
     width: 300px;
-    height: 300px;
+    height: 100px;
 }
 #realmSelect{
     z-index: 1000;
     position: absolute;
-    top: 130px;
-    left: 40px;
+    top: 40px;
+    left: 50px;
 }
 #realmCancel{
     z-index: 1000;
     position:absolute;
-    top: 130px;
-    left: 190px;
+    top: 40px;
+    left: 200px;
+}
+
+/* This rule is for the 'password failed' box */
+#pwfailDiv {
+    z-index: 100;
+    position: absolute;
+    background-color: rgba(123, 123,123, 0.8);
+    display: none;
+    width: 200px;
+    height: 50px;
+    left: 10px;
+    text-align: center;
+    line-height: 50px;
 }
 
 /* Colors for the display on the class column */

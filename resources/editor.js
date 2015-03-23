@@ -1,4 +1,6 @@
 var nrealm = null;
+var ngroup = null;
+
 var realmToNRealm = {};
 var nrealmToRealm = {};
 
@@ -58,8 +60,48 @@ function cancelSelect() {
     $("#realmSelectDiv").hide();
 };
 
-function formSubmit(e) {
-    console.log("submit");
+function authPw() {
+    console.log('authPw');
+    // validate the password before doing anything else
+    var pw=$("#pw").val();
+    var data='group='+ngroup+'&realm='+nrealm+'&pw='+pw;
+
+    $.post('/pwval', data)
+        .done(function() {
+            console.log('password authentication success');
+            postdata();
+        })
+        .fail(function() {
+            console.log('password authentication failed');
+            $("#pwfailDiv").show();
+            setTimeout('$("#pwfailDiv").hide();', 3000);
+        });
+    return false;
+}
+
+function postdata() {
+    console.log('postdata');
+    var url = '/'+nrealm+'/'+ngroup;
+    console.log('url = ' + url);
+
+    var groupname = $('#group').val();
+    var pw = $('#pw').val();
+    var json = buildjson();
+    
+    var data = 'group='+groupname+'&json='+json+'&pw='+pw;
+
+    $.post(url, data)
+        .done(function() {
+            console.log('posting group data success');
+            console.log('redirecting to ' + url);
+            window.location.replace(url);
+        })
+        .fail(function() {
+            console.log('setting group data failed');
+        });
+}
+
+function buildjson() {
     var data = '{"toons": [';
 
     // using the DOM table implementation here because it's a bit more
@@ -74,7 +116,6 @@ function formSubmit(e) {
         if (name.length == 0)
             continue;
         
-        console.log(name);
         if (i != 0) {
             data += ',';
         }
@@ -91,9 +132,8 @@ function formSubmit(e) {
     }
     data += "]}";
 
-    $("<input type='hidden' name='json'/>").val(data).appendTo("#toonform");
-    $("#toonform").submit();
-};
+    return data;
+}
 
 $(function(){
     $(".btnDelete").bind("click", Delete);
@@ -101,12 +141,13 @@ $(function(){
     $(".changeRealm").bind("click", changeRealm);
     $("#realmSelect").bind("change", realmSelected);
     $("#realmCancel").bind("click", cancelSelect);
-    $("#submit").bind("click", formSubmit);
+    $("#submit").bind("click", authPw);
 
     // there's probably a better way to do this, but use the HTML to build a
     // lookup table for the realm to normalized realm entries and store the
     // current local realm entry
     nrealm = $("#nrealm").val();
+    ngroup = $("#ngroup").val();
     $("#realmSelect > option").each(function() {
         nrealmToRealm[this.id] = this.value;
         realmToNRealm[this.value] = this.id;

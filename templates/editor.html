@@ -15,6 +15,7 @@
     
     <form action="/{{ nrealm }}/{{ group }}" method="post" autocomplete="off" id="toonform">
       <input type="hidden" id="nrealm" value="{{ nrealm }}"/>
+      <input type="hidden" id="ngroup" value="{{ group }}"/>
       {% if results == none -%}
       Group name: <input type="text" name="group" id="group"><p/>
       {% else -%}
@@ -68,6 +69,7 @@
           </tr>
         </tbody>
       </table>
+      <div style="font-size: 80%">(Click realm name to change a toon's name)</div>
       
       <p/>
       {% if results == none -%}
@@ -75,7 +77,7 @@
       {% else -%}
       Enter password to save changes:<br>
       {% endif -%}
-      Password: <input type="password" name="pw"><p/>
+      Password: <input type="password" name="pw" id="pw"><p/>
       <input type="submit" value="Save" id="submit">
     </form>
     <div id="realmSelectDiv">
@@ -86,6 +88,7 @@
       </select>
       <input type="button" id="realmCancel" value="Cancel"/>
     </div>
+    <div id="pwfailDiv">Password does not match!</div>
   </body>
 </html>
 {% endautoescape -%}

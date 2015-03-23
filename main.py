@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python
 
-import cgi,json,pprint
 import webapp2
 import jinja2,os
 import grouploader,wowapi
 
 from webapp2_extras import sessions
-from google.appengine.api import urlfetch
-from google.appengine.ext import ndb
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
@@ -16,7 +13,7 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):
-        
+
         # load the list of realms from the datastore that was loaded by the
         # /loadrealms service
         q = wowapi.Realm.query(namespace='Realms')
@@ -39,12 +36,12 @@ class GroupRedir(webapp2.RequestHandler):
         group = self.request.get('group').strip()
         nrealm = grouploader.Group.normalize(realm)
         ngroup = grouploader.Group.normalize(group)
-        
+
         self.redirect('/%s/%s' % (nrealm, ngroup))
 
 # Loads the list of realms into the datastore from the blizzard API so that
 # the realm list on the front page gets populated.  Also loads the list of
-# classes into a table on the DB so that we don't have to request it 
+# classes into a table on the DB so that we don't have to request it
 class InitDB(webapp2.RequestHandler):
     def get(self):
         setup = wowapi.Setup()
@@ -69,14 +66,15 @@ class MaintenanceHandler(webapp2.RequestHandler):
         self.response.write("Raidgrpinfo is in maintenance mode and will return soon.")
     def get(self, nrealm, ngroup):
         self.response.write("Raidgrpinfo is in maintenance mode and will return soon.")
-            
+
 app = webapp2.WSGIApplication([
-   ('/', MainHandler),
-   ('/groups', GroupRedir),
-   ('/initdb', InitDB),
-   ('/setapikey', SetAPIKey),
-   webapp2.Route('/edit/<:([^/]+)>/<:([^/]+)>', grouploader.Editor),
-   webapp2.Route('/<:([^/]+)>/<:([^/]+)>', grouploader.GridLoader),
+    ('/', MainHandler),
+    ('/groups', GroupRedir),
+    ('/initdb', InitDB),
+    ('/setapikey', SetAPIKey),
+    ('/pwval', grouploader.PasswordValidator),
+    webapp2.Route('/edit/<:([^/]+)>/<:([^/]+)>', grouploader.Editor),
+    webapp2.Route('/<:([^/]+)>/<:([^/]+)>', grouploader.GridLoader),
 ], debug=True)
 
 # Maintenance mode stuff for when messing with the database
