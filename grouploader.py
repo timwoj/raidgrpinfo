@@ -13,7 +13,7 @@ from google.appengine.api.memcache import Client
 from passlib.hash import sha256_crypt
 
 # Minimum ilvls and colors for the ilvl grid
-LFR_ILVL=655
+LFR_SET_ILVL=660
 MIN_NORMAL=670
 MIN_HEROIC=685
 COLOR_LFR="#FFB2B2"
@@ -349,7 +349,7 @@ class GridLoader(webapp2.RequestHandler):
                     template_values[itype]['bonusLists'] = items[itype]['bonusLists']
                     if 'tooltipParams' in items[itype]:
                         if 'set' in items[itype]['tooltipParams']:
-                            if items[itype]['itemLevel'] == LFR_ILVL or items[itype]['itemLevel'] == LFR_ILVL+6:
+                            if items[itype]['itemLevel'] == LFR_SET_ILVL or items[itype]['itemLevel'] == LFR_SET_ILVL+6:
                                 template_values[itype]['set'] = 'lfr'
                                 template_values['lfrcount'] += 1
                             elif items[itype]['itemLevel'] >= MIN_NORMAL:

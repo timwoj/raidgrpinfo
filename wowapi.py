@@ -136,7 +136,12 @@ class Importer:
         items = toondata['items']
         for kind in ['head','shoulder','chest','hands','legs','feet','neck','back','wrist','waist','feet','finger1','finger2','trinket1','trinket2','mainHand','offHand']:
             if kind in items:
-                if ((items[kind]['context'] == 'raid-normal' and
+                if ((items[kind]['context'] == 'raid-finder' and
+                     (items[kind]['itemLevel'] == 660 or
+                      items[kind]['itemLevel'] == 666 or
+                      items[kind]['itemLevel'] == 650 or
+                      items[kind]['itemLevel'] == 655)) or
+                    (items[kind]['context'] == 'raid-normal' and
                      (items[kind]['itemLevel'] == 665 or
                       items[kind]['itemLevel'] == 671)) or
                     (items[kind]['context'] == 'raid-heroic' and
