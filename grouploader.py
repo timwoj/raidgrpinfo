@@ -14,8 +14,8 @@ from passlib.hash import sha256_crypt
 
 # Minimum ilvls and colors for the ilvl grid
 LFR_ILVL=655
-MIN_NORMAL=665
-MIN_HEROIC=680
+MIN_NORMAL=670
+MIN_HEROIC=685
 COLOR_LFR="#FFB2B2"
 COLOR_NORMAL="#FFFFB2"
 COLOR_HEROIC="#B2FFB2"

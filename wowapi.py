@@ -129,6 +129,24 @@ class Importer:
 
         print "got good results for %s" % name.encode('ascii','ignore')
 
+        # Because Blizzard continues to fail to update the ilvls of items from
+        # BRF to match the ilvl boost they gave them, I'm updating them manually
+        # here.  This sucks and is a hack, but it's necessary to make the display
+        # correct.  Whenever Blizzard fixes their shit, this can be removed.
+        items = toondata['items']
+        for kind in ['head','shoulder','chest','hands','legs','feet','neck','back','wrist','waist','feet','finger1','finger2','trinket1','trinket2','mainHand','offHand']:
+            if kind in items:
+                if ((items[kind]['context'] == 'raid-normal' and
+                     (items[kind]['itemLevel'] == 665 or
+                      items[kind]['itemLevel'] == 671)) or
+                    (items[kind]['context'] == 'raid-heroic' and
+                     (items[kind]['itemLevel'] == 680 or
+                      items[kind]['itemLevel'] == 686)) or
+                    (items[kind]['context'] == 'raid-mythic' and
+                     (items[kind]['itemLevel'] == 695 or
+                      items[kind]['itemLevel'] == 701))):
+                    items[kind]['itemLevel'] += 5
+
         # For each toon, update the statistics for the group as a whole
         if toondata['main'] == True:
             groupstats.ilvlmains += 1
