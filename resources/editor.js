@@ -74,7 +74,7 @@ function authPw() {
         .fail(function() {
             console.log('password authentication failed');
             $("#pwfailDiv").show();
-            setTimeout('$("#pwfailDiv").hide();', 3000);
+            setTimeout('$("#pwfailDiv").fadeOut("slow");', 4000);
         });
     return false;
 }

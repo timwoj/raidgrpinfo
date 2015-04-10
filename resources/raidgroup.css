@@ -52,13 +52,15 @@ th {
 
 /* This rule is for the 'password failed' box */
 #pwfailDiv {
+    position: fixed;
+    top: 1em;
+    right: 1em;
     z-index: 100;
     position: absolute;
     background-color: rgba(123, 123,123, 0.8);
     display: none;
     width: 200px;
     height: 50px;
-    left: 10px;
     text-align: center;
     line-height: 50px;
 }
