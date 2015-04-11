@@ -151,7 +151,9 @@ class Importer:
                       items[kind]['itemLevel'] == 686)) or
                     (items[kind]['context'] == 'raid-mythic' and
                      (items[kind]['itemLevel'] == 695 or
-                      items[kind]['itemLevel'] == 701))):
+                      items[kind]['itemLevel'] == 701)) or
+                    (items[kind]['context'] == 'trade-skill' and
+                     items[kind]['itemLevel'] == 680)):
                     items[kind]['itemLevel'] += 5
                 totalilvl += items[kind]['itemLevel']
                 itemcount += 1
