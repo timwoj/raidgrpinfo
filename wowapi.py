@@ -133,6 +133,8 @@ class Importer:
         # BRF to match the ilvl boost they gave them, I'm updating them manually
         # here.  This sucks and is a hack, but it's necessary to make the display
         # correct.  Whenever Blizzard fixes their shit, this can be removed.
+        itemcount = 0
+        totalilvl = 0
         items = toondata['items']
         for kind in ['head','shoulder','chest','hands','legs','feet','neck','back','wrist','waist','feet','finger1','finger2','trinket1','trinket2','mainHand','offHand']:
             if kind in items:
@@ -151,6 +153,10 @@ class Importer:
                      (items[kind]['itemLevel'] == 695 or
                       items[kind]['itemLevel'] == 701))):
                     items[kind]['itemLevel'] += 5
+                totalilvl += items[kind]['itemLevel']
+                itemcount += 1
+
+        toondata['items']['averageItemLevelEquipped'] = (int)(totalilvl / itemcount)
 
         # For each toon, update the statistics for the group as a whole
         if toondata['main'] == True:
