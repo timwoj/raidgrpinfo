@@ -72,7 +72,7 @@ app = webapp2.WSGIApplication([
     ('/groups', GroupRedir),
     ('/initdb', InitDB),
     ('/setapikey', SetAPIKey),
-    ('/pwval', grouploader.PasswordValidator),
+    ('/val', grouploader.Validator),
     webapp2.Route('/edit/<:([^/]+)>/<:([^/]+)>', grouploader.Editor),
     webapp2.Route('/<:([^/]+)>/<:([^/]+)>', grouploader.GridLoader),
 ], debug=True)

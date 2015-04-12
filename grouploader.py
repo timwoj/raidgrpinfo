@@ -384,21 +384,32 @@ class GridLoader(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-gridtoon.html')
         self.response.write(template.render(template_values))
 
-class PasswordValidator(webapp2.RequestHandler):
+class Validator(webapp2.RequestHandler):
     def post(self):
         ngroup = self.request.get('group')
         nrealm = self.request.get('realm')
         pw = self.request.get('pw')
+        newgn = self.request.get('newgn')
 
-        db_query = Groupv2.query(Groupv2.nrealm==nrealm, Groupv2.ngroup==ngroup)
-        results = db_query.fetch(1)
-        if (len(results) != 0):
-            if sha256_crypt.verify(pw, results[0].password) == False:
+        if pw != None:
+            db_query = Groupv2.query(Groupv2.nrealm==nrealm, Groupv2.ngroup==ngroup)
+            results = db_query.fetch(1)
+            if (len(results) != 0):
+                if sha256_crypt.verify(pw, results[0].password) == False:
+                    self.response.status = 401
+                    self.response.write('Invalid')
+                else:
+                    self.response.status = 200
+                    self.response.write('Valid')
+            else:
+                self.response.status = 200
+                self.response.write('Valid')
+        elif newgn != None:
+            db_query = Groupv2.query(Groupv2.nrealm==nrealm, Groupv2.ngroup==newgn)
+            results = db_query.fetch(1)
+            if (len(results) != 0):
                 self.response.status = 401
                 self.response.write('Invalid')
             else:
                 self.response.status = 200
                 self.response.write('Valid')
-        else:
-            self.response.status = 200
-            self.response.write('Valid')

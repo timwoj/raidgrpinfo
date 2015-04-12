@@ -66,7 +66,7 @@ function authPw() {
     var pw=$("#pw").val();
     var data='group='+ngroup+'&realm='+nrealm+'&pw='+pw;
 
-    $.post('/pwval', data)
+    $.post('/val', data)
         .done(function() {
             console.log('password authentication success');
             postdata();
@@ -133,6 +133,14 @@ function buildjson() {
     data += "]}";
 
     return data;
+}
+
+function normalize_gn(groupname)
+{
+    var norm = groupname.replace("'","");
+    norm = norm.replace(" ", "-");
+    norm = norm.toLowerCase();
+    return norm;
 }
 
 $(function(){
