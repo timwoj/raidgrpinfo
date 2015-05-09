@@ -49,18 +49,6 @@ class InitDB(webapp2.RequestHandler):
         self.response.write("Loaded %d realms into datastore<br/>" % results[0])
         self.response.write("Loaded %d classes into datastore<br/>" % results[1])
 
-# The new Battle.net Mashery API requires an API key when using it.  This
-# method stores an API in the datastore so it can used in later page requests.
-class SetAPIKey(webapp2.RequestHandler):
-    def get(self):
-        argkey = self.request.get('key')
-        if ((argkey == None) or (len(argkey) == 0)):
-            self.response.write("Must pass API with 'key' argument in url")
-        else:
-            setup = wowapi.Setup()
-            setup.setkey(argkey)
-            self.response.write('API key stored')
-
 class MaintenanceHandler(webapp2.RequestHandler):
     def get(self):
         self.response.write("Raidgrpinfo is in maintenance mode and will return soon.")
@@ -71,7 +59,6 @@ app = webapp2.WSGIApplication([
     ('/', MainHandler),
     ('/groups', GroupRedir),
     ('/initdb', InitDB),
-    ('/setapikey', SetAPIKey),
     ('/val', grouploader.Validator),
     webapp2.Route('/edit/<:([^/]+)>/<:([^/]+)>', grouploader.Editor),
     webapp2.Route('/<:([^/]+)>/<:([^/]+)>', grouploader.GridLoader),

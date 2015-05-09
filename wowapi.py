@@ -2,14 +2,11 @@
 
 #!/usr/bin/env python
 
-import json,time
+import json,time,os
 
 from google.appengine.api import urlfetch
 from google.appengine.api import urlfetch_errors
 from google.appengine.ext import ndb
-
-class APIKey(ndb.Model):
-    key = ndb.StringProperty(indexed=True,required=True)
 
 class ClassEntry(ndb.Model):
     classId = ndb.IntegerProperty()
@@ -23,8 +20,9 @@ class Realm(ndb.Model):
 
 class Importer:
     def load(self, realm, frealm, toonlist, data, groupstats):
-        q = APIKey.query()
-        apikey = q.fetch()[0]
+        path = os.path.join(os.path.split(__file__)[0],'api-auth.json')
+        json_key = json.load(open(path))
+        apikey = json_key['blizzard']
 
         q = ClassEntry.query()
         res = q.fetch()
@@ -60,7 +58,7 @@ class Importer:
             newdata['main'] = toon.main
             newdata['role'] = toon.role
 
-            url = 'https://us.api.battle.net/wow/character/%s/%s?fields=items,guild&locale=en_US&apikey=%s' % (toonrealm, toonname, apikey.key)
+            url = 'https://us.api.battle.net/wow/character/%s/%s?fields=items,guild&locale=en_US&apikey=%s' % (toonrealm, toonname, apikey)
             # create the rpc object for the fetch method.  the deadline
             # defaults to 5 seconds, but that seems to be too short for the
             # Blizzard API site sometimes.  setting it to 10 helps a little
@@ -192,8 +190,9 @@ class Setup:
     # classes into a table on the DB so that we don't have to request it 
     def initdb(self):
 
-        q = APIKey.query()
-        apikey = q.fetch()[0]
+        path = os.path.join(os.path.split(__file__)[0],'api-auth.json')
+        json_key = json.load(open(path))
+        apikey = json_key['blizzard']
 
         # Delete all of the entities out of the realm datastore so fresh entities
         # can be loaded.
@@ -202,7 +201,7 @@ class Setup:
             r.key.delete()
 
         # retrieve a list of realms from the blizzard API
-        url = 'https://us.api.battle.net/wow/realm/status?locale=en_US&apikey=%s' % apikey.key
+        url = 'https://us.api.battle.net/wow/realm/status?locale=en_US&apikey=%s' % apikey
         response = urlfetch.fetch(url)
         jsondata = json.loads(response.content)
 
@@ -218,7 +217,7 @@ class Setup:
             r.key.delete()
 
         # retrieve a list of classes from the blizzard API
-        url = 'https://us.api.battle.net/wow/data/character/classes?locale=en_US&apikey=%s' % apikey.key
+        url = 'https://us.api.battle.net/wow/data/character/classes?locale=en_US&apikey=%s' % apikey
         response = urlfetch.fetch(url)
         rawclasses = json.loads(response.content)
         for c in rawclasses['classes']:
@@ -227,19 +226,3 @@ class Setup:
             ce.put();
 
         return [len(jsondata['realms']), len(rawclasses['classes'])]
-
-    # The new Battle.net Mashery API requires an API key when using it.  This
-    # method stores an API in the datastore so it can used in later page requests.
-    def setkey(self,apikey):
-
-        # Delete all of the entities out of the apikey datastore so fresh entities
-        # can be loaded.
-        q = APIKey.query()
-        result = q.fetch();
-        if (len(result) == 0):
-            k = APIKey(key = apikey)
-            k.put()
-        else:
-            k = result[0]
-            k.key = apikey
-            k.put()
