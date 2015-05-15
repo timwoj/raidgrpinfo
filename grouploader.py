@@ -321,6 +321,8 @@ class GridLoader(webapp2.RequestHandler):
                 'name' : char['toon'],
                 'status' : char['status'],
                 'reason' : char['reason'],
+                'realm' : char['toonrealm'],
+                'frealm' : char['toonfrealm'],
             }
         elif 'items' in char:
 
@@ -385,6 +387,8 @@ class GridLoader(webapp2.RequestHandler):
                 'name' : char['toon'],
                 'status' : 'nok',
                 'reason' : 'Unknown error retrieving data for %s.  Refresh to try again' % char['toon'],
+                'realm' : char['toonrealm'],
+                'frealm' : char['toonfrealm'],
             }
 
         template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-gridtoon.html')

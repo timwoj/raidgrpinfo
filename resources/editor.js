@@ -24,7 +24,7 @@ function Delete(event){
 
 function Add(){
     $("#membersTable tbody").append(
-	"<tr>"+
+	"<tr style='font-size:14px;padding:2px 5px;text-align:center'>"+
             "<td><input type='text'/></td>"+
             "<td><select>"+
             "<option>Tank</option>"+
@@ -47,17 +47,9 @@ function Add(){
 var lastClicked = null;
 function changeRealm(e) {
     console.log("change realm");
-    $("#realmSelectDiv").show();
+    $("#realmWindow").jqxWindow("open");
     lastClicked = e.currentTarget;
-};
-
-function realmSelected(e) {
-    lastClicked.textContent = $("#realmSelect").val();
-    $("#realmSelectDiv").hide();
-};
-
-function cancelSelect() {
-    $("#realmSelectDiv").hide();
+    console.log(lastClicked);
 };
 
 function authPw() {
@@ -73,8 +65,7 @@ function authPw() {
         })
         .fail(function() {
             console.log('password authentication failed');
-            $("#pwfailDiv").show();
-            setTimeout('$("#pwfailDiv").fadeOut("slow");', 4000);
+            $("#pwfail").jqxNotification("open");
         });
     return false;
 }
@@ -115,7 +106,10 @@ function buildjson() {
         // if the name field is empty, just skip this toon
         if (name.length == 0)
             continue;
-        
+
+        name = name.toLowerCase();
+        name = name.charAt(0).toUpperCase() + name.slice(1);
+
         if (i != 0) {
             data += ',';
         }
@@ -147,8 +141,6 @@ $(function(){
     $(".btnDelete").bind("click", Delete);
     $("#btnAdd").bind("click", Add);
     $(".changeRealm").bind("click", changeRealm);
-    $("#realmSelect").bind("change", realmSelected);
-    $("#realmCancel").bind("click", cancelSelect);
     $("#submit").bind("click", authPw);
 
     // there's probably a better way to do this, but use the HTML to build a
@@ -159,5 +151,20 @@ $(function(){
     $("#realmSelect > option").each(function() {
         nrealmToRealm[this.id] = this.value;
         realmToNRealm[this.value] = this.id;
+    });
+
+    $("#pwfail").jqxNotification({position: "top-right", autoClose: true,
+                                  autoCloseDelay: 4000, template: "error"});
+
+    $("#realmWindow").jqxWindow({
+        maxHeight: 150, maxWidth: 280, minHeight: 30, minWidth: 250, height: 100, width: 270,
+        isModal: true, okButton: $("#realmOK"), cancelButton: $("#realmCancel"),
+        resizable: false, autoOpen: false, showCloseButton: false,
+    });
+
+    $("#realmWindow").on('close', function(event) {
+        if (event.args.dialogResult.OK) {
+            lastClicked.textContent = $("#realmSelect").val();
+        }
     });
 });

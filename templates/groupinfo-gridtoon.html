@@ -2,23 +2,8 @@
 <td class="" style="{{ item.itemLevel | ilvlcolor }}">{%- if item.itemLevel != 0 %}<a href="http://wowhead.com/item={{ item.id }}" rel="bonus={{ item.bonusLists|join(':') }}">{{ item.itemLevel }}</a>{% if item.set == 'norm' %}<sup>T</sup>{% elif item.set == 'lfr' %}<sup>L</sup>{%- endif -%}{%- endif -%}</td>
 {%- endmacro -%}
 <tr>
-  <td class="user" style="">
+  <td class="user" style="" id="{{ name | normalize }}-td">
     <a href="http://us.battle.net/wow/en/character/{{ realm }}/{{ name }}/advanced" target="_blank">{{ name }}</a>
-    <span>
-      {{ name }}<br/>
-      {%- if realm == nrealm %}
-      {{ guild }}
-      {%- else %}
-      {{ guild }} - {{ frealm }}
-      {%- endif %}<p/>
-      {%- if status != 'nok' -%}
-      <a href="http://askmrrobot.com/wow/player/us/{% print
-               realm.replace('-','_') %}/{{ name }}" target="_blank">AskMrRobot</a><br/>
-      {%- if class == "Rogue" -%}
-      <a href="http://shadowcraft.mmo-mumble.com/us/{{ realm }}/{{ name }}" target="_blank">ShadowCraft</a><br/>
-      {%- endif -%}
-      {%- endif -%}
-    </span>
   </td>
 {%- if status == 'nok' %}
   <td class="" style="text-align:left" colspan="12">{{ reason }}</td>

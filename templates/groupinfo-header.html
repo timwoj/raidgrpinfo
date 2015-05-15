@@ -1,26 +1,36 @@
 <!DOCTYPE html>
-{% autoescape true -%}
 <html>
-    <head>
-        <title>{{ group }} - {{ frealm }}</title>
-        <link rel="stylesheet" type="text/css" href="/resources/raidgroup.css"/>
-        <script src="/resources/jquery-1.11.2.min.js"></script>
-        <script src="/resources/jquery.tablesorter.min.js"></script>
-        <script src="/resources/tables.js"></script>
-        <script src="http://static.wowhead.com/widgets/power.js"></script>
-    </head>
-    <body>
-        <div class="header">
-            <div style="float:left">
-                <div style="font-size: 24px">{{ group }}</div>
-                <div style="font-size: 20px">{{ frealm }} - US</div>
-            </div>
-            <div style="float:right">
-                <form action="/edit/{{ nrealm }}/{{ ngroup }}">
-                    <input type="submit" value="Edit Group">
-                </form>
-            </div>
-        </div>
-        Group Average ilvl: {{ groupavgilvl }}<br/>
-        Group Average equipped: {{ groupavgeqp }}<br/><br/>
-{% endautoescape -%}
+  <head>
+    <title>{{ group }} - {{ frealm }}</title>
+    <link rel="stylesheet" type="text/css" href="/resources/jqwidgets/styles/jqx.base.css" />
+    <link rel="stylesheet" type="text/css" href="/resources/raidgroup.css"/>
+    <script src="/resources/jquery-1.11.2.min.js"></script>
+    <script src="/resources/jquery.tablesorter.min.js"></script>
+    <script src="/resources/jqwidgets/jqxcore.js"></script>
+    <script src="/resources/jqwidgets/jqxtooltip.js"></script>
+    <script src="/resources/tables.js"></script>
+    <script src="http://static.wowhead.com/widgets/power.js"></script>
+    <script>
+      $(document).ready(function() {
+      {% for toon in toondata -%}
+      {% if toon['status'] != 'nok' -%}
+      $("#{{ toon['name'] | normalize }}-td").jqxTooltip({content: "{{ toon['name'] }}<br/>{{ toon['guild']['name'] }} - {{ toon['realm'] }}<br/><a href='http://askmrrobot.com/wow/player/us/{% print toon['toonrealm'].replace('-','_') %}/{{ toon['name'] }}' target='_blank'>Ask Mr. Robot</a>",autoHideDelay: 6000 });
+      {%- endif %}
+      {%- endfor %}
+      });
+    </script>
+  </head>
+  <body>
+    <div class="header">
+      <div style="float:left">
+        <div style="font-size: 24px">{{ group }}</div>
+        <div style="font-size: 20px">{{ frealm }} - US</div>
+      </div>
+      <div style="float:right">
+        <form action="/edit/{{ nrealm }}/{{ ngroup }}">
+          <input type="submit" value="Edit Group">
+        </form>
+      </div>
+    </div>
+    Group Average ilvl: {{ groupavgilvl }}<br/>
+    Group Average equipped: {{ groupavgeqp }}<br/><br/>
