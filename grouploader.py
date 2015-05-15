@@ -9,7 +9,7 @@ import logging
 
 from datetime import datetime
 from google.appengine.ext import ndb
-from google.appengine.api.memcache import Client
+from google.appengine.api import memcache
 from passlib.hash import sha256_crypt
 
 # Minimum ilvls and colors for the ilvl grid
@@ -32,21 +32,14 @@ def ilvlcolor(ilvl):
     elif ilvl >= MIN_HEROIC:
         return 'background-color:'+COLOR_HEROIC
 
+def normalize(groupname):
+    return groupname.lower().replace('\'','').replace(' ','-')
+
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
     extensions=['jinja2.ext.autoescape'])
 JINJA_ENVIRONMENT.filters['ilvlcolor'] = ilvlcolor
-
-class Group(ndb.Model):
-    nrealm = ndb.StringProperty(indexed=True)
-    ngroup = ndb.StringProperty(indexed=True)
-    groupname = ndb.StringProperty()
-    toons = ndb.StringProperty(repeated=True)
-    password = ndb.StringProperty()
-
-    @staticmethod
-    def normalize(realm):
-        return realm.lower().replace('\'','').replace(' ','-')
+JINJA_ENVIRONMENT.filters['normalize'] = normalize
 
 class Toonv2(ndb.Model):
     name = ndb.StringProperty(indexed=True)
@@ -87,6 +80,22 @@ class GroupStats:
     # warrior/hunter/shaman/monk tokens
     prot = 0
 
+def getGroupFromDB(nrealm, ngroup):
+
+    results = memcache.get('%s_%s' % (nrealm,ngroup))
+    if results is None:
+        logging.info('group was not in memcache')
+        db_query = Groupv2.query(Groupv2.nrealm==nrealm, Groupv2.ngroup==ngroup)
+        queryresults = db_query.fetch(1)
+        if (len(queryresults) != 0):
+            logging.info('found group in datastore, adding to memcache')
+            results = queryresults[0]
+            memcache.set('%s_%s' % (nrealm,ngroup), results)
+        else:
+            logging.info('group was not in datastore either')
+
+    return results
+
 class Editor(webapp2.RequestHandler):
     def get(self, nrealm, ngroup):
         self.editGroup(nrealm, ngroup)
@@ -99,12 +108,7 @@ class Editor(webapp2.RequestHandler):
         realms = q.fetch()
 
         # try to load the group info from the database
-        db_query = Groupv2.query(Groupv2.nrealm==nrealm, Groupv2.ngroup==ngroup)
-        queryresults = db_query.fetch()
-
-        results = None
-        if (len(queryresults) != 0):
-            results = queryresults[0]
+        results = getGroupFromDB(nrealm, ngroup)
 
         # Loop through the results from the data store and create a list
         # of toon names, the markers for subs, and the markers for
@@ -134,31 +138,28 @@ class Editor(webapp2.RequestHandler):
 class GridLoader(webapp2.RequestHandler):
     def get(self, nrealm, ngroup):
         # try to load the group info from the database
-        db_query = Groupv2.query(Groupv2.nrealm==nrealm, Groupv2.ngroup==ngroup)
-        results = db_query.fetch(1)
+        results = getGroupFromDB(nrealm, ngroup)
 
         # if the group doesn't exist, drop into the interface to make a new
         # group
-        if (len(results) == 0):
+        if results == None:
             self.redirect('/edit/%s/%s' % (nrealm, ngroup))
 
         # if the group exists, load the group from the blizzard API and display
         # it.
         else:
-            results[0].lastvisited = datetime.now()
-            results[0].put()
-            self.loadGroup(results[0])
+            results.lastvisited = datetime.now()
+            results.put()
+            self.loadGroup(results)
 
     def post(self, nrealm, ngroup):
 
         # try to load the group info from the database.  this is only necessary
         # to get the password from the database to verify that it's correct.
-        db_query = Groupv2.query(Groupv2.nrealm==nrealm, Groupv2.ngroup==ngroup)
-        results = db_query.fetch(1)
+        results = getGroupFromDB(nrealm, ngroup)
 
-        if ((len(results) != 0) and
-            sha256_crypt.verify(self.request.get('pw'),
-                                results[0].password) != True):
+        if (results != None and
+            sha256_crypt.verify(self.request.get('pw'), results.password) != True):
             self.response.write('<html><head><title>Password failure</title></head>\n')
             self.response.write('<body>\n')
             self.response.write('Password did not match for this group!<p/>')
@@ -168,8 +169,8 @@ class GridLoader(webapp2.RequestHandler):
             return
 
         group = None
-        if (len(results) != 0):
-            group = results[0]
+        if results != None:
+            group = results
         else:
             group = Groupv2()
 
@@ -202,6 +203,10 @@ class GridLoader(webapp2.RequestHandler):
         group.toons = sorted(group.toons, key=lambda s: s.name.lower())
         group.lastvisited = datetime.now()
         group.put()
+
+        # put this group in the memcache too so that it can be loaded from
+        # there instead of from the datastore every time
+        memcache.set('%s_%s' % (nrealm,ngroup), group)
 
         # this is absolutely terrible, but sleep here for a second or two.
         # the reasoning is that the call from the editor page returns there
@@ -260,6 +265,7 @@ class GridLoader(webapp2.RequestHandler):
             'nrealm' : results.nrealm,
             'groupavgilvl' : avgilvl,
             'groupavgeqp' : avgeqp,
+            'toondata' : data,
         }
         template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-header.html')
         self.response.write(template.render(template_values))
@@ -392,10 +398,10 @@ class Validator(webapp2.RequestHandler):
         newgn = self.request.get('newgn')
 
         if pw != None:
-            db_query = Groupv2.query(Groupv2.nrealm==nrealm, Groupv2.ngroup==ngroup)
-            results = db_query.fetch(1)
-            if (len(results) != 0):
-                if sha256_crypt.verify(pw, results[0].password) == False:
+            results = getGroupFromDB(nrealm, ngroup)
+                
+            if results != None:
+                if sha256_crypt.verify(pw, results.password) == False:
                     self.response.status = 401
                     self.response.write('Invalid')
                 else:
@@ -405,9 +411,9 @@ class Validator(webapp2.RequestHandler):
                 self.response.status = 200
                 self.response.write('Valid')
         elif newgn != None:
-            db_query = Groupv2.query(Groupv2.nrealm==nrealm, Groupv2.ngroup==newgn)
-            results = db_query.fetch(1)
-            if (len(results) != 0):
+            results = getGroupFromDB(nrealm, ngroup)
+
+            if results != None:
                 self.response.status = 401
                 self.response.write('Invalid')
             else:
