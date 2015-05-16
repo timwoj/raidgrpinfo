@@ -48,7 +48,7 @@ $(document).ready(function() {
     });
 
     $("#deleteQuestion").jqxWindow({
-        height: 150, width: 350,
+        height: 160, width: 350,
         isModal: true, okButton: $("#deleteOK"), cancelButton: $("#deleteCancel"),
         resizable: false, autoOpen: false, showCloseButton: false,
     });

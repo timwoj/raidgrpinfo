@@ -411,6 +411,14 @@ class Validator(webapp2.RequestHandler):
         newgn = self.request.get('newgn')
 
         if pw != None:
+            # check that the realm and group names are valid, as a safety
+            # measure.
+            if (nrealm == None or ngroup == None):
+                self.response.status = 401
+                self.response.write('Invalid')
+                return
+
+            # grab the group the datastore and try to validate the password
             results = getGroupFromDB(nrealm, ngroup)
                 
             if results != None:
@@ -421,8 +429,10 @@ class Validator(webapp2.RequestHandler):
                     self.response.status = 200
                     self.response.write('Valid')
             else:
-                self.response.status = 401
-                self.response.write('Invalid')
+                # This covers the case where a group is being added since
+                # it won't be in the database yet.
+                self.response.status = 200
+                self.response.write('Valid')
         elif newgn != None:
             results = getGroupFromDB(nrealm, ngroup)
 
