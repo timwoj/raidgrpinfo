@@ -135,6 +135,9 @@ class Editor(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('templates/editor.html')
         self.response.write(template.render(template_values))
 
+        template = JINJA_ENVIRONMENT.get_template('templates/pagefooter.html')
+        self.response.write(template.render())
+
 class GridLoader(webapp2.RequestHandler):
     def get(self, nrealm, ngroup):
         # try to load the group info from the database
@@ -308,10 +311,16 @@ class GridLoader(webapp2.RequestHandler):
         }
         self.response.write(template.render(template_values))
 
-        self.response.write("        <div style='clear: both;font-size: 12px;text-align:center'>Site code by Tamen - Aerie Peak(US) &#149; <a href='http://github.com/timwoj/raidgrpinfo'>http://github.com/timwoj/raidgrpinfo<a/></div>")
+        template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-hidden.html')
+        template_values = {
+            'group' : results.groupname,
+            'realm' : frealm,
+            'nrealm' : results.nrealm,
+        }
+        self.response.write(template.render(template_values))
 
-        self.response.write('    </body>\n')
-        self.response.write('</html>')
+        template = JINJA_ENVIRONMENT.get_template('templates/pagefooter.html')
+        self.response.write(template.render())
 
     # Generic method to add a character to the page response
     def addCharacter(self, char, results, classes):
@@ -412,8 +421,8 @@ class Validator(webapp2.RequestHandler):
                     self.response.status = 200
                     self.response.write('Valid')
             else:
-                self.response.status = 200
-                self.response.write('Valid')
+                self.response.status = 401
+                self.response.write('Invalid')
         elif newgn != None:
             results = getGroupFromDB(nrealm, ngroup)
 
@@ -423,3 +432,17 @@ class Validator(webapp2.RequestHandler):
             else:
                 self.response.status = 200
                 self.response.write('Valid')
+
+class Deleter(webapp2.RequestHandler):
+    def post(self):
+        ngroup = self.request.get('group')
+        nrealm = self.request.get('realm')
+        pw = self.request.get('pw')
+        logging.info('deleting group %s on %s' % (ngroup,nrealm))
+
+        db_query = Groupv2.query(Groupv2.nrealm==nrealm, Groupv2.ngroup==ngroup)
+        queryresults = db_query.fetch(1)
+        g = queryresults[0]
+        g.key.delete()
+        memcache.set('%s_%s' % (nrealm,ngroup), None)
+        

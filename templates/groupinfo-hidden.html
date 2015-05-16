@@ -1,0 +1,19 @@
+
+<div id="deleteQuestion">
+  <div>Delete Group</div>
+  <div>
+    <div>
+      To Delete group {{ group }} - {{ nrealm }}, enter the group password twice:<br/>
+      Password: <input type="text" id="deletepw1"/><br/>
+      Password Again: <input type="text" id="deletepw2"/>
+    </div>
+    <div style="float:right;margin-top:5px">
+      <input type="button" id="deleteOK" value="OK"/>
+      <input type="button" id="deleteCancel" value="Cancel"/>
+    </div>
+  </div>
+</div>
+<div id="pwmismatch">Passwords do not match!</div>
+<div id="pwinvalid">Password is invalid!</div>
+<input type="hidden" id="nrealm" value="{{ nrealm }}"/>
+<input type="hidden" id="ngroup" value="{{ group }}"/>

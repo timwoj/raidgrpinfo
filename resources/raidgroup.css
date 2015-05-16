@@ -14,14 +14,14 @@
     padding-bottom: 20px;
 }
 
-td, th {
+.grid {
     text-align:center;
     padding:2px 5px;
     font-size:14px;
     background:#f4f4f4;
 }
 
-th {
+.headcursor {
     cursor:pointer;
 }
 

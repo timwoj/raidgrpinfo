@@ -8,14 +8,16 @@
     <script src="/resources/jquery.tablesorter.min.js"></script>
     <script src="/resources/jqwidgets/jqxcore.js"></script>
     <script src="/resources/jqwidgets/jqxtooltip.js"></script>
-    <script src="/resources/tables.js"></script>
+    <script src="/resources/jqwidgets/jqxnotification.js"></script>
+    <script src="/resources/jqwidgets/jqxwindow.js"></script>
+    <script src="/resources/grouploader.js"></script>
     <script src="http://static.wowhead.com/widgets/power.js"></script>
     <script>
       $(document).ready(function() {
       {% for toon in toondata -%}
       {% if toon['status'] != 'nok' -%}
       $("#{{ toon['name'] | normalize }}-td").jqxTooltip({content: "{{ toon['name'] }}<br/>{{ toon['guild']['name'] }} - {{ toon['realm'] }}<br/><a href='http://askmrrobot.com/wow/player/us/{% print toon['toonrealm'].replace('-','_') %}/{{ toon['name'] }}' target='_blank'>Ask Mr. Robot</a>",autoHideDelay: 6000 });
-      {%- endif %}
+      {% endif %}
       {%- endfor %}
       });
     </script>
@@ -30,6 +32,7 @@
         <form action="/edit/{{ nrealm }}/{{ ngroup }}">
           <input type="submit" value="Edit Group">
         </form>
+        <input type="button" id="deleteButton" value="Delete Group"/>
       </div>
     </div>
     Group Average ilvl: {{ groupavgilvl }}<br/>
