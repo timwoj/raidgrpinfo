@@ -394,7 +394,7 @@ class GridLoader(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-gridtoon.html')
         self.response.write(template.render(template_values))
 
-        print 'toon %s has %d pieces of HFC gear (%s)' % (char['name'], len(normalgear),str(normalgear))
+        print 'toon %s has %d pieces of HFC gear (%s)' % (char['name'].encode('ascii','ignore'), len(normalgear),str(normalgear))
 
 class Validator(webapp2.RequestHandler):
     def post(self):
