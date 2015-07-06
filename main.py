@@ -34,8 +34,8 @@ class GroupRedir(webapp2.RequestHandler):
         # without spaces.  this makes it easier to work with them.
         realm = self.request.get('realm').strip()
         group = self.request.get('group').strip()
-        nrealm = grouploader.Group.normalize(realm)
-        ngroup = grouploader.Group.normalize(group)
+        nrealm = grouploader.Groupv2.normalize(realm)
+        ngroup = grouploader.Groupv2.normalize(group)
 
         self.redirect('/%s/%s' % (nrealm, ngroup))
 

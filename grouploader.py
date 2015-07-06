@@ -13,9 +13,8 @@ from google.appengine.api import memcache
 from passlib.hash import sha256_crypt
 
 # Minimum ilvls and colors for the ilvl grid
-LFR_SET_ILVL=660
-MIN_NORMAL=670
-MIN_HEROIC=685
+MIN_NORMAL=690
+MIN_HEROIC=705
 COLOR_LFR="#FFB2B2"
 COLOR_NORMAL="#FFFFB2"
 COLOR_HEROIC="#B2FFB2"
@@ -324,7 +323,7 @@ class GridLoader(webapp2.RequestHandler):
 
     # Generic method to add a character to the page response
     def addCharacter(self, char, results, classes):
-
+        
         if 'status' in char and char['status'] == 'nok':
             template_values = {
                 'name' : char['toon'],
@@ -354,41 +353,33 @@ class GridLoader(webapp2.RequestHandler):
 
             # yes, feet are not part of normal tier gear, but they are part
             # of the lfr set.
-            tierItems = ['head','shoulder','chest','hands','legs','feet']
-            nonTierItems = ['neck','back','wrist','waist','feet','finger1','finger2','trinket1','trinket2','mainHand','offHand']
+            itemslots = ['head','shoulder','chest','hands','legs','feet','neck','back','wrist','waist','finger1','finger2','trinket1','trinket2','mainHand','offHand']
 
-            # TODO: combine these two loops into one?
-            for itype in tierItems:
+            query = wowapi.TierSets.query()
+            sets = query.fetch()
+
+            normalgear = list()
+
+            for itype in itemslots:
                 template_values[itype] = {}
                 if itype in items:
                     template_values[itype]['id'] = items[itype]['id']
                     template_values[itype]['itemLevel'] = items[itype]['itemLevel']
                     template_values[itype]['bonusLists'] = items[itype]['bonusLists']
-                    if 'tooltipParams' in items[itype]:
-                        if 'set' in items[itype]['tooltipParams']:
-                            if items[itype]['itemLevel'] == LFR_SET_ILVL or items[itype]['itemLevel'] == LFR_SET_ILVL+6:
-                                template_values[itype]['set'] = 'lfr'
-                                template_values['lfrcount'] += 1
-                            elif items[itype]['itemLevel'] >= MIN_NORMAL:
-                                template_values[itype]['set'] = 'norm'
-                                template_values['tiercount'] += 1
-                            else:
-                                template_values[itype]['set'] = 'no'
+                    if items[itype]['id'] in sets[0].items:
+                        template_values[itype]['set'] = 'norm'
+                        template_values['tiercount'] += 1
+                    elif items[itype]['id'] in sets[0].lfritems:
+                        template_values[itype]['set'] = 'lfr'
+                        template_values['lfrcount'] += 1
                     else:
                         template_values[itype]['set'] = 'no'
+
+                    if items[itype]['context'] == 'raid-normal' and items[itype]['itemLevel'] >= 690:
+                        normalgear.append(itype)
                 else:
                     template_values[itype]['itemLevel'] = 0
                     template_values[itype]['set'] = False
-
-            for itype in nonTierItems:
-                template_values[itype] = {}
-                if itype in items:
-                    template_values[itype]['id'] = items[itype]['id']
-                    template_values[itype]['itemLevel'] = items[itype]['itemLevel']
-                    template_values[itype]['bonusLists'] = items[itype]['bonusLists']
-                else:
-                    template_values[itype]['itemLevel'] = 0
-                    template_values[itype]['set'] = 'no'
 
         else:
 
@@ -402,6 +393,8 @@ class GridLoader(webapp2.RequestHandler):
 
         template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-gridtoon.html')
         self.response.write(template.render(template_values))
+
+        print 'toon %s has %d pieces of HFC gear (%s)' % (char['name'], len(normalgear),str(normalgear))
 
 class Validator(webapp2.RequestHandler):
     def post(self):

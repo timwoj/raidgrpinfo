@@ -18,6 +18,10 @@ class Realm(ndb.Model):
     realm = ndb.StringProperty(indexed=True,required=True)
     slug = ndb.StringProperty(indexed=True,required=True)
 
+class TierSets(ndb.Model):
+    items = ndb.IntegerProperty(indexed=True,repeated=True)
+    lfritems = ndb.IntegerProperty(indexed=True,repeated=True)
+    
 class Importer:
     def load(self, realm, frealm, toonlist, data, groupstats):
         path = os.path.join(os.path.split(__file__)[0],'api-auth.json')
@@ -163,8 +167,15 @@ class Setup:
         json_key = json.load(open(path))
         apikey = json_key['blizzard']
 
-        # Delete all of the entities out of the realm datastore so fresh entities
-        # can be loaded.
+        realmcount = self.initRealms(apikey)
+        classcount = self.initClasses(apikey)
+        sets = self.initSets(apikey)
+
+        return [realmcount, classcount]
+
+    def initRealms(self, apikey):
+        # Delete all of the entities out of the realm datastore so fresh
+        # entities can be loaded.
         q = Realm.query()
         for r in q.fetch():
             r.key.delete()
@@ -179,8 +190,11 @@ class Setup:
                       namespace='Realms', id=realm['slug'])
             r.put()
 
-        # Delete all of the entities out of the class datastore so fresh entities
-        # can be loaded.
+        return len(jsondata['realms'])
+
+    def initClasses(self, apikey):
+        # Delete all of the entities out of the class datastore so fresh
+        # entities can be loaded.
         q = ClassEntry.query()
         for r in q.fetch():
             r.key.delete()
@@ -194,4 +208,40 @@ class Setup:
                             powerType=c['powerType'], name=c['name'])
             ce.put();
 
-        return [len(jsondata['realms']), len(rawclasses['classes'])]
+        return len(rawclasses['classes'])
+
+    def initSets(self, apikey):
+
+        TIER_SETS=[1249,1250,1251,1252,1253,1254,1255,1256,1257,1258,1259]
+        LFR_TIER_SETS=[1260,1261,1262,1263]
+        
+        # Delete all of the entities out of the class datastore so fresh
+        # entities can be loaded.
+        q = TierSets.query()
+        for r in q.fetch():
+            r.key.delete()
+
+        sets = TierSets()
+        sets.items = list()
+        sets.lfritems = list()
+
+        # retrieve a list of classes from the blizzard API
+        for s in TIER_SETS:
+            url = 'https://us.api.battle.net/wow/item/set/%d?locale=en_US&apikey=%s' % (s, apikey)
+            response = urlfetch.fetch(url)
+            raw = json.loads(response.content)
+            if 'items' in raw:
+                sets.items = sets.items + raw['items']
+
+        for s in LFR_TIER_SETS:
+            url = 'https://us.api.battle.net/wow/item/set/%d?locale=en_US&apikey=%s' % (s, apikey)
+            response = urlfetch.fetch(url)
+            raw = json.loads(response.content)
+            if 'items' in raw:
+                sets.lfritems = sets.lfritems + raw['items']
+
+        print sets.items
+        print sets.lfritems
+        sets.put()
+
+        return [len(sets.items), len(sets.lfritems)]
