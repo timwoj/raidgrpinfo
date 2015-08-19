@@ -372,6 +372,8 @@ class GridLoader(webapp2.RequestHandler):
                     elif items[itype]['id'] in sets[0].lfritems:
                         template_values[itype]['set'] = 'lfr'
                         template_values['lfrcount'] += 1
+                    elif items[itype]['context'] == 'trade-skill':
+                        template_values[itype]['set'] = 'crafted'
                     else:
                         template_values[itype]['set'] = 'no'
 
