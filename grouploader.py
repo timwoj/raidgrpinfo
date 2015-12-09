@@ -366,6 +366,7 @@ class GridLoader(webapp2.RequestHandler):
                     template_values[itype]['id'] = items[itype]['id']
                     template_values[itype]['itemLevel'] = items[itype]['itemLevel']
                     template_values[itype]['bonusLists'] = items[itype]['bonusLists']
+                    template_values[itype]['tooltips'] = items[itype]['tooltipParams']
                     if items[itype]['id'] in sets[0].items:
                         template_values[itype]['set'] = 'norm'
                         template_values['tiercount'] += 1
