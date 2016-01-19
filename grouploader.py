@@ -15,21 +15,21 @@ from passlib.hash import sha256_crypt
 # Minimum ilvls and colors for the ilvl grid
 MIN_NORMAL=690
 MIN_HEROIC=705
-COLOR_LFR="#FFB2B2"
-COLOR_NORMAL="#FFFFB2"
-COLOR_HEROIC="#B2FFB2"
+COLOR_LFR='#FFB2B2'
+COLOR_NORMAL='#FFFFB2'
+COLOR_HEROIC='#B2FFB2'
 
 # This is used to color the table cells on the grid display based on the ilvl
 # of the item.  It gets put into the jinja environment as a filter.
 def ilvlcolor(ilvl):
-    if (ilvl == 0):
-        return ''
-    elif (ilvl < MIN_NORMAL):
-        return 'background-color:'+COLOR_LFR
+    retval = ''
+    if (ilvl > 0 and ilvl < MIN_NORMAL):
+        retval = 'background-color:'+COLOR_LFR
     elif ilvl >= MIN_NORMAL and ilvl < MIN_HEROIC:
-        return 'background-color:'+COLOR_NORMAL
+        retval = 'background-color:'+COLOR_NORMAL
     elif ilvl >= MIN_HEROIC:
-        return 'background-color:'+COLOR_HEROIC
+        retval = 'background-color:'+COLOR_HEROIC
+    return retval
 
 def normalize(groupname):
     return groupname.lower().replace('\'','').replace(' ','-')
@@ -364,6 +364,12 @@ class GridLoader(webapp2.RequestHandler):
                 template_values[itype] = {}
                 if itype in items:
                     template_values[itype]['id'] = items[itype]['id']
+                    if ('tooltipParams' in items[itype] and 'upgrade' in items[itype]['tooltipParams']):
+                        template_values[itype]['stockilvl'] = items[itype]['itemLevel']-(items[itype]['tooltipParams']['upgrade']['current']*5)
+                        template_values[itype]['upgrade'] = items[itype]['tooltipParams']['upgrade']['current']
+                    else:
+                        template_values[itype]['stockilvl'] = items[itype]['itemLevel']
+                        template_values[itype]['upgrade'] = -1
                     template_values[itype]['itemLevel'] = items[itype]['itemLevel']
                     template_values[itype]['bonusLists'] = items[itype]['bonusLists']
                     template_values[itype]['tooltips'] = items[itype]['tooltipParams']
@@ -382,7 +388,9 @@ class GridLoader(webapp2.RequestHandler):
                         normalgear.append(itype)
                 else:
                     template_values[itype]['itemLevel'] = 0
+                    template_values[itype]['stockilvl'] = 0
                     template_values[itype]['set'] = False
+                print template_values[itype]
 
         else:
 
