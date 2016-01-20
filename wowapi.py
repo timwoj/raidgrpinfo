@@ -153,6 +153,14 @@ class Importer:
                 groupstats.prot += 1
             elif toonclass in ['Death Knight','Druid','Mage','Rogue']:
                 groupstats.vanq += 1
+                
+        # Hack for Shig's OCD. Swap the rings around so that the legendary ring is
+        # always in slot 2.
+        items = toondata['items']
+        if items['finger1']['id'] in range(124634, 124639) or items['finger1']['id'] in range(118290, 118310):
+            temp = items['finger2']
+            items['finger2'] = items['finger1']
+            items['finger1'] = temp
 
     def create_callback(self, rpc, name, toondata, groupstats, classes):
         return lambda: self.handle_result(rpc, name, toondata, groupstats, classes)
