@@ -15,9 +15,11 @@ from passlib.hash import sha256_crypt
 # Minimum ilvls and colors for the ilvl grid
 MIN_NORMAL=690
 MIN_HEROIC=705
+MIN_MYTHIC=720
 COLOR_LFR='#FFB2B2'
 COLOR_NORMAL='#FFFFB2'
 COLOR_HEROIC='#B2FFB2'
+COLOR_MYTHIC='#C3BEFF'
 
 # This is used to color the table cells on the grid display based on the ilvl
 # of the item.  It gets put into the jinja environment as a filter.
@@ -27,8 +29,10 @@ def ilvlcolor(ilvl):
         retval = 'background-color:'+COLOR_LFR
     elif ilvl >= MIN_NORMAL and ilvl < MIN_HEROIC:
         retval = 'background-color:'+COLOR_NORMAL
-    elif ilvl >= MIN_HEROIC:
+    elif ilvl >= MIN_HEROIC and ilvl < MIN_MYTHIC:
         retval = 'background-color:'+COLOR_HEROIC
+    elif ilvl >= MIN_MYTHIC:
+        retval = 'background-color:'+COLOR_MYTHIC
     return retval
 
 def normalize(groupname):
@@ -304,9 +308,11 @@ class GridLoader(webapp2.RequestHandler):
         template_values = {
             'min_normal' : MIN_NORMAL,
             'min_heroic' : MIN_HEROIC,
+            'min_mythic' : MIN_MYTHIC,
             'color_lfr' : COLOR_LFR,
             'color_normal' : COLOR_NORMAL,
             'color_heroic' : COLOR_HEROIC,
+            'color_mythic' : COLOR_MYTHIC,
         }
         self.response.write(template.render(template_values))
 
