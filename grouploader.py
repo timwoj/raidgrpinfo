@@ -340,7 +340,19 @@ class GridLoader(webapp2.RequestHandler):
             }
         elif 'items' in char:
 
+            # yes, feet are not part of normal tier gear, but they are part
+            # of the lfr set.
+            itemslots = ['head','shoulder','chest','hands','legs','feet','neck','back','wrist','waist','finger1','finger2','trinket1','trinket2','mainHand','offHand']
             items = char['items']
+            
+            avgilvleq = 0
+            numitems = 0
+            for slot in itemslots:
+                if slot in items:
+                   avgilvleq = avgilvleq + items[slot]['itemLevel']
+                   numitems = numitems + 1
+            avgilvleq = round(float(avgilvleq)/float(numitems), 1)
+
             template_values = {
                 'status' : 'ok',
                 'name' : char['name'],
@@ -351,8 +363,8 @@ class GridLoader(webapp2.RequestHandler):
                 'class' : classes[char['class']],
                 'main' : char['main'],
                 'role' : char['role'],
-                'avgilvl' : char['items']['averageItemLevel'],
-                'avgilvle' : char['items']['averageItemLevelEquipped'],
+                'avgilvl' : items['averageItemLevel'],
+                'avgilvle' : avgilvleq,
                 'lfrcount' : 0,
                 'tiercount' : 0
             }
