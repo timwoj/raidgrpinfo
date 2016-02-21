@@ -332,7 +332,7 @@ class GridLoader(webapp2.RequestHandler):
         
         if 'status' in char and char['status'] == 'nok':
             template_values = {
-                'name' : char['toon'],
+                'name' : char['name'],
                 'status' : char['status'],
                 'reason' : char['reason'],
                 'realm' : char['toonrealm'],
@@ -410,20 +410,20 @@ class GridLoader(webapp2.RequestHandler):
                     template_values[itype]['set'] = False
                 print template_values[itype]
 
+            print 'toon %s has %d pieces of HFC gear (%s)' % (char['name'].encode('ascii','ignore'), len(normalgear),str(normalgear))
+
         else:
 
             template_values = {
-                'name' : char['toon'],
+                'name' : char['name'],
                 'status' : 'nok',
-                'reason' : 'Unknown error retrieving data for %s.  Refresh to try again' % char['toon'],
+                'reason' : 'Unknown error retrieving data for %s.  Refresh to try again' % char['name'],
                 'realm' : char['toonrealm'],
                 'frealm' : char['toonfrealm'],
             }
 
         template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-gridtoon.html')
         self.response.write(template.render(template_values))
-
-        print 'toon %s has %d pieces of HFC gear (%s)' % (char['name'].encode('ascii','ignore'), len(normalgear),str(normalgear))
 
 class Validator(webapp2.RequestHandler):
     def post(self):

@@ -96,19 +96,19 @@ class Importer:
             response = rpc.get_result()
         except urlfetch_errors.DeadlineExceededError:
             print('urlfetch threw DeadlineExceededError on toon %s' % name.encode('ascii','ignore'))
-            toondata['toon'] = name
+            toondata['name'] = name
             toondata['status'] = 'nok'
             toondata['reason'] = 'Timeout retrieving data from Battle.net for %s.  Refresh page to try again.' % name
             return
         except urlfetch_errors.DownloadError:
             print('urlfetch threw DownloadError on toon %s' % name.encode('ascii','ignore'))
-            toondata['toon'] = name
+            toondata['name'] = name
             toondata['status'] = 'nok'
             toondata['reason'] = 'Network error retrieving data from Battle.net for toon %s.  Refresh page to try again.' % name
             return
         except:
             print('urlfetch threw unknown exception on toon %s' % name.encode('ascii','ignore'))
-            toondata['toon'] = name
+            toondata['name'] = name
             toondata['status'] = 'nok'
             toondata['reason'] = 'Unknown error retrieving data from Battle.net for toon %s.  Refresh page to try again.' % name
             return
@@ -125,7 +125,7 @@ class Importer:
         if 'status' in jsondata and jsondata['status'] == 'nok':
             print('Blizzard API failed to find toon %s for reason: %s' %
                   (name.encode('ascii','ignore'), jsondata['reason']))
-            toondata['toon'] = name
+            toondata['name'] = name
             toondata['reason'] = "Error retrieving data for %s from Blizzard API: %s" % (name, jsondata['reason'])
             return
 
@@ -157,7 +157,7 @@ class Importer:
         # Hack for Shig's OCD. Swap the rings around so that the legendary ring is
         # always in slot 2.
         items = toondata['items']
-        if items['finger1']['id'] in range(124634, 124639) or items['finger1']['id'] in range(118290, 118310):
+        if 'finger1' in items and (items['finger1']['id'] in range(124634, 124639) or items['finger1']['id'] in range(118290, 118310)):
             temp = items['finger2']
             items['finger2'] = items['finger1']
             items['finger1'] = temp
