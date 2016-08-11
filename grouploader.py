@@ -78,7 +78,7 @@ class GroupStats:
 
     # rogue/mage/druid/dk tokens
     vanq = 0
-    # paladin/priest/warlock tokens
+    # paladin/priest/warlock/dh tokens
     conq = 0
     # warrior/hunter/shaman/monk tokens
     prot = 0
