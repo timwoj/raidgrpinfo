@@ -142,12 +142,12 @@ class Importer:
                 groupstats.plate += 1
             elif toonclass in ['Mage','Priest','Warlock']:
                 groupstats.cloth += 1
-            elif toonclass in ['Druid','Monk','Rogue']:
+            elif toonclass in ['Druid','Monk','Rogue','Demon Hunter']:
                 groupstats.leather += 1
             elif toonclass in ['Hunter','Shaman']:
                 groupstats.mail += 1
 
-            if toonclass in ['Paladin','Priest','Warlock']:
+            if toonclass in ['Paladin','Priest','Warlock','Demon Hunter']:
                 groupstats.conq += 1
             elif toonclass in ['Warrior','Hunter','Shaman','Monk']:
                 groupstats.prot += 1
