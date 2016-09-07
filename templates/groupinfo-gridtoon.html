@@ -20,8 +20,10 @@
     <img src="/resources/icon-tank.png"/>
     {%- elif role == "healer" -%}
     <img src="/resources/icon-healer.png"/>
+    {%- elif role == "dps" -%}
+    <img src="/resources/icon-melee-dps.png"/>
     {%- else -%}
-    <img src="/resources/icon-dps.png"/>
+    <img src="/resources/icon-ranged-dps.png"/>
     {%- endif -%}
     {%- if main == False %} Bench{%- else %} Main{% endif %}</td>
   <td class="grid" style="">{{ avgilvle }}</td>

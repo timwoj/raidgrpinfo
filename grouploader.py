@@ -13,9 +13,9 @@ from google.appengine.api import memcache
 from passlib.hash import sha256_crypt
 
 # Minimum ilvls and colors for the ilvl grid
-MIN_NORMAL=690
-MIN_HEROIC=705
-MIN_MYTHIC=720
+MIN_NORMAL=850
+MIN_HEROIC=865
+MIN_MYTHIC=880
 COLOR_LFR='#FFB2B2'
 COLOR_NORMAL='#FFFFB2'
 COLOR_HEROIC='#B2FFB2'
@@ -82,6 +82,9 @@ class GroupStats:
     conq = 0
     # warrior/hunter/shaman/monk tokens
     prot = 0
+
+    ranged = 0
+    melee = 0
 
 def getGroupFromDB(nrealm, ngroup):
 
@@ -263,6 +266,15 @@ class GridLoader(webapp2.RequestHandler):
             avgilvl = groupstats.totalilvl / groupstats.ilvlmains
             avgeqp = groupstats.totalilvleq / groupstats.ilvlmains
 
+        melee = 0
+        ranged = 0
+        for idx, char in enumerate(data):
+            if char['main']:
+                if char['role'] == 'dps':
+                    melee += 1
+                elif char['role'] == 'ranged':
+                    ranged += 1
+            
         # Build the page header with the group name, realm, and ilvl stats
         template_values = {
             'group' : results.groupname,
@@ -272,6 +284,8 @@ class GridLoader(webapp2.RequestHandler):
             'groupavgilvl' : avgilvl,
             'groupavgeqp' : avgeqp,
             'toondata' : data,
+            'meleecount' : melee,
+            'rangedcount' : ranged,
         }
         template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-header.html')
         self.response.write(template.render(template_values))

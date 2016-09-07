@@ -27,9 +27,10 @@ function Add(){
 	"<tr style='font-size:14px;padding:2px 5px;text-align:center'>"+
             "<td><input type='text'/></td>"+
             "<td><select>"+
-            "<option>Tank</option>"+
-            "<option>Healer</option>"+
-            "<option>DPS</option>"+
+            "<option value='tank'>Tank</option>"+
+            "<option value='healer'>Healer</option>"+
+            "<option value='dps' selected>Melee DPS</option>"+
+            "<option value='ranged'>Ranged DPS</option>"+
             "</select></td>"+
             "<td><select>"+
             "<option>Main</option>"+

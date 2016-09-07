@@ -42,9 +42,10 @@
             <tr style="font-size:14px;padding:2px 5px;text-align:center">
               <td><input type="text" value="{{ toon.name }}"/></td>
               <td><select>
-                  <option{% if toon.role == 'tank' %} selected{% endif -%}>Tank</option>
-                  <option{% if toon.role == 'healer' %} selected{% endif -%}>Healer</option>
-                  <option{% if toon.role == 'dps' %} selected{% endif -%}>DPS</option>
+                  <option value="tank"{% if toon.role == 'tank' %} selected{% endif -%}>Tank</option>
+                  <option value="healer"{% if toon.role == 'healer' %} selected{% endif -%}>Healer</option>
+                  <option value="dps"{% if toon.role == 'dps' %} selected{% endif -%}>Melee DPS</option>
+                  <option value="ranged"{% if toon.role == 'ranged' %} selected{% endif -%}>Ranged DPS</option>
                 </select>
               </td>
               <td><select>
@@ -59,9 +60,10 @@
             <tr style="font-size:14px;padding:2px 5px;text-align:center">
               <td><input type="text" value=""/></td>
               <td><select>
-                  <option>Tank</option>
-                  <option>Healer</option>
-                  <option selected>DPS</option>
+                  <option value="tank">Tank</option>
+                  <option value="healer">Healer</option>
+                  <option value="dps" selected>Melee DPS</option>
+                  <option value="ranged">Ranged DPS</option>
                 </select>
               </td>
               <td><select>
