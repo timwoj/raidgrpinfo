@@ -162,6 +162,27 @@ class Importer:
             items['finger2'] = items['finger1']
             items['finger1'] = temp
 
+        # Group all gems together into a comma-separated list for tooltipParams
+        for slot in toondata['items']:
+            if not isinstance(items[slot], dict):
+                continue
+            item = items[slot]
+            if 'tooltipParams' in item:
+                gem0 = 0
+                gem1 = 0
+                gem2 = 0
+                if 'gem0' in item['tooltipParams']:
+                    gem0 = item['tooltipParams']['gem0']
+                    del item['tooltipParams']['gem0']
+                if 'gem1' in item['tooltipParams']:
+                    gem1 = item['tooltipParams']['gem1']
+                    del item['tooltipParams']['gem1']
+                if 'gem2' in item['tooltipParams']:
+                    gem2 = item['tooltipParams']['gem2']
+                    del item['tooltipParams']['gem2']
+                if gem0 != 0 or gem1 != 0 or gem2 != 0:
+                    item['tooltipParams']['gems'] = ':'.join(str(x) for x in [gem0,gem1,gem2])
+
     def create_callback(self, rpc, name, toondata, groupstats, classes):
         return lambda: self.handle_result(rpc, name, toondata, groupstats, classes)
 

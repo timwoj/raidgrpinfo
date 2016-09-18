@@ -5,7 +5,7 @@
 {{ stockilvl | ilvlcolor }}{% if upgrade == 0 %};border: 1px solid red{% elif upgrade == 1 %};border: 1px solid blue{%- endif -%}
 {%- endmacro -%}
 {%- macro itemtd(item) -%}
-<td class="grid" style="{{ gridcolor(item.stockilvl,item.upgrade) }}">{%- if item.itemLevel != 0 %}<a href="http://wowhead.com/item={{ item.id }}" rel="bonus={{ item.bonusLists|join(':') }}{% if item.tooltips.upgrade is defined %};upgd={{ item.tooltips.upgrade.current }}{% endif %}{% if item.tooltips.gem0 is defined %};gems={{ item.tooltips.gem0 }}{% endif %}{% if item.tooltips.set is defined %};pcs={{ item.tooltips.set|join(':') }}{% endif %}">{{ item.itemLevel }}</a>{{ itemtier(item.set) }}{%- endif -%}</td>
+<td class="grid" style="{{ gridcolor(item.stockilvl,item.upgrade) }}">{%- if item.itemLevel != 0 %}<a href="http://wowhead.com/item={{ item.id }}" rel="bonus={{ item.bonusLists|join(':') }}{% if item.tooltips.upgrade is defined %};upgd={{ item.tooltips.upgrade.current }}{% endif %}{% if item.tooltips.gems is defined %};gems={{ item.tooltips.gems }}{% endif %}{% if item.tooltips.set is defined %};pcs={{ item.tooltips.set|join(':') }}{% endif %}">{{ item.itemLevel }}</a>{{ itemtier(item.set) }}{%- endif -%}</td>
 {%- endmacro -%}
 <tr>
   <td class="user" style="" id="{{ name | normalize }}-td">
