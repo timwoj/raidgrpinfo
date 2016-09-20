@@ -365,6 +365,11 @@ class GridLoader(webapp2.RequestHandler):
                 if slot in items:
                    avgilvleq = avgilvleq + items[slot]['itemLevel']
                    numitems = numitems + 1
+            # if there's no offhand, assume the main hand is a 2-hander and count it double per Blizzard iLvl formula.
+            if (not 'offHand' in items) and ('mainHand' in items):
+                avgilvleq = avgilvleq + items['mainHand']['itemLevel']
+                numitems = numitems + 1
+                
             avgilvleq = round(float(avgilvleq)/float(numitems), 1)
 
             template_values = {
