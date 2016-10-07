@@ -1,4 +1,5 @@
 *.pyc
+.*.swp
 passlib/*.pyc
 passlib/handlers/*.pyc
 passlib/utils/*.pyc
