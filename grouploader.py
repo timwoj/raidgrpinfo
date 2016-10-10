@@ -341,6 +341,14 @@ class GridLoader(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('templates/pagefooter.html')
         self.response.write(template.render())
 
+    def _get_weapon_details(self, item):
+        sum = 0
+        for artifact in [item.get('mainHand'), item.get('offHand', [])]:
+            if artifact:
+                for trait in artifact.get('artifactTraits'):
+                    sum += trait.get('rank')
+        return sum
+
     # Generic method to add a character to the page response
     def addCharacter(self, char, results, classes):
         
@@ -385,7 +393,9 @@ class GridLoader(webapp2.RequestHandler):
                 'avgilvl' : items['averageItemLevel'],
                 'avgilvle' : avgilvleq,
                 'lfrcount' : 0,
-                'tiercount' : 0
+                'tiercount' : 0,
+                'artifactTraits' : 0
+
             }
 
             # yes, feet are not part of normal tier gear, but they are part
@@ -427,9 +437,8 @@ class GridLoader(webapp2.RequestHandler):
                     template_values[itype]['itemLevel'] = 0
                     template_values[itype]['stockilvl'] = 0
                     template_values[itype]['set'] = False
-                print template_values[itype]
-
-            print 'toon %s has %d pieces of HFC gear (%s)' % (char['name'].encode('ascii','ignore'), len(normalgear),str(normalgear))
+            artifact_traits = self._get_weapon_details(items)
+            template_values['artifactTraits'] = artifact_traits
 
         else:
 
