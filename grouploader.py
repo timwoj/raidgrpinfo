@@ -392,14 +392,10 @@ class GridLoader(webapp2.RequestHandler):
                 'role' : char['role'],
                 'avgilvl' : items['averageItemLevel'],
                 'avgilvle' : avgilvleq,
-                'lfrcount' : 0,
                 'tiercount' : 0,
                 'artifactTraits' : 0
-
             }
 
-            # yes, feet are not part of normal tier gear, but they are part
-            # of the lfr set.
             itemslots = ['head','shoulder','chest','hands','legs','feet','neck','back','wrist','waist','finger1','finger2','trinket1','trinket2','mainHand','offHand']
 
             query = wowapi.TierSets.query()
@@ -423,9 +419,6 @@ class GridLoader(webapp2.RequestHandler):
                     if items[itype]['id'] in sets[0].items:
                         template_values[itype]['set'] = 'norm'
                         template_values['tiercount'] += 1
-                    elif items[itype]['id'] in sets[0].lfritems:
-                        template_values[itype]['set'] = 'lfr'
-                        template_values['lfrcount'] += 1
                     elif items[itype]['context'] == 'trade-skill':
                         template_values[itype]['set'] = 'crafted'
                     else:

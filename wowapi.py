@@ -20,7 +20,6 @@ class Realm(ndb.Model):
 
 class TierSets(ndb.Model):
     items = ndb.IntegerProperty(indexed=True,repeated=True)
-    lfritems = ndb.IntegerProperty(indexed=True,repeated=True)
     
 class Importer:
     def load(self, realm, frealm, toonlist, data, groupstats):
@@ -242,7 +241,6 @@ class Setup:
     def initSets(self, apikey):
 
         TIER_SETS=[1249,1250,1251,1252,1253,1254,1255,1256,1257,1258,1259]
-        LFR_TIER_SETS=[1260,1261,1262,1263]
         
         # Delete all of the entities out of the class datastore so fresh
         # entities can be loaded.
@@ -252,7 +250,6 @@ class Setup:
 
         sets = TierSets()
         sets.items = list()
-        sets.lfritems = list()
 
         # retrieve a list of classes from the blizzard API
         for s in TIER_SETS:
@@ -262,15 +259,6 @@ class Setup:
             if 'items' in raw:
                 sets.items = sets.items + raw['items']
 
-        for s in LFR_TIER_SETS:
-            url = 'https://us.api.battle.net/wow/item/set/%d?locale=en_US&apikey=%s' % (s, apikey)
-            response = urlfetch.fetch(url)
-            raw = json.loads(response.content)
-            if 'items' in raw:
-                sets.lfritems = sets.lfritems + raw['items']
-
-        print sets.items
-        print sets.lfritems
         sets.put()
 
-        return [len(sets.items), len(sets.lfritems)]
+        return [len(sets.items)]
