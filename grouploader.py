@@ -274,7 +274,7 @@ class GridLoader(webapp2.RequestHandler):
                     melee += 1
                 elif char['role'] == 'ranged':
                     ranged += 1
-            
+
         # Build the page header with the group name, realm, and ilvl stats
         template_values = {
             'group' : results.groupname,
@@ -341,17 +341,20 @@ class GridLoader(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('templates/pagefooter.html')
         self.response.write(template.render())
 
-    def _get_weapon_details(self, item):
+    def get_weapon_details(self, items):
         sum = 0
-        for artifact in [item.get('mainHand'), item.get('offHand', [])]:
+        for artifact in [items.get('mainHand'), items.get('offHand', [])]:
             if artifact:
                 for trait in artifact.get('artifactTraits'):
                     sum += trait.get('rank')
-        return sum
+        # Deduct artifact traits added by relics. I don't know why people care about this number
+        # verses the effective traits of purchased + relics but boy they sure do
+        adjusted_sum = sum - (len(items.get('mainHand').get('relics', {})) + len(items.get('offHand', {}).get('relics', {})))
+        return adjusted_sum
 
     # Generic method to add a character to the page response
     def addCharacter(self, char, results, classes):
-        
+
         if 'status' in char and char['status'] == 'nok':
             template_values = {
                 'name' : char['name'],
@@ -366,7 +369,7 @@ class GridLoader(webapp2.RequestHandler):
             # of the lfr set.
             itemslots = ['head','shoulder','chest','hands','legs','feet','neck','back','wrist','waist','finger1','finger2','trinket1','trinket2','mainHand','offHand']
             items = char['items']
-            
+
             avgilvleq = 0
             numitems = 0
             for slot in itemslots:
@@ -377,7 +380,7 @@ class GridLoader(webapp2.RequestHandler):
             if (not 'offHand' in items) and ('mainHand' in items):
                 avgilvleq = avgilvleq + items['mainHand']['itemLevel']
                 numitems = numitems + 1
-                
+
             avgilvleq = round(float(avgilvleq)/float(numitems), 1)
 
             template_values = {
@@ -430,8 +433,7 @@ class GridLoader(webapp2.RequestHandler):
                     template_values[itype]['itemLevel'] = 0
                     template_values[itype]['stockilvl'] = 0
                     template_values[itype]['set'] = False
-            artifact_traits = self._get_weapon_details(items)
-            template_values['artifactTraits'] = artifact_traits
+            template_values['artifactTraits'] = self.get_weapon_details(items)
 
         else:
 
@@ -463,7 +465,7 @@ class Validator(webapp2.RequestHandler):
 
             # grab the group the datastore and try to validate the password
             results = getGroupFromDB(nrealm, ngroup)
-                
+
             if results != None:
                 if sha256_crypt.verify(pw, results.password) == False:
                     self.response.status = 401
