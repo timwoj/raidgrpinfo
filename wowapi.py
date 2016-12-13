@@ -161,7 +161,8 @@ class Importer:
             items['finger2'] = items['finger1']
             items['finger1'] = temp
 
-        # Group all gems together into a comma-separated list for tooltipParams
+        # Group all gems together into a comma-separated list for tooltipParams. Also fix
+        # the ilvl on legendaries since Blizzard doesn't seem to want to.
         for slot in toondata['items']:
             if not isinstance(items[slot], dict):
                 continue
@@ -181,6 +182,8 @@ class Importer:
                     del item['tooltipParams']['gem2']
                 if gem0 != 0 or gem1 != 0 or gem2 != 0:
                     item['tooltipParams']['gems'] = ':'.join(str(x) for x in [gem0,gem1,gem2])
+            if item['quality'] == 5 and item['itemLevel'] == 895:
+                item['itemLevel'] = 910
 
     def create_callback(self, rpc, name, toondata, groupstats, classes):
         return lambda: self.handle_result(rpc, name, toondata, groupstats, classes)
