@@ -20,12 +20,15 @@ COLOR_LFR='#FFB2B2'
 COLOR_NORMAL='#FFFFB2'
 COLOR_HEROIC='#B2FFB2'
 COLOR_MYTHIC='#C3BEFF'
+COLOR_LEGENDARY='#FFCA68'
 
 # This is used to color the table cells on the grid display based on the ilvl
 # of the item.  It gets put into the jinja environment as a filter.
-def ilvlcolor(ilvl):
+def ilvlcolor(ilvl, quality):
     retval = ''
-    if (ilvl > 0 and ilvl < MIN_NORMAL):
+    if (quality == 5):
+        retval = 'background-color:'+COLOR_LEGENDARY
+    elif (ilvl > 0 and ilvl < MIN_NORMAL):
         retval = 'background-color:'+COLOR_LFR
     elif ilvl >= MIN_NORMAL and ilvl < MIN_HEROIC:
         retval = 'background-color:'+COLOR_NORMAL
@@ -419,6 +422,7 @@ class GridLoader(webapp2.RequestHandler):
                     template_values[itype]['itemLevel'] = items[itype]['itemLevel']
                     template_values[itype]['bonusLists'] = items[itype]['bonusLists']
                     template_values[itype]['tooltips'] = items[itype]['tooltipParams']
+                    template_values[itype]['quality'] = items[itype]['quality']
                     if items[itype]['id'] in sets[0].items:
                         template_values[itype]['set'] = 'norm'
                         template_values['tiercount'] += 1
