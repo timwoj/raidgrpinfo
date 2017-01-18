@@ -345,14 +345,14 @@ class GridLoader(webapp2.RequestHandler):
         self.response.write(template.render())
 
     def get_weapon_details(self, items):
-        sum = 0
+        rank_sum = 0
         for artifact in [items.get('mainHand'), items.get('offHand', [])]:
             if artifact:
                 for trait in artifact.get('artifactTraits'):
-                    sum += trait.get('rank')
+                    rank_sum += trait.get('rank')
         # Deduct artifact traits added by relics. I don't know why people care about this number
         # verses the effective traits of purchased + relics but boy they sure do
-        adjusted_sum = sum - (len(items.get('mainHand').get('relics', {})) + len(items.get('offHand', {}).get('relics', {})))
+        adjusted_sum = rank_sum - (len(items.get('mainHand', {}).get('relics', {})) + len(items.get('offHand', {}).get('relics', {})))
         return adjusted_sum
 
     # Generic method to add a character to the page response
