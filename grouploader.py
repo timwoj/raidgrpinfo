@@ -384,7 +384,8 @@ class GridLoader(webapp2.RequestHandler):
                 avgilvleq = avgilvleq + items['mainHand']['itemLevel']
                 numitems = numitems + 1
 
-            avgilvleq = round(float(avgilvleq)/float(numitems), 1)
+            if numitems != 0:
+                avgilvleq = round(float(avgilvleq)/float(numitems), 1)
 
             template_values = {
                 'status' : 'ok',
