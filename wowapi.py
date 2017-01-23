@@ -20,8 +20,17 @@ class Realm(ndb.Model):
 
 class TierSets(ndb.Model):
     items = ndb.IntegerProperty(indexed=True,repeated=True)
-    
+
 class Importer:
+
+    # These are the "Better" enchants used for quality checking on enchants
+    ENCHANTS = {
+        'neck': [5437, 5438, 5439, 5890, 5889, 5891],
+        'finger1': [5427, 5428, 5429, 5430],
+        'finger2': [5427, 5428, 5429, 5430],
+        'back': [5434, 5435, 5436]
+    }
+
     def load(self, realm, frealm, toonlist, data, groupstats):
         path = os.path.join(os.path.split(__file__)[0],'api-auth.json')
         json_key = json.load(open(path))
@@ -48,7 +57,7 @@ class Importer:
                     Realm.slug == toonrealm, namespace='Realms')
                 rq2res = rq2.fetch()
                 toonfrealm = rq2res[0].realm
-            
+
             # TODO: this object can probably be a class instead of another dict
             newdata = dict()
             data.append(newdata)
@@ -152,7 +161,7 @@ class Importer:
                 groupstats.prot += 1
             elif toonclass in ['Death Knight','Druid','Mage','Rogue']:
                 groupstats.vanq += 1
-                
+
         # Hack for Shig's OCD. Swap the rings around so that the legendary ring is
         # always in slot 2.
         items = toondata['items']
@@ -186,16 +195,15 @@ class Importer:
             # Default enchant checking to -1 for all items
             item['enchant'] = -1
 
-            if slot == 'neck':
+            if slot in Importer.ENCHANTS:
                 enchant = item.get('tooltipParams', {}).get('enchant', 0)
-                if enchant in [5437, 5438, 5439, 5890, 5889, 5891]:
+                if enchant in Importer.ENCHANTS[slot]:
                     item['enchant'] = 2
                 elif enchant != 0:
                     item['enchant'] = 1
                 else:
                     item['enchant'] = 0
-                print enchant
-                    
+
             if item['quality'] == 5 and item['itemLevel'] == 895:
                 item['itemLevel'] = 910
 
@@ -205,7 +213,7 @@ class Importer:
 class Setup:
     # Loads the list of realms into the datastore from the blizzard API so that
     # the realm list on the front page gets populated.  Also loads the list of
-    # classes into a table on the DB so that we don't have to request it 
+    # classes into a table on the DB so that we don't have to request it
     def initdb(self):
 
         path = os.path.join(os.path.split(__file__)[0],'api-auth.json')
@@ -258,7 +266,7 @@ class Setup:
     def initSets(self, apikey):
 
         TIER_SETS=[1281,1282,1283,1284,1285,1286,1287,1288,1289,1290,1291,1292]
-        
+
         # Delete all of the entities out of the class datastore so fresh
         # entities can be loaded.
         q = TierSets.query()
