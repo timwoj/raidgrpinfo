@@ -13,9 +13,9 @@ from google.appengine.api import memcache
 from passlib.hash import sha256_crypt
 
 # Minimum ilvls and colors for the ilvl grid
-MIN_NORMAL=850
-MIN_HEROIC=865
-MIN_MYTHIC=880
+MIN_NORMAL=870
+MIN_HEROIC=885
+MIN_MYTHIC=900
 COLOR_LFR='#FFB2B2'
 COLOR_NORMAL='#FFFFB2'
 COLOR_HEROIC='#B2FFB2'
@@ -414,12 +414,7 @@ class GridLoader(webapp2.RequestHandler):
                 template_values[itype] = {}
                 if itype in items:
                     template_values[itype]['id'] = items[itype]['id']
-                    if ('tooltipParams' in items[itype] and 'upgrade' in items[itype]['tooltipParams']):
-                        template_values[itype]['stockilvl'] = items[itype]['itemLevel']-(items[itype]['tooltipParams']['upgrade']['current']*5)
-                        template_values[itype]['upgrade'] = items[itype]['tooltipParams']['upgrade']['current']
-                    else:
-                        template_values[itype]['stockilvl'] = items[itype]['itemLevel']
-                        template_values[itype]['upgrade'] = -1
+                    template_values[itype]['enchant'] = items[itype]['enchant']
                     template_values[itype]['itemLevel'] = items[itype]['itemLevel']
                     template_values[itype]['bonusLists'] = items[itype]['bonusLists']
                     template_values[itype]['tooltips'] = items[itype]['tooltipParams']
@@ -436,7 +431,6 @@ class GridLoader(webapp2.RequestHandler):
                         normalgear.append(itype)
                 else:
                     template_values[itype]['itemLevel'] = 0
-                    template_values[itype]['stockilvl'] = 0
                     template_values[itype]['set'] = False
             template_values['artifactTraits'] = self.get_weapon_details(items)
 
@@ -450,6 +444,7 @@ class GridLoader(webapp2.RequestHandler):
                 'frealm' : char['toonfrealm'],
             }
 
+        print template_values
         template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-gridtoon.html')
         self.response.write(template.render(template_values))
 

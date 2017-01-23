@@ -182,6 +182,20 @@ class Importer:
                     del item['tooltipParams']['gem2']
                 if gem0 != 0 or gem1 != 0 or gem2 != 0:
                     item['tooltipParams']['gems'] = ':'.join(str(x) for x in [gem0,gem1,gem2])
+
+            # Default enchant checking to -1 for all items
+            item['enchant'] = -1
+
+            if slot == 'neck':
+                enchant = item.get('tooltipParams', {}).get('enchant', 0)
+                if enchant in [5437, 5438, 5439, 5890, 5889, 5891]:
+                    item['enchant'] = 2
+                elif enchant != 0:
+                    item['enchant'] = 1
+                else:
+                    item['enchant'] = 0
+                print enchant
+                    
             if item['quality'] == 5 and item['itemLevel'] == 895:
                 item['itemLevel'] = 910
 
@@ -243,7 +257,7 @@ class Setup:
 
     def initSets(self, apikey):
 
-        TIER_SETS=[1249,1250,1251,1252,1253,1254,1255,1256,1257,1258,1259]
+        TIER_SETS=[1281,1282,1283,1284,1285,1286,1287,1288,1289,1290,1291,1292]
         
         # Delete all of the entities out of the class datastore so fresh
         # entities can be loaded.
