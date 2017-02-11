@@ -313,12 +313,17 @@ class GridLoader(webapp2.RequestHandler):
         self.response.write(template.render(template_values))
         self.response.write('<tbody>\n')
 
+        # Get the tier set data one time to pass to the character parser instead of
+        # loading it every time.
+        query = wowapi.TierSets.query()
+        tier_sets = query.fetch()
+
         # Loop through the data twice here to display the separate sections,
         # but don't actually loop through all of the data.  The lambda filters
         # filter the character data down to just the parts that are needed
         # for each loop.
         for idx, char in enumerate(data):
-            self.addCharacter(char, results, classes)
+            self.addCharacter(char, results, classes, tier_sets)
 
         self.response.write('</table><p/>\n')
         template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-colorlegend.html')
@@ -356,7 +361,7 @@ class GridLoader(webapp2.RequestHandler):
         return adjusted_sum
 
     # Generic method to add a character to the page response
-    def addCharacter(self, char, results, classes):
+    def addCharacter(self, char, results, classes, tier_sets):
 
         if 'status' in char and char['status'] == 'nok':
             template_values = {
@@ -405,9 +410,6 @@ class GridLoader(webapp2.RequestHandler):
 
             itemslots = ['head','shoulder','chest','hands','legs','feet','neck','back','wrist','waist','finger1','finger2','trinket1','trinket2','mainHand','offHand']
 
-            query = wowapi.TierSets.query()
-            sets = query.fetch()
-
             normalgear = list()
 
             for itype in itemslots:
@@ -419,7 +421,7 @@ class GridLoader(webapp2.RequestHandler):
                     template_values[itype]['bonusLists'] = items[itype]['bonusLists']
                     template_values[itype]['tooltips'] = items[itype]['tooltipParams']
                     template_values[itype]['quality'] = items[itype]['quality']
-                    if items[itype]['id'] in sets[0].items:
+                    if items[itype]['id'] in tier_sets[0].items:
                         template_values[itype]['set'] = 'norm'
                         template_values['tiercount'] += 1
                     elif items[itype]['context'] == 'trade-skill':
