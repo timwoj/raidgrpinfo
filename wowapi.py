@@ -121,6 +121,14 @@ class Importer:
             toondata['reason'] = 'Unknown error retrieving data from Battle.net for toon %s.  Refresh page to try again.' % name
             return
 
+        # Catch HTTP errors from Blizzard. 404s really wreck everything.
+        if response.status_code != 200:
+            print('urlfetch returned a %d status code on toon %s' % (response.status_code, name.encode('ascii','ignore')))
+            toondata['name'] = name
+            toondata['status'] = 'nok'
+            toondata['reason'] = 'Got a %d from Battle.net for toon %s.  Refresh page to try again.' % (response.status_code, name)
+            return
+
         # change the json from the response into a dict of data and store it
         # into the toondata object that was passed in.
         jsondata = json.loads(response.content)
@@ -222,9 +230,9 @@ class Setup:
 
         realmcount = self.initRealms(apikey)
         classcount = self.initClasses(apikey)
-        sets = self.initSets(apikey)
+        setcount = self.initSets(apikey)
 
-        return [realmcount, classcount]
+        return [realmcount, classcount, setcount]
 
     def initRealms(self, apikey):
         # Delete all of the entities out of the realm datastore so fresh
@@ -236,7 +244,10 @@ class Setup:
         # retrieve a list of realms from the blizzard API
         url = 'https://us.api.battle.net/wow/realm/status?locale=en_US&apikey=%s' % apikey
         response = urlfetch.fetch(url)
-        jsondata = json.loads(response.content)
+        if response.status_code == 200:
+            jsondata = json.loads(response.content)
+        else:
+            jsondata = {'realms': []}
 
         for realm in jsondata['realms']:
             r = Realm(realm=realm['name'], slug=realm['slug'],
@@ -255,17 +266,21 @@ class Setup:
         # retrieve a list of classes from the blizzard API
         url = 'https://us.api.battle.net/wow/data/character/classes?locale=en_US&apikey=%s' % apikey
         response = urlfetch.fetch(url)
-        rawclasses = json.loads(response.content)
-        for c in rawclasses['classes']:
+        if response.status_code == 200:
+            jsondata = json.loads(response.content)
+        else:
+            jsondata = {'classes': []}
+
+        for c in jsondata['classes']:
             ce = ClassEntry(classId=c['id'], mask=c['mask'],
                             powerType=c['powerType'], name=c['name'])
             ce.put();
 
-        return len(rawclasses['classes'])
+        return len(jsondata['classes'])
 
     def initSets(self, apikey):
 
-        TIER_SETS=[1281,1282,1283,1284,1285,1286,1287,1288,1289,1290,1291,1292]
+        TIER_SETS=[1301,1302,1303,1304,1305,1306,1307,1308,1309,1310,1311,1312]
 
         # Delete all of the entities out of the class datastore so fresh
         # entities can be loaded.
@@ -280,10 +295,12 @@ class Setup:
         for s in TIER_SETS:
             url = 'https://us.api.battle.net/wow/item/set/%d?locale=en_US&apikey=%s' % (s, apikey)
             response = urlfetch.fetch(url)
-            raw = json.loads(response.content)
-            if 'items' in raw:
-                sets.items = sets.items + raw['items']
+            if response.status_code == 200:
+                raw = json.loads(response.content)
+                if 'items' in raw:
+                    sets.items = sets.items + raw['items']
 
         sets.put()
 
-        return [len(sets.items)]
+        # 6 items per set
+        return len(sets.items) / 6

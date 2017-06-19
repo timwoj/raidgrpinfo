@@ -48,6 +48,7 @@ class InitDB(webapp2.RequestHandler):
         results = setup.initdb()
         self.response.write("Loaded %d realms into datastore<br/>" % results[0])
         self.response.write("Loaded %d classes into datastore<br/>" % results[1])
+        self.response.write("Loaded %d sets into datastore<br/>" % results[2])
 
 class MaintenanceHandler(webapp2.RequestHandler):
     def get(self):
