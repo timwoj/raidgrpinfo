@@ -212,8 +212,9 @@ class Importer:
                 else:
                     item['enchant'] = 0
 
-            if item['quality'] == 5 and item['itemLevel'] == 895:
-                item['itemLevel'] = 910
+            # Fix broken ToS LFR warforged items
+            if item['id'] > 147000 and item['itemLevel'] == 855 and item['context'] == 'raid-finder':
+                item['itemLevel'] = 890
 
     def create_callback(self, rpc, name, toondata, groupstats, classes):
         return lambda: self.handle_result(rpc, name, toondata, groupstats, classes)
@@ -230,7 +231,7 @@ class Setup:
 
         realmcount = self.initRealms(apikey)
         classcount = self.initClasses(apikey)
-        setcount = self.initSets(apikey)
+        setcount = self.initSets()
 
         return [realmcount, classcount, setcount]
 
@@ -278,7 +279,11 @@ class Setup:
 
         return len(jsondata['classes'])
 
-    def initSets(self, apikey):
+    def initSets(self):
+
+        path = os.path.join(os.path.split(__file__)[0],'api-auth.json')
+        json_key = json.load(open(path))
+        apikey = json_key['blizzard']
 
         TIER_SETS=[1301,1302,1303,1304,1305,1306,1307,1308,1309,1310,1311,1312]
 
