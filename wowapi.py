@@ -285,7 +285,7 @@ class Setup:
         json_key = json.load(open(path))
         apikey = json_key['blizzard']
 
-        TIER_SETS=[1301,1302,1303,1304,1305,1306,1307,1308,1309,1310,1311,1312]
+        TIER_SETS=[1319,1320,1321,1322,1323,1324,1325,1326,1327,1328,1329,1330]
 
         # Delete all of the entities out of the class datastore so fresh
         # entities can be loaded.
