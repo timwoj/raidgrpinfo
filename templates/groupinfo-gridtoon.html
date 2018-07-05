@@ -1,11 +1,11 @@
-{%- macro itemtier(itemset) -%}
-<sup>{% if itemset == 'norm' %}T{% elif itemset == 'lfr' %}L{% elif itemset == 'crafted' %}C{%- endif -%}</sup>
+{%- macro itemtag(itemset) -%}
+<sup>{% if itemset == 'crafted' %}C{%- endif -%}</sup>
 {%- endmacro -%}
 {%- macro gridcolor(itemLevel, enchant, quality) -%}
 {{ itemLevel | ilvlcolor(quality) }}{% if enchant == 0 %};border: 1px solid red{% elif enchant == 1 %};border: 1px solid blue{%- endif -%}
 {%- endmacro -%}
 {%- macro itemtd(item) -%}
-<td class="grid" style="{{ gridcolor(item.itemLevel,item.enchant,item.quality) }}">{%- if item.itemLevel != 0 %}<a href="http://wowhead.com/item={{ item.id }}" rel="bonus={{ item.bonusLists|join(':') }}{% if item.tooltips.enchant is defined %};ench={{ item.tooltips.enchant }}{% endif %}{% if item.tooltips.gems is defined %};gems={{ item.tooltips.gems }}{% endif %}{% if item.tooltips.set is defined %};pcs={{ item.tooltips.set|join(':') }}{% endif %}">{{ item.itemLevel }}</a>{{ itemtier(item.set) }}{%- endif -%}</td>
+<td class="grid" style="{{ gridcolor(item.itemLevel,item.enchant,item.quality) }}">{%- if item.itemLevel != 0 %}<a href="http://wowhead.com/item={{ item.id }}" rel="bonus={{ item.bonusLists|join(':') }}{% if item.tooltips.enchant is defined %};ench={{ item.tooltips.enchant }}{% endif %}{% if item.tooltips.gems is defined %};gems={{ item.tooltips.gems }}{% endif %}{% if item.tooltips.set is defined %};pcs={{ item.tooltips.set|join(':') }}{% endif %}">{{ item.itemLevel }}</a>{{ itemtag(item.set) }}{%- endif -%}</td>
 {%- endmacro -%}
 <tr>
   <td class="user" style="" id="{{ name | normalize }}-td">
@@ -44,7 +44,5 @@
   {{ itemtd(trinket2) }}
   {{ itemtd(mainHand) }}
   {{ itemtd(offHand) }}
-  <td class="" style="text-align:center">{{ artifactTraits }}</td>
-  <td class="" style="text-align:center">{{ tiercount }}/4</td>
 {% endif -%}
 </tr>

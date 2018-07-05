@@ -313,17 +313,12 @@ class GridLoader(webapp2.RequestHandler):
         self.response.write(template.render(template_values))
         self.response.write('<tbody>\n')
 
-        # Get the tier set data one time to pass to the character parser instead of
-        # loading it every time.
-        query = wowapi.TierSets.query()
-        tier_sets = query.fetch()
-
         # Loop through the data twice here to display the separate sections,
         # but don't actually loop through all of the data.  The lambda filters
         # filter the character data down to just the parts that are needed
         # for each loop.
         for idx, char in enumerate(data):
-            self.addCharacter(char, results, classes, tier_sets)
+            self.addCharacter(char, results, classes)
 
         self.response.write('</table><p/>\n')
         template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-colorlegend.html')
@@ -349,19 +344,8 @@ class GridLoader(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('templates/pagefooter.html')
         self.response.write(template.render())
 
-    def get_weapon_details(self, items):
-        rank_sum = 0
-        for artifact in [items.get('mainHand'), items.get('offHand', [])]:
-            if artifact:
-                for trait in artifact.get('artifactTraits'):
-                    rank_sum += trait.get('rank')
-        # Deduct artifact traits added by relics. I don't know why people care about this number
-        # verses the effective traits of purchased + relics but boy they sure do
-        adjusted_sum = rank_sum - (len(items.get('mainHand', {}).get('relics', {})) + len(items.get('offHand', {}).get('relics', {})))
-        return adjusted_sum
-
     # Generic method to add a character to the page response
-    def addCharacter(self, char, results, classes, tier_sets):
+    def addCharacter(self, char, results, classes):
 
         if 'status' in char and char['status'] == 'nok':
             template_values = {
@@ -373,8 +357,6 @@ class GridLoader(webapp2.RequestHandler):
             }
         elif 'items' in char:
 
-            # yes, feet are not part of normal tier gear, but they are part
-            # of the lfr set.
             itemslots = ['head','shoulder','chest','hands','legs','feet','neck','back','wrist','waist','finger1','finger2','trinket1','trinket2','mainHand','offHand']
             items = char['items']
 
@@ -403,14 +385,8 @@ class GridLoader(webapp2.RequestHandler):
                 'main' : char['main'],
                 'role' : char['role'],
                 'avgilvl' : items['averageItemLevel'],
-                'avgilvle' : avgilvleq,
-                'tiercount' : 0,
-                'artifactTraits' : 0
+                'avgilvle' : avgilvleq
             }
-
-            itemslots = ['head','shoulder','chest','hands','legs','feet','neck','back','wrist','waist','finger1','finger2','trinket1','trinket2','mainHand','offHand']
-
-            normalgear = list()
 
             for itype in itemslots:
                 template_values[itype] = {}
@@ -421,20 +397,13 @@ class GridLoader(webapp2.RequestHandler):
                     template_values[itype]['bonusLists'] = items[itype]['bonusLists']
                     template_values[itype]['tooltips'] = items[itype]['tooltipParams']
                     template_values[itype]['quality'] = items[itype]['quality']
-                    if items[itype]['id'] in tier_sets[0].items:
-                        template_values[itype]['set'] = 'norm'
-                        template_values['tiercount'] += 1
-                    elif items[itype]['context'] == 'trade-skill':
+                    if items[itype]['context'] == 'trade-skill':
                         template_values[itype]['set'] = 'crafted'
                     else:
                         template_values[itype]['set'] = 'no'
-
-                    if items[itype]['context'] == 'raid-normal' and items[itype]['itemLevel'] >= 690:
-                        normalgear.append(itype)
                 else:
                     template_values[itype]['itemLevel'] = 0
                     template_values[itype]['set'] = False
-            template_values['artifactTraits'] = self.get_weapon_details(items)
 
         else:
 

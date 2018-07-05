@@ -18,9 +18,6 @@ class Realm(ndb.Model):
     realm = ndb.StringProperty(indexed=True,required=True)
     slug = ndb.StringProperty(indexed=True,required=True)
 
-class TierSets(ndb.Model):
-    items = ndb.IntegerProperty(indexed=True,repeated=True)
-
 class Importer:
 
     # These are the "Better" enchants used for quality checking on enchants
@@ -231,9 +228,8 @@ class Setup:
 
         realmcount = self.initRealms(apikey)
         classcount = self.initClasses(apikey)
-        setcount = self.initSets()
 
-        return [realmcount, classcount, setcount]
+        return [realmcount, classcount]
 
     def initRealms(self, apikey):
         # Delete all of the entities out of the realm datastore so fresh
@@ -278,34 +274,3 @@ class Setup:
             ce.put();
 
         return len(jsondata['classes'])
-
-    def initSets(self):
-
-        path = os.path.join(os.path.split(__file__)[0],'api-auth.json')
-        json_key = json.load(open(path))
-        apikey = json_key['blizzard']
-
-        TIER_SETS=[1319,1320,1321,1322,1323,1324,1325,1326,1327,1328,1329,1330]
-
-        # Delete all of the entities out of the class datastore so fresh
-        # entities can be loaded.
-        q = TierSets.query()
-        for r in q.fetch():
-            r.key.delete()
-
-        sets = TierSets()
-        sets.items = list()
-
-        # retrieve a list of classes from the blizzard API
-        for s in TIER_SETS:
-            url = 'https://us.api.battle.net/wow/item/set/%d?locale=en_US&apikey=%s' % (s, apikey)
-            response = urlfetch.fetch(url)
-            if response.status_code == 200:
-                raw = json.loads(response.content)
-                if 'items' in raw:
-                    sets.items = sets.items + raw['items']
-
-        sets.put()
-
-        # 6 items per set
-        return len(sets.items) / 6
