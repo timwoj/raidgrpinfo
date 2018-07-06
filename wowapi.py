@@ -22,10 +22,10 @@ class Importer:
 
     # These are the "Better" enchants used for quality checking on enchants
     ENCHANTS = {
-        'neck': [5437, 5438, 5439, 5890, 5889, 5891],
-        'finger1': [5427, 5428, 5429, 5430],
-        'finger2': [5427, 5428, 5429, 5430],
-        'back': [5434, 5435, 5436]
+        'finger1': [5942, 5943, 5944, 5945],
+        'finger2': [5942, 5943, 5944, 5945],
+        'mainHand': [5946, 5948, 5949, 5950, 5963, 5964, 5965, 5966],
+        'offHand': [5946, 5948, 5949, 5950, 5963, 5964, 5965, 5966],
     }
 
     def load(self, realm, frealm, toonlist, data, groupstats):
