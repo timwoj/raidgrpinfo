@@ -7,6 +7,7 @@
   <head>
     <title>{{ title(results) }}</title>
     <link rel="stylesheet" type="text/css" href="/resources/jqwidgets/styles/jqx.base.css" />
+    <meta charset="utf-8">
     <script src="/resources/jquery-1.11.2.min.js"></script>
     <script src="/resources/jquery.tablesorter.min.js"></script>
     <script src="/resources/jqwidgets/jqxcore.js"></script>
@@ -18,7 +19,7 @@
     <div>
       <h1>{{ title(results) }}</h1>
       
-      <form action="/{{ nrealm }}/{{ group }}" method="post" autocomplete="off" id="toonform">
+      <form action="/{{ nrealm }}/{{ group }}" method="post" autocomplete="off" id="toonform" accept-charset="UTF-8">
         <input type="hidden" id="nrealm" value="{{ nrealm }}"/>
         <input type="hidden" id="ngroup" value="{{ group }}"/>
         {% if results == none -%}
@@ -40,7 +41,7 @@
           <tbody id="tablebody">
             {%- for toon in toons -%}
             <tr style="font-size:14px;padding:2px 5px;text-align:center">
-              <td><input type="text" value="{{ toon.name }}"/></td>
+              <td><input type="text" value="{{ toon.name }}" accept-charset="UTF-8" style="text-transform: none;"/></td>
               <td><select>
                   <option value="tank"{% if toon.role == 'tank' %} selected{% endif -%}>Tank</option>
                   <option value="healer"{% if toon.role == 'healer' %} selected{% endif -%}>Healer</option>

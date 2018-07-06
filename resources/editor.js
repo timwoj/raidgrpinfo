@@ -25,7 +25,7 @@ function Delete(event){
 function Add(){
     $("#membersTable tbody").append(
 	"<tr style='font-size:14px;padding:2px 5px;text-align:center'>"+
-            "<td><input type='text'/></td>"+
+            "<td><input type='text' accept-charset='UTF-8' style='text-transform: none;'/></td>"+
             "<td><select>"+
             "<option value='tank'>Tank</option>"+
             "<option value='healer'>Healer</option>"+
@@ -105,11 +105,14 @@ function buildjson() {
         var name = row.cells[0].childNodes[0].value.trim();
 
         // if the name field is empty, just skip this toon
-        if (name.length == 0)
+        if (name.length == 0) {
             continue;
+        }
 
         name = name.toLowerCase();
-        name = name.charAt(0).toUpperCase() + name.slice(1);
+        if (name.charCodeAt(0) < 128) {
+            name = name.charAt(0).toUpperCase() + name.slice(1);
+        }
 
         if (i != 0) {
             data += ',';
