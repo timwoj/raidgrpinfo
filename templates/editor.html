@@ -50,8 +50,9 @@
                 </select>
               </td>
               <td><select>
-                  <option{% if toon.main == True %} selected{% endif -%}>Main</option>
-                  <option{% if toon.main == False %} selected{% endif -%}>Bench</option>
+                  <option{% if toon.status == 'main' %} selected{% endif -%}>Main</option>
+                  <option{% if toon.status == 'bench' %} selected{% endif -%}>Bench</option>
+                  <option{% if toon.status == 'alt' %} selected{% endif -%}>Alt</option>
                 </select>
               </td>
               <td><div class="changeRealm">{{ toon.realm }}</div></td>
@@ -70,6 +71,7 @@
               <td><select>
                   <option>Main</option>
                   <option>Bench</option>
+                  <option>Alt</option>
                 </select>
               </td>
               <td><div class="changeRealm">{{realm}}</div></td>

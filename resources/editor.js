@@ -33,8 +33,9 @@ function Add(){
             "<option value='ranged'>Ranged DPS</option>"+
             "</select></td>"+
             "<td><select>"+
-            "<option>Main</option>"+
-            "<option>Bench</option>"+
+            "<option value='main'>Main</option>"+
+            "<option value='bench'>Bench</option>"+
+            "<option value='alt'>Alt</option>"+
             "</select></td>"+
             "<td><div class='changeRealm'>"+nrealmToRealm[nrealm]+"</div></td>"+
 	    "<td><img src='/resources/delete.png' height='24' width='24' class='btnDelete'/></td>"+
@@ -72,9 +73,7 @@ function authPw() {
 }
 
 function postdata() {
-    console.log('postdata');
     let url = '/'+nrealm+'/'+ngroup;
-    console.log('url = ' + url);
 
     let groupname = $('#group').val();
     let pw = $('#pw').val();
@@ -121,7 +120,7 @@ function buildjson() {
         toon = {
             name: name,
             role: row.cells[1].childNodes[0].value.toLowerCase(),
-            group: row.cells[2].childNodes[0].value.toLowerCase(),
+            status: row.cells[2].childNodes[0].value.toLowerCase(),
             realm: realm
         };
 

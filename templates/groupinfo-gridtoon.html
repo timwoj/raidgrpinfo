@@ -25,7 +25,7 @@
     {%- else -%}
     <img src="/resources/icon-ranged-dps.png"/>
     {%- endif -%}
-    {%- if main == False %} Bench{%- else %} Main{% endif %}</td>
+    {%- if status == 'main' %} Main{%- elif status == 'bench' %} Bench{%- else %} Alt{% endif %}</td>
   <td class="grid" style="">{{ avgilvle }}</td>
   <td class="grid" style="">{{ avgilvl }}</td>
   {{ itemtd(head) }}

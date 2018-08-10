@@ -64,7 +64,7 @@ class Importer:
             # from the data.
             newdata['toonrealm'] = toonrealm
             newdata['toonfrealm'] = toonfrealm
-            newdata['main'] = toon.main
+            newdata['status'] = toon.status
             newdata['role'] = toon.role
 
             url = 'https://us.api.battle.net/wow/character/%s/%s?fields=items,guild&locale=en_US&apikey=%s' % (toonrealm, toonname, apikey)
@@ -145,7 +145,7 @@ class Importer:
         print "got good results for %s" % name.encode('ascii','ignore')
 
         # For each toon, update the statistics for the group as a whole
-        if toondata['main'] == True:
+        if toondata['status'] == 'main':
             groupstats.ilvlmains += 1
             groupstats.totalilvl += jsondata['items']['averageItemLevel']
             groupstats.totalilvleq += jsondata['items']['averageItemLevelEquipped']

@@ -52,6 +52,7 @@ class Toonv2(ndb.Model):
     role = ndb.StringProperty()
     main = ndb.BooleanProperty()
     realm = ndb.StringProperty()
+    status = ndb.StringProperty()
 
 class Groupv2(ndb.Model):
     nrealm = ndb.StringProperty(indexed=True)
@@ -129,7 +130,7 @@ class Editor(webapp2.RequestHandler):
                t = dict()
                t['name'] = toon.name
                t['role'] = toon.role
-               t['main'] = toon.main
+               t['status'] = toon.status
                t['realm'] = str([x.realm for x in realms if x.slug==toon.realm][0])
                toons.append(t)
 
@@ -205,10 +206,7 @@ class GridLoader(webapp2.RequestHandler):
             toon = Toonv2()
             toon.name = j['name']
             toon.role = j['role']
-            if (j['group'] == 'main'):
-                toon.main = True
-            else:
-                toon.main = False
+            toon.status = j['status']
             toon.realm = j['realm']
             group.toons.append(toon);
 
@@ -272,7 +270,7 @@ class GridLoader(webapp2.RequestHandler):
         melee = 0
         ranged = 0
         for idx, char in enumerate(data):
-            if char['main']:
+            if char['status'] == 'main':
                 if char['role'] == 'dps':
                     melee += 1
                 elif char['role'] == 'ranged':
@@ -382,7 +380,7 @@ class GridLoader(webapp2.RequestHandler):
                 'realm' : char['toonrealm'],  # realm for toon (might not be == to nrealm)
                 'guild' : char['guild']['name'] if 'guild' in char else None,
                 'class' : classes[char['class']],
-                'main' : char['main'],
+                'status' : char['status'],
                 'role' : char['role'],
                 'avgilvl' : items['averageItemLevel'],
                 'avgilvle' : avgilvleq
@@ -472,3 +470,14 @@ class Deleter(webapp2.RequestHandler):
         g.key.delete()
         memcache.set('%s_%s' % (nrealm,ngroup), None)
         
+class StatusMigration(webapp2.RequestHandler):
+    def get(self):
+        groups = Groupv2.query().fetch()
+        for group in groups:
+            for toon in group.toons:
+                if toon.main == True:
+                    toon.status = 'main'
+                else:
+                    toon.status = 'bench'
+                
+            group.put()
