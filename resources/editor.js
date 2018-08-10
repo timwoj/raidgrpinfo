@@ -10,10 +10,10 @@ function Delete(event){
     
     // TODO: confirmation box appears n-1 times where n is the number of toons
     // on the page.  no idea why it does that.
-    var par = $(this).parent().parent(); // tr
+    let par = $(this).parent().parent(); // tr
     // // the jquery noob in me says there *has* to be a different way to do this
-    // var toon = par.children().first().children().first().val();
-    // var r = confirm("Delete toon '"+toon+"'?");
+    // let toon = par.children().first().children().first().val();
+    // let r = confirm("Delete toon '"+toon+"'?");
     // if (r == true)
     // {
         par.remove();
@@ -56,8 +56,8 @@ function changeRealm(e) {
 function authPw() {
     console.log('authPw');
     // validate the password before doing anything else
-    var pw=$("#pw").val();
-    var data='group='+ngroup+'&realm='+nrealm+'&pw='+pw;
+    let pw=$("#pw").val();
+    let data='group='+ngroup+'&realm='+nrealm+'&pw='+pw;
 
     $.post('/val', data)
         .done(function() {
@@ -73,14 +73,14 @@ function authPw() {
 
 function postdata() {
     console.log('postdata');
-    var url = '/'+nrealm+'/'+ngroup;
+    let url = '/'+nrealm+'/'+ngroup;
     console.log('url = ' + url);
 
-    var groupname = $('#group').val();
-    var pw = $('#pw').val();
-    var json = buildjson();
+    let groupname = $('#group').val();
+    let pw = $('#pw').val();
+    let json = buildjson();
     
-    var data = 'group='+groupname+'&json='+json+'&pw='+pw;
+    let data = 'group='+groupname+'&json='+json+'&pw='+pw;
 
     $.post(url, data)
         .done(function() {
@@ -94,15 +94,16 @@ function postdata() {
 }
 
 function buildjson() {
-    var data = '{"toons": [';
+
+    let data = {toons: []};
 
     // using the DOM table implementation here because it's a bit more
     // readable.  this could be changed to use jquery later.
-    var body = document.getElementById('tablebody');
-    var rowCount = body.rows.length;
-    for (var i=0; i<rowCount; i+=1) {
-        var row = body.rows[i];
-        var name = row.cells[0].childNodes[0].value.trim();
+    let body = document.getElementById('tablebody');
+    let rowCount = body.rows.length;
+    for (let i=0; i<rowCount; i+=1) {
+        let row = body.rows[i];
+        let name = row.cells[0].childNodes[0].value.trim();
 
         // if the name field is empty, just skip this toon
         if (name.length == 0) {
@@ -114,28 +115,25 @@ function buildjson() {
             name = name.charAt(0).toUpperCase() + name.slice(1);
         }
 
-        if (i != 0) {
-            data += ',';
-        }
-        data += '{"name": "';
-        data += name;
-        data += '", "role": "';
-        data += row.cells[1].childNodes[0].value.toLowerCase();
-        data += '", "group": "';
-        data += row.cells[2].childNodes[0].value.toLowerCase();
-        data += '", "realm": "';
-        var realm = row.cells[3].childNodes[0].textContent;
-        data += realmToNRealm[realm];
-        data += '"}';
-    }
-    data += "]}";
+        let realm = row.cells[3].childNodes[0].textContent;
+        realm = realmToNRealm[realm];
 
-    return data;
+        toon = {
+            name: name,
+            role: row.cells[1].childNodes[0].value.toLowerCase(),
+            group: row.cells[2].childNodes[0].value.toLowerCase(),
+            realm: realm
+        };
+
+        data['toons'].push(toon);
+    }
+
+    return JSON.stringify(data);
 }
 
 function normalize_gn(groupname)
 {
-    var norm = groupname.replace("'","");
+    let norm = groupname.replace("'","");
     norm = norm.replace(" ", "-");
     norm = norm.toLowerCase();
     return norm;
