@@ -383,7 +383,8 @@ class GridLoader(webapp2.RequestHandler):
                 'status' : char['status'],
                 'role' : char['role'],
                 'avgilvl' : items['averageItemLevel'],
-                'avgilvle' : avgilvleq
+                'avgilvle' : avgilvleq,
+                'azeriteLevel': items['neck']['azeriteLevel']
             }
 
             for itype in itemslots:

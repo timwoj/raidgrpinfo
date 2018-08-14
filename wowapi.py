@@ -209,9 +209,7 @@ class Importer:
                 else:
                     item['enchant'] = 0
 
-            # Fix broken ToS LFR warforged items
-            if item['id'] > 147000 and item['itemLevel'] == 855 and item['context'] == 'raid-finder':
-                item['itemLevel'] = 890
+            item['azeriteLevel'] = item.get('azeriteItem', {}).get('azeriteLevel', 0)
 
     def create_callback(self, rpc, name, toondata, groupstats, classes):
         return lambda: self.handle_result(rpc, name, toondata, groupstats, classes)
