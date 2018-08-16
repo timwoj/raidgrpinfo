@@ -197,9 +197,7 @@ class GridLoader(webapp2.RequestHandler):
         group.password = sha256_crypt.encrypt(self.request.get('pw'))
 
         # load the json data that includes the toon data
-        jsontext = self.request.get('json').strip()
-        logging.debug(jsontext.encode('ascii', 'ignore'))
-        jsondata = json.loads(jsontext)
+        jsondata = json.loads(self.request.get('json').strip())
         logging.info('number of toons saved: %d', len(jsondata['toons']))
 
         # clear the old toon information and recreate it from the data from
@@ -410,7 +408,6 @@ class GridLoader(webapp2.RequestHandler):
                 'frealm' : char['toonfrealm'],
             }
 
-        print template_values
         template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-gridtoon.html')
         self.response.write(template.render(template_values))
 
