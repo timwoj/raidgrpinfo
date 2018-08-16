@@ -6,4 +6,4 @@ passlib/utils/*.pyc
 .DS_Store
 resources/.DS_Store
 *~
-api-auth.json
+index.yaml
