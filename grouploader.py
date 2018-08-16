@@ -84,13 +84,6 @@ class GroupStats:
     mail = 0
     plate = 0
 
-    # rogue/mage/druid/dk tokens
-    vanq = 0
-    # paladin/priest/warlock/dh tokens
-    conq = 0
-    # warrior/hunter/shaman/monk tokens
-    prot = 0
-
     ranged = 0
     melee = 0
 
@@ -298,9 +291,6 @@ class GridLoader(webapp2.RequestHandler):
             'leathercount' : groupstats.leather,
             'mailcount' : groupstats.mail,
             'platecount' : groupstats.plate,
-            'conqcount' : groupstats.conq,
-            'protcount' : groupstats.prot,
-            'vanqcount' : groupstats.vanq,
         }
         template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-armortokens.html')
         self.response.write(template.render(template_values))

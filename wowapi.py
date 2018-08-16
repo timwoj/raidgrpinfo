@@ -159,23 +159,7 @@ class Importer:
             elif toonclass in ['Hunter', 'Shaman']:
                 groupstats.mail += 1
 
-            if toonclass in ['Paladin', 'Priest', 'Warlock', 'Demon Hunter']:
-                groupstats.conq += 1
-            elif toonclass in ['Warrior', 'Hunter', 'Shaman', 'Monk']:
-                groupstats.prot += 1
-            elif toonclass in ['Death Knight', 'Druid', 'Mage', 'Rogue']:
-                groupstats.vanq += 1
-
-        # Hack for Shig's OCD. Swap the rings around so that the legendary ring is
-        # always in slot 2.
-        items = toondata['items']
-        if 'finger1' in items and (items['finger1']['id'] in range(124634, 124639) or items['finger1']['id'] in range(118290, 118310)):
-            temp = items['finger2']
-            items['finger2'] = items['finger1']
-            items['finger1'] = temp
-
-        # Group all gems together into a comma-separated list for tooltipParams. Also fix
-        # the ilvl on legendaries since Blizzard doesn't seem to want to.
+        # Group all gems together into a comma-separated list for tooltipParams
         for slot in toondata['items']:
             if not isinstance(toondata['items'][slot], dict):
                 continue
