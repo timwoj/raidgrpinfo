@@ -2,33 +2,37 @@
 
 #!/usr/bin/env python
 
-import webapp2,jinja2
-import json,os,time
+import json
+import os
+import time
+from datetime import datetime
+
+import webapp2
+import jinja2
 import wowapi
 import logging
 
-from datetime import datetime
 from google.appengine.ext import ndb
 from google.appengine.api import memcache
 from passlib.hash import sha256_crypt
 
 # Minimum ilvls and colors for the ilvl grid
-MIN_NORMAL=355
-MIN_HEROIC=370
-MIN_MYTHIC=385
-COLOR_LFR='#FFB2B2'
-COLOR_NORMAL='#FFFFB2'
-COLOR_HEROIC='#B2FFB2'
-COLOR_MYTHIC='#C3BEFF'
-COLOR_LEGENDARY='#FFCA68'
+MIN_NORMAL = 355
+MIN_HEROIC = 370
+MIN_MYTHIC = 385
+COLOR_LFR = '#FFB2B2'
+COLOR_NORMAL = '#FFFFB2'
+COLOR_HEROIC = '#B2FFB2'
+COLOR_MYTHIC = '#C3BEFF'
+COLOR_LEGENDARY = '#FFCA68'
 
 # This is used to color the table cells on the grid display based on the ilvl
 # of the item.  It gets put into the jinja environment as a filter.
 def ilvlcolor(ilvl, quality):
     retval = ''
-    if (quality == 5):
+    if quality == 5:
         retval = 'background-color:'+COLOR_LEGENDARY
-    elif (ilvl > 0 and ilvl < MIN_NORMAL):
+    elif ilvl > 0 and ilvl < MIN_NORMAL:
         retval = 'background-color:'+COLOR_LFR
     elif ilvl >= MIN_NORMAL and ilvl < MIN_HEROIC:
         retval = 'background-color:'+COLOR_NORMAL
@@ -39,7 +43,7 @@ def ilvlcolor(ilvl, quality):
     return retval
 
 def normalize(groupname):
-    return groupname.lower().replace('\'','').replace(' ','-')
+    return groupname.lower().replace('\'', '').replace(' ', '-')
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
@@ -64,7 +68,7 @@ class Groupv2(ndb.Model):
 
     @staticmethod
     def normalize(realm):
-        return realm.lower().replace('\'','').replace(' ','-')
+        return realm.lower().replace('\'', '').replace(' ', '-')
 
 class GroupStats:
 
@@ -90,17 +94,17 @@ class GroupStats:
     ranged = 0
     melee = 0
 
-def getGroupFromDB(nrealm, ngroup):
+def get_group_from_db(nrealm, ngroup):
 
-    results = memcache.get('%s_%s' % (nrealm,ngroup))
+    results = memcache.get('%s_%s' % (nrealm, ngroup))
     if results is None:
         logging.info('group was not in memcache')
-        db_query = Groupv2.query(Groupv2.nrealm==nrealm, Groupv2.ngroup==ngroup)
+        db_query = Groupv2.query(Groupv2.nrealm == nrealm, Groupv2.ngroup == ngroup)
         queryresults = db_query.fetch(1)
-        if (len(queryresults) != 0):
+        if queryresults:
             logging.info('found group in datastore, adding to memcache')
             results = queryresults[0]
-            memcache.set('%s_%s' % (nrealm,ngroup), results)
+            memcache.set('%s_%s' % (nrealm, ngroup), results)
         else:
             logging.info('group was not in datastore either')
 
@@ -108,37 +112,37 @@ def getGroupFromDB(nrealm, ngroup):
 
 class Editor(webapp2.RequestHandler):
     def get(self, nrealm, ngroup):
-        self.editGroup(nrealm, ngroup)
+        self.edit_group(nrealm, ngroup)
 
-    def editGroup(self, nrealm, ngroup):
+    def edit_group(self, nrealm, ngroup):
 
         # load the list of realms from the datastore that was loaded by the
         # /loadrealms service
-        q = wowapi.Realm.query(namespace='Realms')
-        realms = q.fetch()
+        query = wowapi.Realm.query(namespace='Realms')
+        realms = query.fetch()
 
         # try to load the group info from the database
-        results = getGroupFromDB(nrealm, ngroup)
+        results = get_group_from_db(nrealm, ngroup)
 
         # Loop through the results from the data store and create a list
         # of toon names, the markers for subs, and the markers for
         # cross-realm.  If there weren't any results, blank lists will be
         # passed to the template.
         toons = list()
-        if results != None:
-           for toon in results.toons:
-               t = dict()
-               t['name'] = toon.name
-               t['role'] = toon.role
-               t['status'] = toon.status
-               t['realm'] = str([x.realm for x in realms if x.slug==toon.realm][0])
-               toons.append(t)
+        if results is not None:
+            for toon in results.toons:
+                newtoon = dict()
+                newtoon['name'] = toon.name
+                newtoon['role'] = toon.role
+                newtoon['status'] = toon.status
+                newtoon['realm'] = str([x.realm for x in realms if x.slug == toon.realm][0])
+                toons.append(newtoon)
 
         # throw them at jinja to generate the actual html
         template_values = {
             'group' : ngroup,
             'nrealm' : nrealm,
-            'realm' : str([x.realm for x in realms if x.slug==nrealm][0]),
+            'realm' : str([x.realm for x in realms if x.slug == nrealm][0]),
             'toons' : toons,
             'realms' : realms,
         }
@@ -151,11 +155,11 @@ class Editor(webapp2.RequestHandler):
 class GridLoader(webapp2.RequestHandler):
     def get(self, nrealm, ngroup):
         # try to load the group info from the database
-        results = getGroupFromDB(nrealm, ngroup)
+        results = get_group_from_db(nrealm, ngroup)
 
         # if the group doesn't exist, drop into the interface to make a new
         # group
-        if results == None:
+        if results is None:
             self.redirect('/edit/%s/%s' % (nrealm, ngroup))
 
         # if the group exists, load the group from the blizzard API and display
@@ -163,16 +167,15 @@ class GridLoader(webapp2.RequestHandler):
         else:
             results.lastvisited = datetime.now()
             results.put()
-            self.loadGroup(results)
+            self.load_group(results)
 
     def post(self, nrealm, ngroup):
 
         # try to load the group info from the database.  this is only necessary
         # to get the password from the database to verify that it's correct.
-        results = getGroupFromDB(nrealm, ngroup)
+        results = get_group_from_db(nrealm, ngroup)
 
-        if (results != None and
-            sha256_crypt.verify(self.request.get('pw'), results.password) != True):
+        if results != None and sha256_crypt.verify(self.request.get('pw'), results.password) != True:
             self.response.write('<html><head><title>Password failure</title></head>\n')
             self.response.write('<body>\n')
             self.response.write('Password did not match for this group!<p/>')
@@ -195,9 +198,9 @@ class GridLoader(webapp2.RequestHandler):
 
         # load the json data that includes the toon data
         jsontext = self.request.get('json').strip()
-        logging.debug(jsontext.encode('ascii','ignore'))
+        logging.debug(jsontext.encode('ascii', 'ignore'))
         jsondata = json.loads(jsontext)
-        logging.info('number of toons saved: %d' % len(jsondata['toons']))
+        logging.info('number of toons saved: %d', len(jsondata['toons']))
 
         # clear the old toon information and recreate it from the data from
         # the form
@@ -208,7 +211,7 @@ class GridLoader(webapp2.RequestHandler):
             toon.role = j['role']
             toon.status = j['status']
             toon.realm = j['realm']
-            group.toons.append(toon);
+            group.toons.append(toon)
 
         group.toons = sorted(group.toons, key=lambda s: s.name.lower())
         group.lastvisited = datetime.now()
@@ -216,7 +219,7 @@ class GridLoader(webapp2.RequestHandler):
 
         # put this group in the memcache too so that it can be loaded from
         # there instead of from the datastore every time
-        memcache.set('%s_%s' % (nrealm,ngroup), group)
+        memcache.set('%s_%s' % (nrealm, ngroup), group)
 
         # this is absolutely terrible, but sleep here for a second or two.
         # the reasoning is that the call from the editor page returns there
@@ -225,29 +228,28 @@ class GridLoader(webapp2.RequestHandler):
         # editor page (see the get() function above).  sleeping here ensures
         # that the data was written before the redirection happens.
         results = list()
-        while (len(results) == 0):
+        while results:
             time.sleep(0.5)
-            db_query = Groupv2.query(Groupv2.nrealm==nrealm,
-                                     Groupv2.ngroup==ngroup)
+            db_query = Groupv2.query(Groupv2.nrealm == nrealm, Groupv2.ngroup == ngroup)
             results = db_query.fetch(1)
 
-    def loadGroup(self, results):
+    def load_group(self, results):
 
         # Get the group data from the results
         toonlist = results.toons
         realm = results.nrealm
 
         # Query ndb for the full realm name based on the results
-        rq = wowapi.Realm.query(wowapi.Realm.slug == realm, namespace='Realms')
-        rqres = rq.fetch()
-        frealm = rqres[0].realm
+        realm_query = wowapi.Realm.query(wowapi.Realm.slug == realm, namespace='Realms')
+        realm_result = realm_query.fetch()
+        frealm = realm_result[0].realm
 
-        q = wowapi.ClassEntry.query()
-        res = q.fetch()
+        query = wowapi.ClassEntry.query()
+        res = query.fetch()
 
         classes = dict()
-        for c in res:
-            classes[c.classId] = c.name
+        for cls in res:
+            classes[cls.classId] = cls.name
 
         data = list()
         groupstats = GroupStats()
@@ -316,7 +318,7 @@ class GridLoader(webapp2.RequestHandler):
         # filter the character data down to just the parts that are needed
         # for each loop.
         for idx, char in enumerate(data):
-            self.addCharacter(char, results, classes)
+            self.add_character(char, results, classes)
 
         self.response.write('</table><p/>\n')
         template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-colorlegend.html')
@@ -343,7 +345,7 @@ class GridLoader(webapp2.RequestHandler):
         self.response.write(template.render())
 
     # Generic method to add a character to the page response
-    def addCharacter(self, char, results, classes):
+    def add_character(self, char, results, classes):
 
         if 'status' in char and char['status'] == 'nok':
             template_values = {
@@ -355,15 +357,17 @@ class GridLoader(webapp2.RequestHandler):
             }
         elif 'items' in char:
 
-            itemslots = ['head','shoulder','chest','hands','legs','feet','neck','back','wrist','waist','finger1','finger2','trinket1','trinket2','mainHand','offHand']
+            itemslots = ['head', 'shoulder', 'chest', 'hands', 'legs', 'feet', 'neck',
+                         'back', 'wrist', 'waist', 'finger1', 'finger2', 'trinket1',
+                         'trinket2', 'mainHand', 'offHand']
             items = char['items']
 
             avgilvleq = 0
             numitems = 0
             for slot in itemslots:
                 if slot in items:
-                   avgilvleq = avgilvleq + items[slot]['itemLevel']
-                   numitems = numitems + 1
+                    avgilvleq = avgilvleq + items[slot]['itemLevel']
+                    numitems = numitems + 1
             # if there's no offhand, assume the main hand is a 2-hander and count it double per Blizzard iLvl formula.
             if (not 'offHand' in items) and ('mainHand' in items):
                 avgilvleq = avgilvleq + items['mainHand']['itemLevel']
@@ -373,7 +377,7 @@ class GridLoader(webapp2.RequestHandler):
                 avgilvleq = round(float(avgilvleq)/float(numitems), 1)
 
             template_values = {
-                'status' : 'ok',
+                'load_status' : 'ok',
                 'name' : char['name'],
                 'frealm' : char['toonfrealm'],   # full realm name
                 'nrealm' : results.nrealm,  # realm for group
@@ -422,22 +426,22 @@ class Validator(webapp2.RequestHandler):
     def post(self):
         ngroup = self.request.get('group')
         nrealm = self.request.get('realm')
-        pw = self.request.get('pw')
+        password = self.request.get('pw')
         newgn = self.request.get('newgn')
 
-        if pw != None:
+        if password != None:
             # check that the realm and group names are valid, as a safety
             # measure.
-            if (nrealm == None or ngroup == None):
+            if (nrealm is None or ngroup is None):
                 self.response.status = 401
                 self.response.write('Invalid')
                 return
 
             # grab the group the datastore and try to validate the password
-            results = getGroupFromDB(nrealm, ngroup)
+            results = get_group_from_db(nrealm, ngroup)
 
             if results != None:
-                if sha256_crypt.verify(pw, results.password) == False:
+                if not sha256_crypt.verify(password, results.password):
                     self.response.status = 401
                     self.response.write('Invalid')
                 else:
@@ -449,7 +453,7 @@ class Validator(webapp2.RequestHandler):
                 self.response.status = 200
                 self.response.write('Valid')
         elif newgn != None:
-            results = getGroupFromDB(nrealm, ngroup)
+            results = get_group_from_db(nrealm, ngroup)
 
             if results != None:
                 self.response.status = 401
@@ -476,9 +480,9 @@ class StatusMigration(webapp2.RequestHandler):
         groups = Groupv2.query().fetch()
         for group in groups:
             for toon in group.toons:
-                if toon.main == True:
+                if toon.main:
                     toon.status = 'main'
                 else:
                     toon.status = 'bench'
-                
+
             group.put()

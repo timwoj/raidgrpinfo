@@ -11,7 +11,7 @@
   <td class="user" style="" id="{{ name | normalize }}-td">
     <a href="http://us.battle.net/wow/en/character/{{ realm }}/{{ name }}/advanced" target="_blank">{{ name }}</a>
   </td>
-{%- if status == 'nok' %}
+{%- if load_status == 'nok' %}
   <td class="" style="text-align:left" colspan="12">{{ reason }}</td>
 {%- else %}
   <td class="{{ class|replace(" ","")|lower() }} grid" style="">{{ class }}</td>
