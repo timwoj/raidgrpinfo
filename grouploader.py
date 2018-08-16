@@ -333,14 +333,6 @@ class GridLoader(webapp2.RequestHandler):
         }
         self.response.write(template.render(template_values))
 
-        template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-hidden.html')
-        template_values = {
-            'group' : results.groupname,
-            'realm' : frealm,
-            'nrealm' : results.nrealm,
-        }
-        self.response.write(template.render(template_values))
-
         template = JINJA_ENVIRONMENT.get_template('templates/pagefooter.html')
         self.response.write(template.render())
 
@@ -462,19 +454,6 @@ class Validator(webapp2.RequestHandler):
                 self.response.status = 200
                 self.response.write('Valid')
 
-class Deleter(webapp2.RequestHandler):
-    def post(self):
-        ngroup = self.request.get('group')
-        nrealm = self.request.get('realm')
-        pw = self.request.get('pw')
-        logging.info('deleting group %s on %s' % (ngroup,nrealm))
-
-        db_query = Groupv2.query(Groupv2.nrealm==nrealm, Groupv2.ngroup==ngroup)
-        queryresults = db_query.fetch(1)
-        g = queryresults[0]
-        g.key.delete()
-        memcache.set('%s_%s' % (nrealm,ngroup), None)
-        
 class StatusMigration(webapp2.RequestHandler):
     def get(self):
         groups = Groupv2.query().fetch()

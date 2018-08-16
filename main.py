@@ -60,7 +60,6 @@ app = webapp2.WSGIApplication([
     ('/groups', GroupRedir),
     ('/initdb', InitDB),
     ('/val', grouploader.Validator),
-    ('/delete', grouploader.Deleter),
     ('/migratestatus', grouploader.StatusMigration),
     webapp2.Route('/edit/<:([^/]+)>/<:([^/]+)>', grouploader.Editor),
     webapp2.Route('/<:([^/]+)>/<:([^/]+)>', grouploader.GridLoader),
