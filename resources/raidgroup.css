@@ -25,6 +25,16 @@
     cursor:pointer;
 }
 
+/* Flex box setup for the stats block in the header */
+.stats {
+    clear: both;
+    display: flex;
+}
+
+.stats>* {
+    flex: 1 1 33%;
+}
+
 /* Colors for the display on the class column */
 .deathknight {
     background:#C41F3B;

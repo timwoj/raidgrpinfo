@@ -262,12 +262,18 @@ class GridLoader(webapp2.RequestHandler):
 
         melee = 0
         ranged = 0
+        tanks = 0
+        healers = 0
         for idx, char in enumerate(data):
             if char['status'] == 'main':
                 if char['role'] == 'dps':
                     melee += 1
                 elif char['role'] == 'ranged':
                     ranged += 1
+                elif char['role'] == 'tank':
+                    tanks += 1
+                elif char['role'] == 'healer':
+                    healers += 1
 
         # Build the page header with the group name, realm, and ilvl stats
         template_values = {
@@ -278,21 +284,16 @@ class GridLoader(webapp2.RequestHandler):
             'groupavgilvl': avgilvl,
             'groupavgeqp': avgeqp,
             'toondata': data,
+            'tankcount': tanks,
+            'healercount': healers,
             'meleecount': melee,
             'rangedcount': ranged,
-        }
-        template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-header.html')
-        self.response.write(template.render(template_values))
-
-        self.response.write('        <hr style="width:90%;clear: both"/><br/>\n')
-
-        template_values = {
             'clothcount': groupstats.cloth,
             'leathercount': groupstats.leather,
             'mailcount': groupstats.mail,
             'platecount': groupstats.plate,
         }
-        template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-armortokens.html')
+        template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-header.html')
         self.response.write(template.render(template_values))
 
         self.response.write('        <hr style="width:90%;clear: both"/><br/>\n')
