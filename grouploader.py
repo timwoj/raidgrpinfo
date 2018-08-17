@@ -133,11 +133,11 @@ class Editor(webapp2.RequestHandler):
 
         # throw them at jinja to generate the actual html
         template_values = {
-            'group' : ngroup,
-            'nrealm' : nrealm,
-            'realm' : str([x.realm for x in realms if x.slug == nrealm][0]),
-            'toons' : toons,
-            'realms' : realms,
+            'group': ngroup,
+            'nrealm': nrealm,
+            'realm': str([x.realm for x in realms if x.slug == nrealm][0]),
+            'toons': toons,
+            'realms': realms,
         }
         template = JINJA_ENVIRONMENT.get_template('templates/editor.html')
         self.response.write(template.render(template_values))
@@ -271,15 +271,15 @@ class GridLoader(webapp2.RequestHandler):
 
         # Build the page header with the group name, realm, and ilvl stats
         template_values = {
-            'group' : results.groupname,
-            'frealm' : frealm,
-            'ngroup' : results.ngroup,
-            'nrealm' : results.nrealm,
-            'groupavgilvl' : avgilvl,
-            'groupavgeqp' : avgeqp,
-            'toondata' : data,
-            'meleecount' : melee,
-            'rangedcount' : ranged,
+            'group': results.groupname,
+            'frealm': frealm,
+            'ngroup': results.ngroup,
+            'nrealm': results.nrealm,
+            'groupavgilvl': avgilvl,
+            'groupavgeqp': avgeqp,
+            'toondata': data,
+            'meleecount': melee,
+            'rangedcount': ranged,
         }
         template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-header.html')
         self.response.write(template.render(template_values))
@@ -287,10 +287,10 @@ class GridLoader(webapp2.RequestHandler):
         self.response.write('        <hr style="width:90%;clear: both"/><br/>\n')
 
         template_values = {
-            'clothcount' : groupstats.cloth,
-            'leathercount' : groupstats.leather,
-            'mailcount' : groupstats.mail,
-            'platecount' : groupstats.plate,
+            'clothcount': groupstats.cloth,
+            'leathercount': groupstats.leather,
+            'mailcount': groupstats.mail,
+            'platecount': groupstats.plate,
         }
         template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-armortokens.html')
         self.response.write(template.render(template_values))
@@ -311,13 +311,13 @@ class GridLoader(webapp2.RequestHandler):
         self.response.write('</table><p/>\n')
         template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-colorlegend.html')
         template_values = {
-            'min_normal' : MIN_NORMAL,
-            'min_heroic' : MIN_HEROIC,
-            'min_mythic' : MIN_MYTHIC,
-            'color_lfr' : COLOR_LFR,
-            'color_normal' : COLOR_NORMAL,
-            'color_heroic' : COLOR_HEROIC,
-            'color_mythic' : COLOR_MYTHIC,
+            'min_normal': MIN_NORMAL,
+            'min_heroic': MIN_HEROIC,
+            'min_mythic': MIN_MYTHIC,
+            'color_lfr': COLOR_LFR,
+            'color_normal': COLOR_NORMAL,
+            'color_heroic': COLOR_HEROIC,
+            'color_mythic': COLOR_MYTHIC,
         }
         self.response.write(template.render(template_values))
 
@@ -329,11 +329,11 @@ class GridLoader(webapp2.RequestHandler):
 
         if 'load_status' in char and char['load_status'] == 'nok':
             template_values = {
-                'name' : char['name'],
-                'load_status' : char['load_status'],
-                'reason' : char['reason'],
-                'realm' : char['toonrealm'],
-                'frealm' : char['toonfrealm'],
+                'name': char['name'],
+                'load_status': char['load_status'],
+                'reason': char['reason'],
+                'realm': char['toonrealm'],
+                'frealm': char['toonfrealm'],
             }
         elif 'items' in char:
 
@@ -357,17 +357,17 @@ class GridLoader(webapp2.RequestHandler):
                 avgilvleq = round(float(avgilvleq)/float(numitems), 1)
 
             template_values = {
-                'load_status' : 'ok',
-                'name' : char['name'],
-                'frealm' : char['toonfrealm'],   # full realm name
-                'nrealm' : results.nrealm,  # realm for group
-                'realm' : char['toonrealm'],  # realm for toon (might not be == to nrealm)
-                'guild' : char['guild']['name'] if 'guild' in char else None,
-                'class' : classes[char['class']],
-                'status' : char['status'],
-                'role' : char['role'],
-                'avgilvl' : items['averageItemLevel'],
-                'avgilvle' : avgilvleq,
+                'load_status': 'ok',
+                'name': char['name'],
+                'frealm': char['toonfrealm'],   # full realm name
+                'nrealm': results.nrealm,  # realm for group
+                'realm': char['toonrealm'],  # realm for toon (might not be == to nrealm)
+                'guild': char['guild']['name'] if 'guild' in char else None,
+                'class': classes[char['class']],
+                'status': char['status'],
+                'role': char['role'],
+                'avgilvl': items['averageItemLevel'],
+                'avgilvle': avgilvleq,
                 'azeriteLevel': items['neck']['azeriteLevel']
             }
 
@@ -391,11 +391,11 @@ class GridLoader(webapp2.RequestHandler):
         else:
 
             template_values = {
-                'name' : char['name'],
-                'load_status' : 'nok',
-                'reason' : 'Unknown error retrieving data for %s.  Refresh to try again' % char['name'],
-                'realm' : char['toonrealm'],
-                'frealm' : char['toonfrealm'],
+                'name': char['name'],
+                'load_status': 'nok',
+                'reason': 'Unknown error retrieving data for %s.  Refresh to try again' % char['name'],
+                'realm': char['toonrealm'],
+                'frealm': char['toonfrealm'],
             }
 
         template = JINJA_ENVIRONMENT.get_template('templates/groupinfo-gridtoon.html')
