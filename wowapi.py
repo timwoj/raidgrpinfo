@@ -101,19 +101,19 @@ class Importer:
         except urlfetch_errors.DeadlineExceededError:
             print('urlfetch threw DeadlineExceededError on toon %s' % name.encode('ascii', 'ignore'))
             toondata['name'] = name
-            toondata['status'] = 'nok'
+            toondata['load_status'] = 'nok'
             toondata['reason'] = 'Timeout retrieving data from Battle.net for %s.  Refresh page to try again.' % name
             return
         except urlfetch_errors.DownloadError:
             print('urlfetch threw DownloadError on toon %s' % name.encode('ascii', 'ignore'))
             toondata['name'] = name
-            toondata['status'] = 'nok'
+            toondata['load_status'] = 'nok'
             toondata['reason'] = 'Network error retrieving data from Battle.net for toon %s.  Refresh page to try again.' % name
             return
         except:
             print('urlfetch threw unknown exception on toon %s' % name.encode('ascii', 'ignore'))
             toondata['name'] = name
-            toondata['status'] = 'nok'
+            toondata['load_status'] = 'nok'
             toondata['reason'] = 'Unknown error retrieving data from Battle.net for toon %s.  Refresh page to try again.' % name
             return
 
@@ -121,7 +121,7 @@ class Importer:
         if response.status_code != 200:
             print('urlfetch returned a %d status code on toon %s' % (response.status_code, name.encode('ascii', 'ignore')))
             toondata['name'] = name
-            toondata['status'] = 'nok'
+            toondata['load_status'] = 'nok'
             toondata['reason'] = 'Got a %d from Battle.net for toon %s.  Refresh page to try again.' % (response.status_code, name)
             return
 
@@ -134,7 +134,7 @@ class Importer:
         # for some reason.  Check for this and log it if it fails.  Note that
         # this response doesn't contain the toon's name so it has to be added
         # in afterwards.
-        if 'status' in jsondata and jsondata['status'] == 'nok':
+        if 'load_status' in jsondata and jsondata['load_status'] == 'nok':
             print('Blizzard API failed to find toon %s for reason: %s' %
                   (name.encode('ascii', 'ignore'), jsondata['reason']))
             toondata['name'] = name

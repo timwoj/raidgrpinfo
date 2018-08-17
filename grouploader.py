@@ -127,7 +127,7 @@ class Editor(webapp2.RequestHandler):
                 newtoon = dict()
                 newtoon['name'] = toon.name
                 newtoon['role'] = toon.role
-                newtoon['status'] = toon.status
+                newtoon['load_status'] = toon.status
                 newtoon['realm'] = str([x.realm for x in realms if x.slug == toon.realm][0])
                 toons.append(newtoon)
 
@@ -327,10 +327,10 @@ class GridLoader(webapp2.RequestHandler):
     # Generic method to add a character to the page response
     def add_character(self, char, results, classes):
 
-        if 'status' in char and char['status'] == 'nok':
+        if 'load_status' in char and char['load_status'] == 'nok':
             template_values = {
                 'name' : char['name'],
-                'status' : char['status'],
+                'load_status' : char['load_status'],
                 'reason' : char['reason'],
                 'realm' : char['toonrealm'],
                 'frealm' : char['toonfrealm'],
@@ -392,7 +392,7 @@ class GridLoader(webapp2.RequestHandler):
 
             template_values = {
                 'name' : char['name'],
-                'status' : 'nok',
+                'load_status' : 'nok',
                 'reason' : 'Unknown error retrieving data for %s.  Refresh to try again' % char['name'],
                 'realm' : char['toonrealm'],
                 'frealm' : char['toonfrealm'],
