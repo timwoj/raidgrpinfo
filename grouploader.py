@@ -121,14 +121,16 @@ class Editor(webapp2.RequestHandler):
         # of toon names, the markers for subs, and the markers for
         # cross-realm.  If there weren't any results, blank lists will be
         # passed to the template.
-        toons = list()
+        toons = []
         if results is not None:
             for toon in results.toons:
-                newtoon = dict()
-                newtoon['name'] = toon.name
-                newtoon['role'] = toon.role
-                newtoon['load_status'] = toon.status
-                newtoon['realm'] = str([x.realm for x in realms if x.slug == toon.realm][0])
+                newtoon = {
+                    'name': toon.name,
+                    'role': toon.role,
+                    'status': toon.status,
+                    'realm': str([x.realm for x in realms if x.slug == toon.realm][0])
+                }
+
                 toons.append(newtoon)
 
         # throw them at jinja to generate the actual html
