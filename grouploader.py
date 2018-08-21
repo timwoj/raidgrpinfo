@@ -220,8 +220,8 @@ class GridLoader(webapp2.RequestHandler):
         # in the datastore yet.  that causes it to redirect back to the
         # editor page (see the get() function above).  sleeping here ensures
         # that the data was written before the redirection happens.
-        results = list()
-        while results:
+        results = []
+        while not results:
             time.sleep(0.5)
             db_query = Groupv2.query(Groupv2.nrealm == nrealm, Groupv2.ngroup == ngroup)
             results = db_query.fetch(1)
@@ -240,11 +240,11 @@ class GridLoader(webapp2.RequestHandler):
         query = wowapi.ClassEntry.query()
         res = query.fetch()
 
-        classes = dict()
+        classes = {}
         for cls in res:
             classes[cls.classId] = cls.name
 
-        data = list()
+        data = []
         groupstats = GroupStats()
 
         # Use the API importer to load the data for the group into a list of
