@@ -48,14 +48,11 @@ function Add(){
 
 var lastClicked = null;
 function changeRealm(e) {
-    console.log("change realm");
     $("#realmWindow").jqxWindow("open");
     lastClicked = e.currentTarget;
-    console.log(lastClicked);
 };
 
 function authPw() {
-    console.log('authPw');
     // validate the password before doing anything else
     let pw=$("#pw").val();
     let data='group='+ngroup+'&realm='+nrealm+'&pw='+pw;
@@ -83,8 +80,6 @@ function postdata() {
 
     $.post(url, data)
         .done(function() {
-            console.log('posting group data success');
-            console.log('redirecting to ' + url);
             window.location.replace(url);
         })
         .fail(function() {
