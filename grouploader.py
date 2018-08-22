@@ -45,11 +45,38 @@ def ilvlcolor(ilvl, quality):
 def normalize(groupname):
     return groupname.lower().replace('\'', '').replace(' ', '-')
 
+def build_wowhead_rel(item):
+
+    rel_entries = []
+
+    bonus_lists = item.get('bonusLists', [])
+    if bonus_lists:
+        rel_entries.append('bonus=%s' % ':'.join(map(str, bonus_lists)))
+
+    tooltips = item.get('tooltips', {})
+    if tooltips.get('enchant', ''):
+        rel_entries.append('ench=%s' % tooltips['enchant'])
+
+    if tooltips.get('gems', ''):
+        rel_entries.append('gems=%s' % tooltips['gems'])
+
+    if tooltips.get('set', ''):
+        rel_entries.append('pcs=%s' % tooltips['set'])
+
+    azerite_ids = item.get('azerite', [])
+    if azerite_ids:
+        powers = [len(azerite_ids)] + [x for x in azerite_ids if x != 0]
+        rel_entries.append('azerite-powers=%s' % ':'.join(map(str, powers)))
+
+    print(rel_entries)
+    return ';'.join(rel_entries)
+
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
     extensions=['jinja2.ext.autoescape'])
 JINJA_ENVIRONMENT.filters['ilvlcolor'] = ilvlcolor
 JINJA_ENVIRONMENT.filters['normalize'] = normalize
+JINJA_ENVIRONMENT.filters['build_wowhead_rel'] = build_wowhead_rel
 
 class Toonv2(ndb.Model):
     name = ndb.StringProperty(indexed=True)
@@ -170,7 +197,7 @@ class GridLoader(webapp2.RequestHandler):
         # to get the password from the database to verify that it's correct.
         results = get_group_from_db(nrealm, ngroup)
 
-        if results != None and sha256_crypt.verify(self.request.get('pw'), results.password) != True:
+        if results is not None and not sha256_crypt.verify(self.request.get('pw'), results.password):
             self.response.write('<html><head><title>Password failure</title></head>\n')
             self.response.write('<body>\n')
             self.response.write('Password did not match for this group!<p/>')
@@ -377,12 +404,18 @@ class GridLoader(webapp2.RequestHandler):
             for itype in itemslots:
                 template_values[itype] = {}
                 if itype in items:
+                    azerite_ids = []
+                    if 'azeriteEmpoweredItem' in items[itype]:
+                        for power in items[itype]['azeriteEmpoweredItem'].get('azeritePowers', []):
+                            azerite_ids.append(power['id'])
+
                     template_values[itype]['id'] = items[itype]['id']
                     template_values[itype]['enchant'] = items[itype]['enchant']
                     template_values[itype]['itemLevel'] = items[itype]['itemLevel']
                     template_values[itype]['bonusLists'] = items[itype]['bonusLists']
                     template_values[itype]['tooltips'] = items[itype]['tooltipParams']
                     template_values[itype]['quality'] = items[itype]['quality']
+                    template_values[itype]['azerite'] = azerite_ids
                     if items[itype]['context'] == 'trade-skill':
                         template_values[itype]['set'] = 'crafted'
                     else:
