@@ -26,6 +26,21 @@ COLOR_HEROIC = '#B2FFB2'
 COLOR_MYTHIC = '#C3BEFF'
 COLOR_LEGENDARY = '#FFCA68'
 
+CLASS_INDEXES = {
+    'Warrior': 1,
+    'Paladin': 2,
+    'Hunter': 3,
+    'Rogue': 4,
+    'Priest': 5,
+    'Death Knight': 6,
+    'Shaman': 7,
+    'Mage': 8,
+    'Warlock': 9,
+    'Monk': 10,
+    'Druid': 11,
+    'Demon Hunter': 12
+}
+
 # This is used to color the table cells on the grid display based on the ilvl
 # of the item.  It gets put into the jinja environment as a filter.
 def ilvlcolor(ilvl, quality):
@@ -45,10 +60,11 @@ def ilvlcolor(ilvl, quality):
 def normalize(groupname):
     return groupname.lower().replace('\'', '').replace(' ', '-')
 
-def build_wowhead_rel(item):
+def build_wowhead_rel(item, player_class):
 
     rel_entries = []
 
+    print(player_class)
     bonus_lists = item.get('bonusLists', [])
     if bonus_lists:
         rel_entries.append('bonus=%s' % ':'.join(map(str, bonus_lists)))
@@ -65,7 +81,8 @@ def build_wowhead_rel(item):
 
     azerite_ids = item.get('azerite', [])
     if azerite_ids:
-        powers = [len(azerite_ids)] + [x for x in azerite_ids if x != 0]
+        powers = [CLASS_INDEXES[player_class]] + [x for x in azerite_ids if x != 0]
+#        powers = [x for x in azerite_ids if x != 0]
         rel_entries.append('azerite-powers=%s' % ':'.join(map(str, powers)))
 
     print(rel_entries)
