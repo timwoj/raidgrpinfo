@@ -415,7 +415,7 @@ class GridLoader(webapp2.RequestHandler):
                 'role': char['role'],
                 'avgilvl': items['averageItemLevel'],
                 'avgilvle': avgilvleq,
-                'azeriteLevel': items['neck']['azeriteLevel']
+                'azeriteLevel': items.get('neck', {}).get('azeriteLevel', 0)
             }
 
             for itype in itemslots:
