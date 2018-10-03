@@ -11,26 +11,37 @@ import urllib
 from google.appengine.api import urlfetch
 from google.appengine.api import urlfetch_errors
 from google.appengine.ext import ndb
+from google.appengine.api import memcache
 
 def get_oauth_headers():
-    path = os.path.join(os.path.split(__file__)[0], 'api-auth.json')
-    authdata = json.load(open(path))
+    oauth_token = memcache.get('oauth_bearer_token')
+    if oauth_token is None:
+        path = os.path.join(os.path.split(__file__)[0], 'api-auth.json')
+        authdata = json.load(open(path))
 
-    credentials = "{}:{}".format(authdata['blizzard_client_id'], authdata['blizzard_client_secret'])
-    encoded_credentials = base64.b64encode(credentials)
+        credentials = "{}:{}".format(authdata['blizzard_client_id'], authdata['blizzard_client_secret'])
+        encoded_credentials = base64.b64encode(credentials)
 
-    response = urlfetch.fetch('https://us.battle.net/oauth/token',
-                              payload='grant_type=client_credentials',
-                              method=urlfetch.POST,
-                              headers={'Authorization': 'Basic ' + encoded_credentials})
+        response = urlfetch.fetch('https://us.battle.net/oauth/token',
+                                  payload='grant_type=client_credentials',
+                                  method=urlfetch.POST,
+                                  headers={'Authorization': 'Basic ' + encoded_credentials})
 
-    oauth_token = ''
-    if response.status_code == urlfetch.httplib.OK:
-        response_data = json.loads(response.content)
-        oauth_token = response_data['access_token']
-        return {'Authorization': 'Bearer ' + oauth_token}
-    else:
+        if response.status_code == urlfetch.httplib.OK:
+            response_data = json.loads(response.content)
+            oauth_token = response_data['access_token']
+
+            # Blizzard sends an expiration time for the token in the response,
+            # but we want to make sure that our memcache expires before they
+            # do. Subtract 60s off that so we make sure to re-request before
+            # it's expired.
+            expiration = int(response_data['expires_in']) - 60
+            memcache.set('oauth_bearer_token', oauth_token, time=expiration)
+
+    if oauth_token is None:
         return {}
+    else:
+        return {'Authorization': 'Bearer ' + oauth_token}
 
 class ClassEntry(ndb.Model):
     classId = ndb.IntegerProperty()

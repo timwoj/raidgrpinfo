@@ -64,7 +64,6 @@ def build_wowhead_rel(item, player_class):
 
     rel_entries = []
 
-    print(player_class)
     bonus_lists = item.get('bonusLists', [])
     if bonus_lists:
         rel_entries.append('bonus=%s' % ':'.join(map(str, bonus_lists)))
@@ -85,7 +84,6 @@ def build_wowhead_rel(item, player_class):
 #        powers = [x for x in azerite_ids if x != 0]
         rel_entries.append('azerite-powers=%s' % ':'.join(map(str, powers)))
 
-    print(rel_entries)
     return ';'.join(rel_entries)
 
 JINJA_ENVIRONMENT = jinja2.Environment(
