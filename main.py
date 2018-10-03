@@ -69,7 +69,6 @@ app = webapp2.WSGIApplication([
 #app = webapp2.WSGIApplication([
 #    ('/', MaintenanceHandler),
 #    ('/initdb', InitDB),
-#    ('/setapikey', SetAPIKey),
 #    webapp2.Route('/edit/<:([^/]+)>/<:([^/]+)>', MaintenanceHandler),
 #    webapp2.Route('/<:([^/]+)>/<:([^/]+)>', MaintenanceHandler),
 #], debug=True)

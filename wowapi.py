@@ -5,10 +5,31 @@
 import json
 import time
 import os
+import base64
 
 from google.appengine.api import urlfetch
 from google.appengine.api import urlfetch_errors
 from google.appengine.ext import ndb
+
+def get_oauth_headers():
+    path = os.path.join(os.path.split(__file__)[0], 'api-auth.json')
+    authdata = json.load(open(path))
+
+    credentials = "{}:{}".format(authdata['blizzard_client_id'], authdata['blizzard_client_secret'])
+    encoded_credentials = base64.b64encode(credentials)
+
+    response = urlfetch.fetch('https://us.battle.net/oauth/token',
+                              payload='grant_type=client_credentials',
+                              method=urlfetch.POST,
+                              headers={'Authorization': 'Basic ' + encoded_credentials})
+
+    oauth_token = ''
+    if response.status_code == urlfetch.httplib.OK:
+        response_data = json.loads(response.content)
+        oauth_token = response_data['access_token']
+        return {'Authorization': 'Bearer ' + oauth_token}
+    else:
+        return {}
 
 class ClassEntry(ndb.Model):
     classId = ndb.IntegerProperty()
@@ -31,8 +52,7 @@ class Importer:
 
     def load(self, realm, frealm, toonlist, data, groupstats):
         path = os.path.join(os.path.split(__file__)[0], 'api-auth.json')
-        json_key = json.load(open(path))
-        apikey = json_key['blizzard']
+        authdata = json.load(open(path))
 
         query = ClassEntry.query()
         result = query.fetch()
@@ -41,10 +61,16 @@ class Importer:
         for cls in result:
             classes[cls.classId] = cls.name
 
+        oauth_headers = get_oauth_headers()
+
         # Request all of the toon data from the blizzard API and determine the
         # group's ilvls, armor type counts and token type counts.  subs are not
         # included in the counts, since they're not really part of the main
-        # group.
+        # group. The Blizzard API has a limit of 100 calls per second. Keep a
+        # count and if we hit 100 calls, we'll wait a half second before
+        # continuing. If someone has more than 100 toons in their list, they
+        # should be slapped.
+        toon_count = 0
         for toon in toonlist:
             toonname = toon.name
             toonrealm = toon.realm
@@ -67,19 +93,21 @@ class Importer:
             newdata['status'] = toon.status
             newdata['role'] = toon.role
 
-            url = 'https://us.api.battle.net/wow/character/%s/%s?fields=items,guild&locale=en_US&apikey=%s' % (toonrealm, toonname, apikey)
+            url = 'https://us.api.blizzard.com/wow/character/%s/%s?fields=items,guild&locale=en_US' % (toonrealm, toonname)
+
             # create the rpc object for the fetch method.  the deadline
             # defaults to 5 seconds, but that seems to be too short for the
             # Blizzard API site sometimes.  setting it to 10 helps a little
             # but it makes page loads a little slower.
             rpc = urlfetch.create_rpc(10)
             rpc.callback = self.create_callback(rpc, toonname, newdata, groupstats, classes)
-            urlfetch.make_fetch_call(rpc, url)
+            urlfetch.make_fetch_call(rpc, url, headers=oauth_headers)
             newdata['rpc'] = rpc
 
-            # The Blizzard API has a limit of 10 calls per second.  Sleep here
-            # for a very brief time to avoid hitting that limit.
-            time.sleep(0.1)
+            toon_count = toon_count + 1
+            if toon_count > 100:
+                time.sleep(0.5)
+                toon_count = 0
 
         # Now that all of the RPC calls have been created, loop through the data
         # dictionary one more time and wait for each fetch to be completed. Once
@@ -202,17 +230,12 @@ class Setup:
     # the realm list on the front page gets populated.  Also loads the list of
     # classes into a table on the DB so that we don't have to request it
     def initdb(self):
-
-        path = os.path.join(os.path.split(__file__)[0], 'api-auth.json')
-        json_key = json.load(open(path))
-        apikey = json_key['blizzard']
-
-        realmcount = self.init_realms(apikey)
-        classcount = self.init_classes(apikey)
-
+        oauth_headers = get_oauth_headers()
+        realmcount = self.init_realms(oauth_headers)
+        classcount = self.init_classes(oauth_headers)
         return [realmcount, classcount]
 
-    def init_realms(self, apikey):
+    def init_realms(self, oauth_headers):
         # Delete all of the entities out of the realm datastore so fresh
         # entities can be loaded.
         query = Realm.query()
@@ -220,8 +243,8 @@ class Setup:
             row.key.delete()
 
         # retrieve a list of realms from the blizzard API
-        url = 'https://us.api.battle.net/wow/realm/status?locale=en_US&apikey=%s' % apikey
-        response = urlfetch.fetch(url)
+        url = 'https://us.api.blizzard.com/wow/realm/status?locale=en_US'
+        response = urlfetch.fetch(url, headers=oauth_headers)
         if response.status_code == 200:
             jsondata = json.loads(response.content)
         else:
@@ -234,7 +257,7 @@ class Setup:
 
         return len(jsondata['realms'])
 
-    def init_classes(self, apikey):
+    def init_classes(self, oauth_headers):
         # Delete all of the entities out of the class datastore so fresh
         # entities can be loaded.
         query = ClassEntry.query()
@@ -242,8 +265,8 @@ class Setup:
             row.key.delete()
 
         # retrieve a list of classes from the blizzard API
-        url = 'https://us.api.battle.net/wow/data/character/classes?locale=en_US&apikey=%s' % apikey
-        response = urlfetch.fetch(url)
+        url = 'https://us.api.blizzard.com/wow/data/character/classes?locale=en_US'
+        response = urlfetch.fetch(url, headers=oauth_headers)
         if response.status_code == 200:
             jsondata = json.loads(response.content)
         else:
