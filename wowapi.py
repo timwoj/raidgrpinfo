@@ -6,6 +6,7 @@ import json
 import time
 import os
 import base64
+import urllib
 
 from google.appengine.api import urlfetch
 from google.appengine.api import urlfetch_errors
@@ -93,7 +94,7 @@ class Importer:
             newdata['status'] = toon.status
             newdata['role'] = toon.role
 
-            url = 'https://us.api.blizzard.com/wow/character/%s/%s?fields=items,guild&locale=en_US' % (toonrealm, toonname)
+            url = 'https://us.api.blizzard.com/wow/character/%s/%s?fields=items,guild&locale=en_US' % (toonrealm, urllib.quote(toonname.encode('utf-8')))
 
             # create the rpc object for the fetch method.  the deadline
             # defaults to 5 seconds, but that seems to be too short for the
