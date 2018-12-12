@@ -84,7 +84,7 @@ def build_wowhead_rel(item, player_class):
 #        powers = [x for x in azerite_ids if x != 0]
         rel_entries.append('azerite-powers=%s' % ':'.join(map(str, powers)))
 
-    return ';'.join(rel_entries)
+    return '&'.join(rel_entries)
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
