@@ -16,7 +16,7 @@
       $(document).ready(function() {
       {% for toon in toondata -%}
       {% if toon['status'] != 'nok' -%}
-      $("#{{ toon['name'] | normalize }}-td").jqxTooltip({content: "{{ toon['name'] }}<br/>{% if toon['guild'] is defined -%}{{ toon['guild']['name'] }} - {% endif %}{{ toon['realm'] }}<br/><a href='http://askmrrobot.com/wow/gear/us/{% print toon['toonrealm'].replace('-','_') %}/{{ toon['name'] }}' target='_blank'>Ask Mr. Robot</a>",autoHideDelay: 6000 });
+      $("#{{ toon['name'] | normalize }}-td").jqxTooltip({content: "{{ toon['name'] }}<br/>{% if toon['guild'] is defined -%}{{ toon['guild']['name'] }} - {% endif %}{{ toon['realm'] }}</a>",autoHideDelay: 6000 });
       {% endif %}
       {%- endfor %}
       });
