@@ -224,13 +224,14 @@ class Importer:
             item['enchant'] = -1
 
             if slot in Importer.ENCHANTS:
-                enchant = item.get('tooltipParams', {}).get('enchant', 0)
-                if enchant in Importer.ENCHANTS[slot]:
-                    item['enchant'] = 2
-                elif enchant != 0:
-                    item['enchant'] = 1
-                else:
-                    item['enchant'] = 0
+                if slot != 'offHand' or 'weaponInfo' in item:
+                    enchant = item.get('tooltipParams', {}).get('enchant', 0)
+                    if enchant in Importer.ENCHANTS[slot]:
+                        item['enchant'] = 2
+                    elif enchant != 0:
+                        item['enchant'] = 1
+                    else:
+                        item['enchant'] = 0
 
             item['azeriteLevel'] = item.get('azeriteItem', {}).get('azeriteLevel', 0)
 
