@@ -1,0 +1,33 @@
+{
+  "devDependencies": {
+    "anim-event": "^1.0.16",
+    "babel-core": "^6.4.5",
+    "babel-eslint": "^7.1.1",
+    "babel-loader": "^7.1.4",
+    "babel-preset-env": "^1.6.0",
+    "babel-preset-react": "^6.3.13",
+    "cross-env": "^5.0.5",
+    "css-loader": "^0.26.1",
+    "cssprefix": "^2.0.16",
+    "csv-parse": "^1.2.1",
+    "deep-equal": "^1.0.1",
+    "extract-text-webpack-plugin": "^4.0.0-beta.0",
+    "jest-cli": "^20.0.0",
+    "m-class-list": "^1.1.9",
+    "node-sass": "^4.0.0",
+    "plain-draggable": "^2.5.12",
+    "plain-overlay": "^1.4.14",
+    "pointer-event": "^1.0.0",
+    "sass-loader": "^6.0.7",
+    "style-loader": "0.13.1",
+    "timed-transition": "^1.5.2",
+    "webpack": "^4.1.1",
+    "webpack-cli": "^2.0.12",
+    "webpack-shell-plugin": "^0.5.0"
+  },
+  "dependencies": {
+    "noty": "^3.2.0-beta",
+    "plain-modal": "^1.0.30",
+    "tablesort": "^5.1.0"
+  }
+}

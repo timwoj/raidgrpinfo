@@ -1,3 +1,6 @@
+import Noty from 'noty';
+import PlainModal from 'plain-modal';
+
 var nrealm = null;
 var ngroup = null;
 
@@ -48,8 +51,10 @@ function Add(){
 
 var lastClicked = null;
 function changeRealm(e) {
-    $("#realmWindow").jqxWindow("open");
-    lastClicked = e.currentTarget;
+  lastClicked = e.currentTarget;
+
+  const modal = new PlainModal(document.getElementById('realmWindow'), {duration: 0});
+  modal.show();
 };
 
 function authPw() {
@@ -63,8 +68,12 @@ function authPw() {
             postdata();
         })
         .fail(function() {
-            console.log('password authentication failed');
-            $("#pwfail").jqxNotification("open");
+          console.log('password authentication failed');
+          new Noty({
+            type: 'error',
+            text: 'Password is invalid!',
+            timeout: 4000
+          });
         });
     return false;
 }
@@ -148,9 +157,6 @@ $(function(){
         nrealmToRealm[this.id] = this.value;
         realmToNRealm[this.value] = this.id;
     });
-
-    $("#pwfail").jqxNotification({position: "top-right", autoClose: true,
-                                  autoCloseDelay: 4000, template: "error"});
 
     $("#realmWindow").jqxWindow({
         maxHeight: 150, maxWidth: 280, minHeight: 30, minWidth: 250, height: 100, width: 270,
