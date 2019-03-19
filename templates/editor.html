@@ -6,14 +6,14 @@
 <html>
   <head>
     <title>{{ title(results) }}</title>
-    <link rel="stylesheet" type="text/css" href="/resources/jqwidgets/styles/jqx.base.css" />
+    <link rel="stylesheet" type="text/css" href="/static/jqwidgets/styles/jqx.base.css" />
     <meta charset="utf-8">
     <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.30.7/js/jquery.tablesorter.min.js"></script>
-    <script src="/resources/jqwidgets/jqxcore.js"></script>
-    <script src="/resources/jqwidgets/jqxnotification.js"></script>
-    <script src="/resources/jqwidgets/jqxwindow.js"></script>
-    <script src="/resources/editor.js"></script>
+    <script src="/static/jqwidgets/jqxcore.js"></script>
+    <script src="/static/jqwidgets/jqxnotification.js"></script>
+    <script src="/static/jqwidgets/jqxwindow.js"></script>
+    <script src="/static/editor.js"></script>
   </head>
   <body>
     <div>
@@ -56,7 +56,7 @@
                 </select>
               </td>
               <td><div class="changeRealm">{{ toon.realm }}</div></td>
-              <td><img src='/resources/delete.png' height='24' width='24' class='btnDelete'/></td>
+              <td><img src='/static/delete.png' height='24' width='24' class='btnDelete'/></td>
             </tr>
             {% endfor %}
             <tr style="font-size:14px;padding:2px 5px;text-align:center">
@@ -75,7 +75,7 @@
                 </select>
               </td>
               <td><div class="changeRealm">{{realm}}</div></td>
-              <td><img src='/resources/delete.png' height='24' width='24' class='btnDelete'/></td>
+              <td><img src='/static/delete.png' height='24' width='24' class='btnDelete'/></td>
             </tr>
           </tbody>
         </table>

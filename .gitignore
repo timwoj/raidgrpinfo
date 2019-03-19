@@ -7,3 +7,6 @@ passlib/utils/*.pyc
 resources/.DS_Store
 *~
 index.yaml
+api-auth.json
+lib
+venv

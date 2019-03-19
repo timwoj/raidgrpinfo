@@ -7,6 +7,7 @@ import time
 import os
 import base64
 import urllib
+import sys
 
 from google.appengine.api import urlfetch
 from google.appengine.api import urlfetch_errors
@@ -242,11 +243,15 @@ class Setup:
     # Loads the list of realms into the datastore from the blizzard API so that
     # the realm list on the front page gets populated.  Also loads the list of
     # classes into a table on the DB so that we don't have to request it
-    def initdb(self):
-        oauth_headers = get_oauth_headers()
-        realmcount = self.init_realms(oauth_headers)
-        classcount = self.init_classes(oauth_headers)
-        return [realmcount, classcount]
+    def initdb(self, app):
+        try:
+            oauth_headers = get_oauth_headers()
+            realmcount = self.init_realms(oauth_headers)
+            classcount = self.init_classes(oauth_headers)
+            return [realmcount, classcount]
+        except:
+            app.logger.error("Error:", sys.exc_info()[0])
+            return [0, 0]
 
     def init_realms(self, oauth_headers):
         # Delete all of the entities out of the realm datastore so fresh

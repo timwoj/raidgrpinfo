@@ -17,13 +17,13 @@
   <td class="{{ class|replace(" ","") | lower() }} grid" style="">{{ class }}</td>
   <td class="grid" style="white-space: nowrap">
     {%- if role == "tank" -%}
-    <img src="/resources/icon-tank.png"/>
+    <img src="/static/icon-tank.png"/>
     {%- elif role == "healer" -%}
-    <img src="/resources/icon-healer.png"/>
+    <img src="/static/icon-healer.png"/>
     {%- elif role == "dps" -%}
-    <img src="/resources/icon-melee-dps.png"/>
+    <img src="/static/icon-melee-dps.png"/>
     {%- else -%}
-    <img src="/resources/icon-ranged-dps.png"/>
+    <img src="/static/icon-ranged-dps.png"/>
     {%- endif -%}
     {%- if status == 'main' %} Main{%- elif status == 'bench' %} Bench{%- else %} Alt{% endif %}</td>
   <td class="grid" style="">{{ avgilvle }}</td>
