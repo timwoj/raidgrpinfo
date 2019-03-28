@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 #!/usr/bin/env python
 
 import json
@@ -7,7 +6,7 @@ import time
 import os
 import base64
 import urllib
-import sys
+import traceback
 
 from google.appengine.api import urlfetch
 from google.appengine.api import urlfetch_errors
@@ -35,14 +34,14 @@ def get_oauth_headers():
             # Blizzard sends an expiration time for the token in the response,
             # but we want to make sure that our memcache expires before they
             # do. Subtract 60s off that so we make sure to re-request before
-            # it's expired.
+            # it expires.
             expiration = int(response_data['expires_in']) - 60
             memcache.set('oauth_bearer_token', oauth_token, time=expiration)
 
     if oauth_token is None:
         return {}
-    else:
-        return {'Authorization': 'Bearer ' + oauth_token}
+
+    return {'Authorization': 'Bearer ' + oauth_token}
 
 class ClassEntry(ndb.Model):
     classId = ndb.IntegerProperty()
@@ -50,11 +49,25 @@ class ClassEntry(ndb.Model):
     powerType = ndb.StringProperty()
     name = ndb.StringProperty()
 
+    @classmethod
+    def get_mapping(cls):
+        results = cls.query().fetch()
+        if results:
+            return dict((x.classId, x.name) for x in results)
+        return {}
+
 class Realm(ndb.Model):
     realm = ndb.StringProperty(indexed=True, required=True)
     slug = ndb.StringProperty(indexed=True, required=True)
 
-class Importer:
+    @classmethod
+    def query_realm(cls, toon_realm):
+        result = cls.query(cls.slug == toon_realm, namespace='Realms').fetch(1)[0]
+        if result:
+            return result.realm
+        return ''
+
+class Importer(object):
     # These are the "Better" enchants used for quality checking on enchants
     ENCHANTS = {
         'finger1': [5942, 5943, 5944, 5945],
@@ -64,16 +77,8 @@ class Importer:
     }
 
     def load(self, realm, frealm, toonlist, data, groupstats):
-        path = os.path.join(os.path.split(__file__)[0], 'api-auth.json')
-        authdata = json.load(open(path))
 
-        query = ClassEntry.query()
-        result = query.fetch()
-
-        classes = dict()
-        for cls in result:
-            classes[cls.classId] = cls.name
-
+        classes = ClassEntry.get_mapping()
         oauth_headers = get_oauth_headers()
 
         # Request all of the toon data from the blizzard API and determine the
@@ -90,9 +95,7 @@ class Importer:
             if toonrealm == realm:
                 toonfrealm = frealm
             else:
-                rq2 = Realm.query(Realm.slug == toonrealm, namespace='Realms')
-                rq2res = rq2.fetch()
-                toonfrealm = rq2res[0].realm
+                toonfrealm = Realm.query_realm(toonrealm)
 
             # TODO: this object can probably be a class instead of another dict
             newdata = dict()
@@ -182,23 +185,32 @@ class Importer:
             toondata['reason'] = "Error retrieving data for %s from Blizzard API: %s" % (name, jsondata['reason'])
             return
 
-        print "got good results for %s" % name.encode('ascii', 'ignore')
+        print("got good results for %s" % name.encode('ascii', 'ignore'))
 
         # For each toon, update the statistics for the group as a whole
         if toondata['status'] == 'main':
-            groupstats.ilvlmains += 1
-            groupstats.totalilvl += jsondata['items']['averageItemLevel']
-            groupstats.totalilvleq += jsondata['items']['averageItemLevelEquipped']
+            groupstats['ilvlmains'] += 1
+            groupstats['totalilvl'] += jsondata['items']['averageItemLevel']
+            groupstats['totalilvleq'] += jsondata['items']['averageItemLevelEquipped']
 
             toonclass = classes[jsondata['class']]
             if toonclass in ['Paladin', 'Warrior', 'Death Knight']:
-                groupstats.plate += 1
+                groupstats['plate'] += 1
             elif toonclass in ['Mage', 'Priest', 'Warlock']:
-                groupstats.cloth += 1
+                groupstats['cloth'] += 1
             elif toonclass in ['Druid', 'Monk', 'Rogue', 'Demon Hunter']:
-                groupstats.leather += 1
+                groupstats['leather'] += 1
             elif toonclass in ['Hunter', 'Shaman']:
-                groupstats.mail += 1
+                groupstats['mail'] += 1
+
+            if toondata['role'] == 'dps':
+                groupstats['melee'] += 1
+            elif toondata['role'] == 'ranged':
+                groupstats['ranged'] += 1
+            elif toondata['role'] == 'tank':
+                groupstats['tanks'] += 1
+            elif toondata['role'] == 'healer':
+                groupstats['healers'] += 1
 
         # Group all gems together into a comma-separated list for tooltipParams
         for slot in toondata['items']:
@@ -239,7 +251,7 @@ class Importer:
     def create_callback(self, rpc, name, toondata, groupstats, classes):
         return lambda: self.handle_result(rpc, name, toondata, groupstats, classes)
 
-class Setup:
+class Setup(object):
     # Loads the list of realms into the datastore from the blizzard API so that
     # the realm list on the front page gets populated.  Also loads the list of
     # classes into a table on the DB so that we don't have to request it
@@ -249,8 +261,8 @@ class Setup:
             realmcount = self.init_realms(oauth_headers)
             classcount = self.init_classes(oauth_headers)
             return [realmcount, classcount]
-        except:
-            app.logger.error("Error:", sys.exc_info()[0])
+        except Exception as e:
+            traceback.print_exc()
             return [0, 0]
 
     def init_realms(self, oauth_headers):

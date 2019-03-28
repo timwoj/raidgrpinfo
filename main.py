@@ -4,8 +4,7 @@
 from flask import Flask, render_template, request, redirect
 import grouploader
 import wowapi
-import logging
-    
+
 app = Flask(__name__)
 app.debug = True
 
@@ -18,11 +17,11 @@ def root():
 
     # load the list of realms from the datastore that was loaded by the
     # /loadrealms service
-    q = wowapi.Realm.query(namespace='Realms')
-    realms = q.fetch()
+    query = wowapi.Realm.query(namespace='Realms')
+    realms = query.fetch()
 
     return render_template('frontpage.html', realms=realms)
-    
+
 # This class redirects using the input from the form on the main page to the
 # right page for the group.
 @app.route('/groups', methods=['POST'])
@@ -44,19 +43,17 @@ def initdb():
     setup = wowapi.Setup()
     results = setup.initdb(app)
     return 'Loaded %d realms into datastore<br/>\nLoaded %d classes into datastore<br/>' % (results[0], results[1])
-    
+
 @app.route('/val', methods=['POST'])
 def validator():
     return grouploader.validate_password(request)
 
 @app.route('/<nrealm>/<ngroup>', methods=['GET', 'POST'])
 def group_handler(nrealm, ngroup):
-    print('get group?')
-    print(request.method)
     if request.method == 'GET':
         return grouploader.get_group(nrealm, ngroup)
-    else:
-        return grouploader.post_group(request, nrealm, ngroup)
+
+    return grouploader.post_group(request, nrealm, ngroup)
 
 @app.route('/edit/<nrealm>/<ngroup>')
 def edit_handler(nrealm, ngroup):
