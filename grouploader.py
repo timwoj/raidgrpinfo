@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
-
 #!/usr/bin/env python
 
-from flask import render_template, redirect
 import json
-import os
-import time
 from datetime import datetime
 
-import jinja2
+from flask import render_template, redirect
 import wowapi
 
 from google.appengine.ext import ndb
@@ -108,48 +104,30 @@ class Groupv2(ndb.Model):
     def normalize(realm):
         return realm.lower().replace('\'', '').replace(' ', '-')
 
-class GroupStats:
+    @classmethod
+    def query_group(cls, nrealm, ngroup):
+        results = memcache.get('%s_%s' % (nrealm, ngroup))
+        if results is None:
+            print('group was not in memcache')
+            group_result = cls.query(cls.nrealm == nrealm, cls.ngroup == ngroup).fetch(1)
 
-    # the number of mains that should be used to calculate the group average
-    # ilvl and equipped ilvls.  this may be different from the total number of
-    # mains since there may be errors retrieving data from Battle.net.
-    ilvlmains = 0
-    totalilvl = 0
-    totalilvleq = 0
+            if group_result:
+                print('found group in datastore, adding to memcache')
+                results = group_result[0]
+                memcache.set('%s_%s' % (nrealm, ngroup), results)
+            else:
+                print('group was not in datastore either')
 
-    cloth = 0
-    leather = 0
-    mail = 0
-    plate = 0
-
-    ranged = 0
-    melee = 0
-
-def get_group_from_db(nrealm, ngroup):
-
-    results = memcache.get('%s_%s' % (nrealm, ngroup))
-    if results is None:
-        print('group was not in memcache')
-        db_query = Groupv2.query(Groupv2.nrealm == nrealm, Groupv2.ngroup == ngroup)
-        queryresults = db_query.fetch(1)
-        if queryresults:
-            print('found group in datastore, adding to memcache')
-            results = queryresults[0]
-            memcache.set('%s_%s' % (nrealm, ngroup), results)
-        else:
-            print('group was not in datastore either')
-
-    return results
+        return results
 
 def edit_group(nrealm, ngroup):
 
     # load the list of realms from the datastore that was loaded by the
     # /loadrealms service
-    query = wowapi.Realm.query(namespace='Realms')
-    realms = query.fetch()
+    realms = wowapi.Realm.query(namespace='Realms').fetch()
 
     # try to load the group info from the database
-    results = get_group_from_db(nrealm, ngroup)
+    results = Groupv2.query_group(nrealm, ngroup)
 
     # Loop through the results from the data store and create a list
     # of toon names, the markers for subs, and the markers for
@@ -175,7 +153,7 @@ def edit_group(nrealm, ngroup):
         'toons': toons,
         'realms': realms,
     }
-    
+
     output = render_template('editor.html', **template_values)
     output += render_template('pagefooter.html')
     return output
@@ -183,7 +161,7 @@ def edit_group(nrealm, ngroup):
 def get_group(nrealm, ngroup):
 
     # try to load the group info from the database
-    results = get_group_from_db(nrealm, ngroup)
+    results = Groupv2.query_group(nrealm, ngroup)
 
     # if the group doesn't exist, drop into the interface to make a new
     # group
@@ -192,16 +170,15 @@ def get_group(nrealm, ngroup):
 
     # if the group exists, load the group from the blizzard API and display
     # it.
-    else:
-        results.lastvisited = datetime.now()
-        results.put()
-        return load_group(results)
+    results.lastvisited = datetime.now()
+    results.put()
+    return load_group(results)
 
 def post_group(request, nrealm, ngroup):
 
     # try to load the group info from the database.  this is only necessary
     # to get the password from the database to verify that it's correct.
-    results = get_group_from_db(nrealm, ngroup)
+    results = Groupv2.query_group(nrealm, ngroup)
 
     if results is not None and not sha256_crypt.verify(request.form.get('pw', ''), results.password):
         output = '<html><head><title>Password failure</title></head><body>'
@@ -219,7 +196,6 @@ def post_group(request, nrealm, ngroup):
     group.nrealm = nrealm
     group.ngroup = ngroup
     group.groupname = request.form.get('group', '').strip()
-
     group.password = sha256_crypt.encrypt(request.form.get('pw', ''))
 
     # load the json data that includes the toon data
@@ -230,11 +206,7 @@ def post_group(request, nrealm, ngroup):
     # the form
     del group.toons[:]
     for j in jsondata['toons']:
-        toon = Toonv2()
-        toon.name = j['name']
-        toon.role = j['role']
-        toon.status = j['status']
-        toon.realm = j['realm']
+        toon = Toonv2(**j)
         group.toons.append(toon)
 
     group.toons = sorted(group.toons, key=lambda s: s.name.lower())
@@ -242,28 +214,19 @@ def post_group(request, nrealm, ngroup):
     group.put()
 
     # put this group in the memcache too so that it can be loaded from
-    # there instead of from the datastore every time
+    # there instead of from the datastore every time. It will also be loaded
+    # from the memcache after the redirect.
     memcache.set('%s_%s' % (nrealm, ngroup), group)
 
-    results = []
-    while not results:
-        time.sleep(0.5)
-        db_query = Groupv2.query(Groupv2.nrealm == nrealm, Groupv2.ngroup == ngroup)
-        results = db_query.fetch(1)
-
-    # Redirect back to the group page
-    return redirect('%s/%s' % (nrealm, ngroup))
+    # Return a good status so the javascript will redirect to the group page
+    return "", 200
 
 def load_group(results):
 
     response = ''
 
-    # Get the group data from the results
-    toonlist = results.toons
-    realm = results.nrealm
-
     # Query ndb for the full realm name based on the results
-    realm_query = wowapi.Realm.query(wowapi.Realm.slug == realm, namespace='Realms')
+    realm_query = wowapi.Realm.query(wowapi.Realm.slug == results.nrealm, namespace='Realms')
     realm_result = realm_query.fetch()
     frealm = realm_result[0].realm
 
@@ -275,37 +238,34 @@ def load_group(results):
         classes[cls.classId] = cls.name
 
     data = []
-    groupstats = GroupStats()
+    groupstats = {
+        'ilvlmains': 0,
+        'totalilvl': 0,
+        'totalilvleq': 0,
+        'cloth': 0,
+        'leather': 0,
+        'mail': 0,
+        'plate': 0,
+        'ranged': 0,
+        'melee': 0,
+        'tanks': 0,
+        'healers': 0
+    }
 
     # Use the API importer to load the data for the group into a list of
     # entries for each toon.  We'll loop through this data to build up
     # the page once all of the fetches are finished.
     importer = wowapi.Importer()
-    importer.load(realm, frealm, toonlist, data, groupstats)
+    importer.load(results.nrealm, frealm, results.toons, data, groupstats)
 
     # Catch the case where no mains were found in the data so we don't
     # divide by zero
-    if groupstats.ilvlmains == 0:
+    if groupstats['ilvlmains'] == 0:
         avgilvl = 0
         avgeqp = 0
     else:
-        avgilvl = groupstats.totalilvl / groupstats.ilvlmains
-        avgeqp = groupstats.totalilvleq / groupstats.ilvlmains
-
-    melee = 0
-    ranged = 0
-    tanks = 0
-    healers = 0
-    for idx, char in enumerate(data):
-        if char['status'] == 'main':
-            if char['role'] == 'dps':
-                melee += 1
-            elif char['role'] == 'ranged':
-                ranged += 1
-            elif char['role'] == 'tank':
-                tanks += 1
-            elif char['role'] == 'healer':
-                healers += 1
+        avgilvl = groupstats['totalilvl'] / groupstats['ilvlmains']
+        avgeqp = groupstats['totalilvleq'] / groupstats['ilvlmains']
 
     # Build the page header with the group name, realm, and ilvl stats
     template_values = {
@@ -316,16 +276,16 @@ def load_group(results):
         'groupavgilvl': avgilvl,
         'groupavgeqp': avgeqp,
         'toondata': data,
-        'tankcount': tanks,
-        'healercount': healers,
-        'meleecount': melee,
-        'rangedcount': ranged,
-        'clothcount': groupstats.cloth,
-        'leathercount': groupstats.leather,
-        'mailcount': groupstats.mail,
-        'platecount': groupstats.plate,
+        'tankcount': groupstats['tanks'],
+        'healercount': groupstats['healers'],
+        'meleecount': groupstats['melee'],
+        'rangedcount': groupstats['ranged'],
+        'clothcount': groupstats['cloth'],
+        'leathercount': groupstats['leather'],
+        'mailcount': groupstats['mail'],
+        'platecount': groupstats['plate']
     }
-    
+
     response += render_template('groupinfo-header.html', **template_values)
     response += '        <hr style="width:90%;clear: both"/><br/>\n'
     response += render_template('groupinfo-gridheader.html', **template_values)
@@ -339,7 +299,6 @@ def load_group(results):
         response += add_character(char, results, classes)
 
     response += '</table><p/>\n'
-    
     template_values = {
         'min_normal': MIN_NORMAL,
         'min_heroic': MIN_HEROIC,
@@ -352,7 +311,7 @@ def load_group(results):
     response += render_template('groupinfo-colorlegend.html', **template_values)
     response += render_template('pagefooter.html')
 
-    return response
+    return response, 200
 
 # Generic method to add a character to the page response
 def add_character(char, results, classes):
@@ -372,20 +331,6 @@ def add_character(char, results, classes):
                      'trinket2', 'mainHand', 'offHand']
         items = char['items']
 
-        avgilvleq = 0
-        numitems = 0
-        for slot in itemslots:
-            if slot in items:
-                avgilvleq = avgilvleq + items[slot]['itemLevel']
-                numitems = numitems + 1
-        # if there's no offhand, assume the main hand is a 2-hander and count it double per Blizzard iLvl formula.
-        if (not 'offHand' in items) and ('mainHand' in items):
-            avgilvleq = avgilvleq + items['mainHand']['itemLevel']
-            numitems = numitems + 1
-
-        if numitems != 0:
-            avgilvleq = round(float(avgilvleq)/float(numitems), 1)
-
         template_values = {
             'load_status': 'ok',
             'name': char['name'],
@@ -397,32 +342,46 @@ def add_character(char, results, classes):
             'status': char['status'],
             'role': char['role'],
             'avgilvl': items['averageItemLevel'],
-            'avgilvle': avgilvleq,
             'azeriteLevel': items.get('neck', {}).get('azeriteLevel', 0)
         }
 
-        for itype in itemslots:
-            template_values[itype] = {}
-            if itype in items:
+        avgilvleq = 0
+        numitems = 0
+        for slot in itemslots:
+            template_values[slot] = {
+                'itemLevel': 0,
+                'set': 'no'
+            }
+
+            if slot in items:
+                # Count up the item levels and number of items as we go
+                avgilvleq += items[slot]['itemLevel']
+                numitems += 1
+
                 azerite_ids = []
-                if 'azeriteEmpoweredItem' in items[itype]:
-                    for power in items[itype]['azeriteEmpoweredItem'].get('azeritePowers', []):
+                if 'azeriteEmpoweredItem' in items[slot]:
+                    for power in items[slot]['azeriteEmpoweredItem'].get('azeritePowers', []):
                         azerite_ids.append(power['id'])
 
-                template_values[itype]['id'] = items[itype]['id']
-                template_values[itype]['enchant'] = items[itype]['enchant']
-                template_values[itype]['itemLevel'] = items[itype]['itemLevel']
-                template_values[itype]['bonusLists'] = items[itype]['bonusLists']
-                template_values[itype]['tooltips'] = items[itype]['tooltipParams']
-                template_values[itype]['quality'] = items[itype]['quality']
-                template_values[itype]['azerite'] = azerite_ids
-                if items[itype]['context'] == 'trade-skill':
-                    template_values[itype]['set'] = 'crafted'
+                template_values[slot]['id'] = items[slot]['id']
+                template_values[slot]['enchant'] = items[slot]['enchant']
+                template_values[slot]['itemLevel'] = items[slot]['itemLevel']
+                template_values[slot]['bonusLists'] = items[slot]['bonusLists']
+                template_values[slot]['tooltips'] = items[slot]['tooltipParams']
+                template_values[slot]['quality'] = items[slot]['quality']
+                template_values[slot]['azerite'] = azerite_ids
+                if items[slot]['context'] == 'trade-skill':
+                    template_values[slot]['set'] = 'crafted'
                 else:
-                    template_values[itype]['set'] = 'no'
-            else:
-                template_values[itype]['itemLevel'] = 0
-                template_values[itype]['set'] = False
+                    template_values[slot]['set'] = 'no'
+
+        # if there's no offhand, assume the main hand is a 2-hander and count it double per Blizzard iLvl formula.
+        if (not 'offHand' in items) and ('mainHand' in items):
+            avgilvleq += items['mainHand']['itemLevel']
+            numitems += 1
+
+        if numitems != 0:
+            template_values['avgilvle'] = round(float(avgilvleq)/float(numitems), 1)
 
     else:
 
@@ -449,21 +408,21 @@ def validate_password(request):
             return 'Invalid', 401
 
         # grab the group the datastore and try to validate the password
-        results = get_group_from_db(nrealm, ngroup)
+        results = Groupv2.query_group(nrealm, ngroup)
 
         if results != None:
             if not sha256_crypt.verify(password, results.password):
                 return 'Invalid', 401
-            else:
-                return 'Valid', 200
-        else:
-            # This covers the case where a group is being added since
-            # it won't be in the database yet.
             return 'Valid', 200
+
+        # This covers the case where a group is being added since
+        # it won't be in the database yet.
+        return 'Valid', 200
+
     elif newgn != None:
-        results = get_group_from_db(nrealm, ngroup)
+        results = Groupv2.query_group(nrealm, ngroup)
 
         if results != None:
             return 'Invalid', 401
-        else:
-            return 'Valid', 200
+
+    return 'Valid', 200
