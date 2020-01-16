@@ -324,12 +324,12 @@ def add_character(char, results, classes):
             'realm': char['toonrealm'],
             'frealm': char['toonfrealm'],
         }
-    elif 'items' in char:
+    elif 'equipped_items' in char:
 
         itemslots = ['head', 'shoulder', 'chest', 'hands', 'legs', 'feet', 'neck',
-                     'back', 'wrist', 'waist', 'finger1', 'finger2', 'trinket1',
-                     'trinket2', 'mainHand', 'offHand']
-        items = char['items']
+                     'back', 'wrist', 'waist', 'finger_1', 'finger_2', 'trinket_1',
+                     'trinket_2', 'main_hand', 'off_hand']
+        items = char['equipped_items']
 
         template_values = {
             'load_status': 'ok',
@@ -338,11 +338,11 @@ def add_character(char, results, classes):
             'nrealm': results.nrealm,  # realm for group
             'realm': char['toonrealm'],  # realm for toon (might not be == to nrealm)
             'guild': char['guild']['name'] if 'guild' in char else None,
-            'class': classes[char['class']],
+            'class': char['character_class']['name'],
             'status': char['status'],
             'role': char['role'],
-            'avgilvl': items['averageItemLevel'],
-            'azeriteLevel': items.get('neck', {}).get('azeriteLevel', 0)
+            'avgilvl': char['average_item_level'],
+            'azeriteLevel': char['azerite_level']
         }
 
         avgilvleq = 0
@@ -353,30 +353,48 @@ def add_character(char, results, classes):
                 'set': 'no'
             }
 
-            if slot in items:
-                # Count up the item levels and number of items as we go
-                avgilvleq += items[slot]['itemLevel']
-                numitems += 1
+        offhand = False
+        twohander = False
 
-                azerite_ids = []
-                if 'azeriteEmpoweredItem' in items[slot]:
-                    for power in items[slot]['azeriteEmpoweredItem'].get('azeritePowers', []):
-                        azerite_ids.append(power['id'])
+        for item in items:
 
-                template_values[slot]['id'] = items[slot]['id']
-                template_values[slot]['enchant'] = items[slot]['enchant']
-                template_values[slot]['itemLevel'] = items[slot]['itemLevel']
-                template_values[slot]['bonusLists'] = items[slot]['bonusLists']
-                template_values[slot]['tooltips'] = items[slot]['tooltipParams']
-                template_values[slot]['quality'] = items[slot]['quality']
-                template_values[slot]['azerite'] = azerite_ids
-                if items[slot]['context'] == 'trade-skill':
-                    template_values[slot]['set'] = 'crafted'
-                else:
-                    template_values[slot]['set'] = 'no'
+            slot = item['slot']['type'].encode('ascii', 'ignore').lower()
 
-        # if there's no offhand, assume the main hand is a 2-hander and count it double per Blizzard iLvl formula.
-        if (not 'offHand' in items) and ('mainHand' in items):
+            # Ignore things like shirts and tabards
+            if slot not in itemslots:
+                continue
+
+            # Count up the item levels and number of items as we go
+            avgilvleq += item['level']['value']
+            numitems += 1
+
+            azerite_ids = []
+            for power in item.get('azerite_details', {}).get('selected_powers', []):
+                azerite_ids.append(power['id'])
+
+            template_values[slot]['id'] = item['item']['id']
+            template_values[slot]['enchant'] = item['enchant']
+            template_values[slot]['itemLevel'] = item['level']['value']
+            template_values[slot]['bonusLists'] = item.get('bonus_list', [])
+            template_values[slot]['tooltips'] = item['tooltips']
+            template_values[slot]['quality'] = item['quality']['type']
+            template_values[slot]['azerite'] = azerite_ids
+            # TODO: how do crafted rings/necks show up here? They don't have a profession
+            # requirement to wear them.
+            if 'profession' in item.get('requirements', {}).get('skill', {}):
+                template_values[slot]['set'] = 'crafted'
+            else:
+                template_values[slot]['set'] = 'no'
+
+            if slot == 'MAIN_HAND' and item.get('inventory_type', {}).get('type') == 'TWOHWEAPON':
+                twohander = True
+            if slot == 'OFF_HAND':
+                offhand = False
+
+        # if there's no offhand and the main hand is a two-hander, count it double per Blizzard
+        # ilvl formulas. This breaks for classes like Fury that can normally one-hand wield
+        # two-handers, but that's life.
+        if twohander and not offhand:
             avgilvleq += items['mainHand']['itemLevel']
             numitems += 1
 
@@ -388,7 +406,7 @@ def add_character(char, results, classes):
         template_values = {
             'name': char['name'],
             'load_status': 'nok',
-            'reason': 'Unknown error retrieving data for %s.  Refresh to try again' % char['name'],
+            'reason': 'Equipment data was missing for %s.  Refresh to try again' % char['name'],
             'realm': char['toonrealm'],
             'frealm': char['toonfrealm'],
         }

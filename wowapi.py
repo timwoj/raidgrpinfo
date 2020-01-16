@@ -70,10 +70,10 @@ class Realm(ndb.Model):
 class Importer(object):
     # These are the "Better" enchants used for quality checking on enchants
     ENCHANTS = {
-        'finger1': [6108, 6109, 6110, 6111],
-        'finger2': [6108, 6109, 6110, 6111],
-        'mainHand': [5946, 5948, 5949, 5950, 5957, 5962, 5963, 5964, 5965, 5966, 3847, 3368, 3370, 6112, 6148, 6149, 6150],
-        'offHand': [5946, 5948, 5949, 5950, 5957, 5962, 5963, 5964, 5965, 5966, 3847, 3368, 3370, 6112, 6148, 6149, 6150],
+        'FINGER_1': [6108, 6109, 6110, 6111],
+        'FINGER_2': [6108, 6109, 6110, 6111],
+        'MAIN_HAND': [5946, 5948, 5949, 5950, 5957, 5962, 5963, 5964, 5965, 5966, 3847, 3368, 3370, 6112, 6148, 6149, 6150],
+        'OFF_HAND': [5946, 5948, 5949, 5950, 5957, 5962, 5963, 5964, 5965, 5966, 3847, 3368, 3370, 6112, 6148, 6149, 6150],
     }
 
     def load(self, realm, frealm, toonlist, data, groupstats):
@@ -109,7 +109,7 @@ class Importer(object):
             newdata['status'] = toon.status
             newdata['role'] = toon.role
 
-            url = 'https://us.api.blizzard.com/wow/character/%s/%s?fields=items,guild&locale=en_US' % (toonrealm, urllib.quote(toonname.encode('utf-8')))
+            url = 'https://us.api.blizzard.com/profile/wow/character/%s/%s?namespace=profile-us&locale=en_US' % (toonrealm, urllib.quote(toonname.encode('utf-8').lower()))
 
             # create the rpc object for the fetch method.  the deadline
             # defaults to 5 seconds, but that seems to be too short for the
@@ -142,58 +142,37 @@ class Importer(object):
 
         try:
             response = rpc.get_result()
-        except urlfetch_errors.DeadlineExceededError:
-            print('urlfetch threw DeadlineExceededError on toon %s' % name.encode('ascii', 'ignore'))
-            toondata['name'] = name
-            toondata['load_status'] = 'nok'
-            toondata['reason'] = 'Timeout retrieving data from Battle.net for %s.  Refresh page to try again.' % name
+        except Excception as e:
+            handle_request_exception(e, 'profile', toondata)
             return
-        except urlfetch_errors.DownloadError:
-            print('urlfetch threw DownloadError on toon %s' % name.encode('ascii', 'ignore'))
-            toondata['name'] = name
-            toondata['load_status'] = 'nok'
-            toondata['reason'] = 'Network error retrieving data from Battle.net for toon %s.  Refresh page to try again.' % name
-            return
-        except:
-            print('urlfetch threw unknown exception on toon %s' % name.encode('ascii', 'ignore'))
-            toondata['name'] = name
-            toondata['load_status'] = 'nok'
-            toondata['reason'] = 'Unknown error retrieving data from Battle.net for toon %s.  Refresh page to try again.' % name
-            return
+
+        toondata['name'] = name
+        toondata['load_status'] = 'ok'
+
+        # change the json from the response into a dict of data.
+        jsondata = json.loads(response.content)
 
         # Catch HTTP errors from Blizzard. 404s really wreck everything.
-        if response.status_code != 200:
-            print('urlfetch returned a %d status code on toon %s' % (response.status_code, name.encode('ascii', 'ignore')))
-            toondata['name'] = name
-            toondata['load_status'] = 'nok'
-            toondata['reason'] = 'Got a %d from Battle.net for toon %s.  Refresh page to try again.' % (response.status_code, name)
-            return
+        if not self.check_response_status(response, jsondata, 'equipment', toondata):
+            return;
 
-        # change the json from the response into a dict of data and store it
-        # into the toondata object that was passed in.
-        jsondata = json.loads(response.content)
-        toondata.update(jsondata)
-
-        # Blizzard's API will return an error if it couldn't retrieve the data
-        # for some reason.  Check for this and log it if it fails.  Note that
-        # this response doesn't contain the toon's name so it has to be added
-        # in afterwards.
-        if 'load_status' in jsondata and jsondata['load_status'] == 'nok':
-            print('Blizzard API failed to find toon %s for reason: %s' %
-                  (name.encode('ascii', 'ignore'), jsondata['reason']))
-            toondata['name'] = name
-            toondata['reason'] = "Error retrieving data for %s from Blizzard API: %s" % (name, jsondata['reason'])
-            return
+        # store off some of the fields that we care about directly
+        toondata['guild'] = jsondata['guild']
+        toondata['realm'] = jsondata['realm']
+        toondata['character_class'] = jsondata['character_class']
+        toondata['name'] = jsondata['name']
+        toondata['average_item_level'] = jsondata['average_item_level']
+        toondata['equipped_item_level'] = jsondata['equipped_item_level']
 
         print("got good results for %s" % name.encode('ascii', 'ignore'))
 
         # For each toon, update the statistics for the group as a whole
         if toondata['status'] == 'main':
             groupstats['ilvlmains'] += 1
-            groupstats['totalilvl'] += jsondata['items']['averageItemLevel']
-            groupstats['totalilvleq'] += jsondata['items']['averageItemLevelEquipped']
+            groupstats['totalilvl'] += jsondata['average_item_level']
+            groupstats['totalilvleq'] += jsondata['equipped_item_level']
 
-            toonclass = classes[jsondata['class']]
+            toonclass = jsondata['character_class']['name']
             if toonclass in ['Paladin', 'Warrior', 'Death Knight']:
                 groupstats['plate'] += 1
             elif toonclass in ['Mage', 'Priest', 'Warlock']:
@@ -212,44 +191,88 @@ class Importer(object):
             elif toondata['role'] == 'healer':
                 groupstats['healers'] += 1
 
+        # We're also going to need the equipment for this character so make a second request
+        oauth_headers = get_oauth_headers()
+        try:
+            equip_res = urlfetch.fetch("%s&locale=en_US" % jsondata['equipment']['href'], headers=oauth_headers)
+        except Excception as e:
+            handle_request_exception(e, 'equipment', toondata)
+            return
+
+        # change the json from the response into a dict of data.
+        jsondata = json.loads(equip_res.content)
+
+        # Catch HTTP errors from Blizzard. 404s really wreck everything.
+        if not self.check_response_status(equip_res, jsondata, 'equipment', toondata):
+            return;
+
+        toondata['equipped_items'] = jsondata['equipped_items']
+        toondata['azerite_level'] = 0
+
         # Group all gems together into a comma-separated list for tooltipParams
-        for slot in toondata['items']:
-            if not isinstance(toondata['items'][slot], dict):
+        for item in toondata['equipped_items']:
+            if not isinstance(item, dict):
                 continue
-            item = toondata['items'][slot]
-            if 'tooltipParams' in item:
-                gem0 = 0
-                gem1 = 0
-                gem2 = 0
-                if 'gem0' in item['tooltipParams']:
-                    gem0 = item['tooltipParams']['gem0']
-                    del item['tooltipParams']['gem0']
-                if 'gem1' in item['tooltipParams']:
-                    gem1 = item['tooltipParams']['gem1']
-                    del item['tooltipParams']['gem1']
-                if 'gem2' in item['tooltipParams']:
-                    gem2 = item['tooltipParams']['gem2']
-                    del item['tooltipParams']['gem2']
-                if gem0 != 0 or gem1 != 0 or gem2 != 0:
-                    item['tooltipParams']['gems'] = ':'.join(str(x) for x in [gem0, gem1, gem2])
+
+            item['tooltips'] = {}
+            if 'sockets' in item:
+                gems = []
+                for socket in item['sockets']:
+                    gems.append(socket.get('item', {}).get('id', 0))
+
+                if gems:
+                    item['tooltips']['gems'] = ':'.join(str(x) for x in gems)
 
             # Default enchant checking to -1 for all items
             item['enchant'] = -1
 
+            slot = item['slot']['type']
             if slot in Importer.ENCHANTS:
-                if slot != 'offHand' or 'weaponInfo' in item:
-                    enchant = item.get('tooltipParams', {}).get('enchant', 0)
-                    if enchant in Importer.ENCHANTS[slot]:
-                        item['enchant'] = 2
-                    elif enchant != 0:
-                        item['enchant'] = 1
-                    else:
-                        item['enchant'] = 0
+                if slot != 'OFF_HAND' or 'weapon' in item:
+                    item['enchant'] = 0
+                    for enchant in item.get('enchantments', []):
+                        enchant_id = enchant.get('enchantment_id', 0)
+                        item['tooltips']['enchant'] = enchant_id
+                        if enchant_id in Importer.ENCHANTS[slot] and item['enchant'] < 2:
+                            item['enchant'] = 2
+                        elif enchant != 0 and item['enchant'] < 1:
+                            item['enchant'] = 1
 
-            item['azeriteLevel'] = item.get('azeriteItem', {}).get('azeriteLevel', 0)
+            if slot == 'NECK':
+                toondata['azerite_level'] = item.get('azerite_details', {}).get('level', {}).get('value', 0)
 
     def create_callback(self, rpc, name, toondata, groupstats, classes):
         return lambda: self.handle_result(rpc, name, toondata, groupstats, classes)
+
+    # Handles exceptions from requests to the API in a common fashion
+    def handle_request_exception(self, exception, where, toondata):
+        toondata['load_status'] = 'nok'
+
+        if isinstance(urlfetch_errors.DeadlineExceededError, exception):
+            print('urlfetch threw DeadlineExceededError on toon %s' % name.encode('ascii', 'ignore'))
+            toondata['reason'] = 'Timeout retrieving %s data from Battle.net for %s.  Refresh page to try again.' % (where, name)
+        elif isinstance(urlfetch_errors.DownloadError, exception):
+            print('urlfetch threw DownloadError on toon %s' % name.encode('ascii', 'ignore'))
+            toondata['reason'] = 'Network error retrieving %s data from Battle.net for toon %s.  Refresh page to try again.' % (where, name)
+        else:
+            print('urlfetch threw unknown exception on toon %s' % name.encode('ascii', 'ignore'))
+            toondata['reason'] = 'Unknown error retrieving %s data from Battle.net for toon %s.  Refresh page to try again.' % (where, name)
+
+    # Checks response codes and error messages from the API in a common fashion.
+    def check_response_status(self, response, jsondata, where, toondata):
+        if response.status_code != 200 or ( 'code' in jsondata and 'detail' in jsondata ):
+            code = jsondata.get('code', response.status_code)
+            print('urlfetch returned a %d status code on toon %s' % (code, toondata['name'].encode('ascii', 'ignore')))
+            toondata['load_status'] = 'nok'
+            toondata['reason'] = 'Got a %d requesting %s from Battle.net for toon %s.  Refresh page to try again.' % (code, where, toondata['name'])
+
+            if 'detail' in jsondata:
+                toondata['reason'] += ' (reason: %s)' % jsondata['detail']
+
+            return False
+
+        return True
+
 
 class Setup(object):
     # Loads the list of realms into the datastore from the blizzard API so that
