@@ -76,6 +76,9 @@ class Importer(object):
         'OFF_HAND': [5946, 5948, 5949, 5950, 5957, 5962, 5963, 5964, 5965, 5966, 3847, 3368, 3370, 6112, 6148, 6149, 6150],
     }
 
+    # These are the essences added in 8.3 that add corruption resistance
+    ESSENCES_83 = [16, 24, 33, 34, 35, 36, 37]
+
     def load(self, realm, frealm, toonlist, data, groupstats):
 
         classes = ClassEntry.get_mapping()
@@ -208,6 +211,7 @@ class Importer(object):
 
         toondata['equipped_items'] = jsondata['equipped_items']
         toondata['azerite_level'] = 0
+        toondata['corruption'] = 0
 
         # Group all gems together into a comma-separated list for tooltipParams
         for item in toondata['equipped_items']:
@@ -238,8 +242,25 @@ class Importer(object):
                         elif enchant != 0 and item['enchant'] < 1:
                             item['enchant'] = 1
 
+            for stat in item.get('stats',[]):
+                stat_type = stat.get('type', {}).get('type', '')
+                if stat_type == 'CORRUPTION':
+                    toondata['corruption'] += stat.get('value', 0)
+                elif stat_type == 'CORRUPTION_RESISTANCE':
+                    toondata['corruption'] -= stat.get('value', 0)
+
+            neck_resistance = 0
             if slot == 'NECK':
                 toondata['azerite_level'] = item.get('azerite_details', {}).get('level', {}).get('value', 0)
+
+                if neck_resistance == 0:
+                    for essence in item.get('azerite_details', {}).get('selected_essences'):
+                        if essence.get('essence', {}).get('id', 0) in Importer.ESSENCES_83:
+                            neck_resistance = 10
+
+            toondata['corruption'] -= neck_resistance
+            if toondata['corruption'] < 0:
+                toondata['corruption'] = 0
 
     def create_callback(self, rpc, name, toondata, groupstats, classes):
         return lambda: self.handle_result(rpc, name, toondata, groupstats, classes)

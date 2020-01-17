@@ -337,12 +337,13 @@ def add_character(char, results, classes):
             'frealm': char['toonfrealm'],   # full realm name
             'nrealm': results.nrealm,  # realm for group
             'realm': char['toonrealm'],  # realm for toon (might not be == to nrealm)
-            'guild': char['guild']['name'] if 'guild' in char else None,
+            'guild': char.get('guild',{}).get('name', None),
             'class': char['character_class']['name'],
             'status': char['status'],
             'role': char['role'],
             'avgilvl': char['average_item_level'],
-            'azeriteLevel': char['azerite_level']
+            'azeriteLevel': char['azerite_level'],
+            'corruption': char['corruption']
         }
 
         avgilvleq = 0
