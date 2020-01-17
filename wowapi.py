@@ -160,7 +160,7 @@ class Importer(object):
             return;
 
         # store off some of the fields that we care about directly
-        toondata['guild'] = jsondata['guild']
+        toondata['guild'] = jsondata.get('guild', {})
         toondata['realm'] = jsondata['realm']
         toondata['character_class'] = jsondata['character_class']
         toondata['name'] = jsondata['name']
