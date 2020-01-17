@@ -38,7 +38,7 @@ function Add(){
       "<option value='alt'>Alt</option>"+
       "</select></td>"+
       "<td><div class='changeRealm'>"+nrealmToRealm[nrealm]+"</div></td>"+
-      "<td><img src='/resources/delete.png' height='24' width='24' class='btnDelete'/></td>"+
+      "<td><img src='/static/delete.png' height='24' width='24' class='btnDelete'/></td>"+
       "</tr>");
 
   // Recreate these bindings to include the fields from the new row
