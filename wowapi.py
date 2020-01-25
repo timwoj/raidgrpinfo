@@ -259,8 +259,9 @@ class Importer(object):
                             neck_resistance = 10
 
             toondata['corruption'] -= neck_resistance
-            if toondata['corruption'] < 0:
-                toondata['corruption'] = 0
+
+        if toondata['corruption'] < 0:
+            toondata['corruption'] = 0
 
     def create_callback(self, rpc, name, toondata, groupstats, classes):
         return lambda: self.handle_result(rpc, name, toondata, groupstats, classes)
