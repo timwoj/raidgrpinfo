@@ -145,7 +145,7 @@ class Importer(object):
 
         try:
             response = rpc.get_result()
-        except Excception as e:
+        except Exception as e:
             handle_request_exception(e, 'profile', toondata)
             return
 
@@ -198,7 +198,7 @@ class Importer(object):
         oauth_headers = get_oauth_headers()
         try:
             equip_res = urlfetch.fetch("%s&locale=en_US" % jsondata['equipment']['href'], headers=oauth_headers)
-        except Excception as e:
+        except Exception as e:
             handle_request_exception(e, 'equipment', toondata)
             return
 

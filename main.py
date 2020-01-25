@@ -11,6 +11,7 @@ app.debug = True
 app.jinja_env.filters['ilvlcolor'] = grouploader.ilvlcolor
 app.jinja_env.filters['normalize'] = grouploader.normalize
 app.jinja_env.filters['build_wowhead_rel'] = grouploader.build_wowhead_rel
+app.jinja_env.filters['build_jqx_widgets'] = grouploader.build_jqx_widgets
 
 @app.route('/')
 def root():

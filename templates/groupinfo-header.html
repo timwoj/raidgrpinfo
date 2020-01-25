@@ -17,12 +17,8 @@
     <script src="https://wow.zamimg.com/widgets/power.js"></script>
     <script>
       $(document).ready(function() {
-      {% for toon in toondata -%}
-      {% if toon['status'] != 'nok' -%}
-      $("#{{ toon['name'] | normalize }}-td").jqxTooltip({content: "{{ toon['name'] }}<br/>{% if toon['guild'] is defined -%}{{ toon['guild']['name'] }} - {% endif %}{{ toon['realm']['name'] }}</a>",autoHideDelay: 6000 });
-      {% endif %}
-      {%- endfor %}
-      });
+        {{ item | build_jqx_widgets }}
+      }
     </script>
   </head>
   <body>

@@ -55,6 +55,20 @@ def ilvlcolor(ilvl, quality):
 def normalize(groupname):
     return groupname.lower().replace('\'', '').replace(' ', '-')
 
+def build_jqx_widgets(toondata):
+    output = ''
+    for toon in toondata:
+        if toon['load_status'] != 'nok':
+            nname = normalize(toon.get('name', ''))
+            guildrealm = toon.get('guild', {}).get('name', '')
+            realm = toon.get('realm', {}).get('name', '')
+            if guildrealm and realm:
+                guildrealm += ' - '
+            guildrealm += realm
+
+            output += '$("#%s-td").jqxTooltip({content: "%s<br/>%s", autoHideDelay: 6000});\n' % (nname, toon['name'], guildrealm)
+    return output
+
 def build_wowhead_rel(item, player_class):
 
     rel_entries = []
