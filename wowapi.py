@@ -254,7 +254,7 @@ class Importer(object):
                 toondata['azerite_level'] = item.get('azerite_details', {}).get('level', {}).get('value', 0)
 
                 if neck_resistance == 0:
-                    for essence in item.get('azerite_details', {}).get('selected_essences'):
+                    for essence in item.get('azerite_details', {}).get('selected_essences', []):
                         if essence.get('essence', {}).get('id', 0) in Importer.ESSENCES_83:
                             neck_resistance = 10
 
