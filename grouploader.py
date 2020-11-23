@@ -12,9 +12,9 @@ from google.appengine.api import memcache
 from passlib.hash import sha256_crypt
 
 # Minimum ilvls and colors for the ilvl grid
-MIN_NORMAL = 445
-MIN_HEROIC = 460
-MIN_MYTHIC = 475
+MIN_NORMAL = 200
+MIN_HEROIC = 213
+MIN_MYTHIC = 226
 COLOR_LFR = '#FFB2B2'
 COLOR_NORMAL = '#FFFFB2'
 COLOR_HEROIC = '#B2FFB2'
@@ -86,16 +86,6 @@ def build_wowhead_rel(item, player_class):
 
     if tooltips.get('set', ''):
         rel_entries.append('pcs=%s' % tooltips['set'])
-
-    azerite_ids = item.get('azerite', [])
-    if azerite_ids:
-        powers = [CLASS_INDEXES[player_class]] + [x for x in azerite_ids if x != 0]
-        rel_entries.append('azerite-powers=%s' % ':'.join(map(str, powers)))
-
-    azerite_ids = item.get('azerite', [])
-    if azerite_ids:
-        powers = [CLASS_INDEXES[player_class]] + [x for x in azerite_ids if x != 0]
-        rel_entries.append('azerite-powers=%s' % ':'.join(map(str, powers)))
 
     return '&'.join(rel_entries)
 
@@ -356,8 +346,6 @@ def add_character(char, results, classes):
             'status': char['status'],
             'role': char['role'],
             'avgilvl': char['average_item_level'],
-            'azeriteLevel': char['azerite_level'],
-            'corruption': char['corruption']
         }
 
         avgilvleq = 0
@@ -383,17 +371,12 @@ def add_character(char, results, classes):
             avgilvleq += item['level']['value']
             numitems += 1
 
-            azerite_ids = []
-            for power in item.get('azerite_details', {}).get('selected_powers', []):
-                azerite_ids.append(power['id'])
-
             template_values[slot]['id'] = item['item']['id']
             template_values[slot]['enchant'] = item['enchant']
             template_values[slot]['itemLevel'] = item['level']['value']
             template_values[slot]['bonusLists'] = item.get('bonus_list', [])
             template_values[slot]['tooltips'] = item['tooltips']
             template_values[slot]['quality'] = item['quality']['type']
-            template_values[slot]['azerite'] = azerite_ids
             # TODO: how do crafted rings/necks show up here? They don't have a profession
             # requirement to wear them.
             if 'profession' in item.get('requirements', {}).get('skill', {}):

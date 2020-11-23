@@ -45,8 +45,6 @@ def get_oauth_headers():
 
 class ClassEntry(ndb.Model):
     classId = ndb.IntegerProperty()
-    mask = ndb.IntegerProperty()
-    powerType = ndb.StringProperty()
     name = ndb.StringProperty()
 
     @classmethod
@@ -75,9 +73,6 @@ class Importer(object):
         'MAIN_HAND': [5946, 5948, 5949, 5950, 5957, 5962, 5963, 5964, 5965, 5966, 3847, 3368, 3370, 6112, 6148, 6149, 6150],
         'OFF_HAND': [5946, 5948, 5949, 5950, 5957, 5962, 5963, 5964, 5965, 5966, 3847, 3368, 3370, 6112, 6148, 6149, 6150],
     }
-
-    # These are the essences added in 8.3 that add corruption resistance
-    ESSENCES_83 = [16, 24, 33, 34, 35, 36, 37]
 
     def load(self, realm, frealm, toonlist, data, groupstats):
 
@@ -156,7 +151,7 @@ class Importer(object):
         jsondata = json.loads(response.content)
 
         # Catch HTTP errors from Blizzard. 404s really wreck everything.
-        if not self.check_response_status(response, jsondata, 'equipment', toondata):
+        if not self.check_response_status(response, jsondata, 'profile', toondata):
             return;
 
         # store off some of the fields that we care about directly
@@ -210,8 +205,6 @@ class Importer(object):
             return;
 
         toondata['equipped_items'] = jsondata['equipped_items']
-        toondata['azerite_level'] = 0
-        toondata['corruption'] = 0
 
         # Group all gems together into a comma-separated list for tooltipParams
         for item in toondata['equipped_items']:
@@ -241,27 +234,6 @@ class Importer(object):
                             item['enchant'] = 2
                         elif enchant != 0 and item['enchant'] < 1:
                             item['enchant'] = 1
-
-            for stat in item.get('stats',[]):
-                stat_type = stat.get('type', {}).get('type', '')
-                if stat_type == 'CORRUPTION':
-                    toondata['corruption'] += stat.get('value', 0)
-                elif stat_type == 'CORRUPTION_RESISTANCE':
-                    toondata['corruption'] -= stat.get('value', 0)
-
-            neck_resistance = 0
-            if slot == 'NECK':
-                toondata['azerite_level'] = item.get('azerite_details', {}).get('level', {}).get('value', 0)
-
-                if neck_resistance == 0:
-                    for essence in item.get('azerite_details', {}).get('selected_essences', []):
-                        if essence.get('essence', {}).get('id', 0) in Importer.ESSENCES_83:
-                            neck_resistance = 10
-
-            toondata['corruption'] -= neck_resistance
-
-        if toondata['corruption'] < 0:
-            toondata['corruption'] = 0
 
     def create_callback(self, rpc, name, toondata, groupstats, classes):
         return lambda: self.handle_result(rpc, name, toondata, groupstats, classes)
@@ -318,7 +290,7 @@ class Setup(object):
             row.key.delete()
 
         # retrieve a list of realms from the blizzard API
-        url = 'https://us.api.blizzard.com/wow/realm/status?locale=en_US'
+        url = 'https://us.api.blizzard.com/data/wow/realm/index?namespace=dynamic-us&locale=en_US&region=us'
         response = urlfetch.fetch(url, headers=oauth_headers)
         if response.status_code == 200:
             jsondata = json.loads(response.content)
@@ -340,7 +312,7 @@ class Setup(object):
             row.key.delete()
 
         # retrieve a list of classes from the blizzard API
-        url = 'https://us.api.blizzard.com/wow/data/character/classes?locale=en_US'
+        url = 'https://us.api.blizzard.com/data/wow/playable-class/index?namespace=static-us&locale=en_US&region=us'
         response = urlfetch.fetch(url, headers=oauth_headers)
         if response.status_code == 200:
             jsondata = json.loads(response.content)
@@ -348,8 +320,7 @@ class Setup(object):
             jsondata = {'classes': []}
 
         for cls in jsondata['classes']:
-            class_entry = ClassEntry(classId=cls['id'], mask=cls['mask'],
-                                     powerType=cls['powerType'], name=cls['name'])
+            class_entry = ClassEntry(classId=cls['id'], name=cls['name'])
             class_entry.put()
 
         return len(jsondata['classes'])
