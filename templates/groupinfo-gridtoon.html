@@ -26,7 +26,6 @@
     <img src="/static/icon-ranged-dps.png"/>
     {%- endif -%}
     {%- if status == 'main' %} Main{%- elif status == 'bench' %} Bench{%- else %} Alt{% endif %}</td>
-  <td class="grid" style="">{{ avgilvle }}</td>
   <td class="grid" style="">{{ avgilvl }}</td>
   {{ itemtd(head, class) }}
   {{ itemtd(shoulder, class) }}
@@ -44,5 +43,6 @@
   {{ itemtd(trinket_2, class) }}
   {{ itemtd(main_hand, class) }}
   {{ itemtd(off_hand, class) }}
+  <td class="grid" style="">{{ covenant }}</td>
 {% endif -%}
 </tr>

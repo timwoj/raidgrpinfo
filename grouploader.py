@@ -345,7 +345,7 @@ def add_character(char, results, classes):
             'class': char['character_class']['name'],
             'status': char['status'],
             'role': char['role'],
-            'avgilvl': char['average_item_level'],
+            'covenant': char['covenant']
         }
 
         avgilvleq = 0
@@ -397,7 +397,7 @@ def add_character(char, results, classes):
             numitems += 1
 
         if numitems != 0:
-            template_values['avgilvle'] = round(float(avgilvleq)/float(numitems), 1)
+            template_values['avgilvl'] = round(float(avgilvleq)/float(numitems), 1)
 
     else:
 

@@ -161,6 +161,7 @@ class Importer(object):
         toondata['name'] = jsondata['name']
         toondata['average_item_level'] = jsondata['average_item_level']
         toondata['equipped_item_level'] = jsondata['equipped_item_level']
+        toondata['covenant'] = jsondata.get('covenant_progress',{}).get('chosen_covenant',{}).get('name','None')
 
         print("got good results for %s" % name.encode('ascii', 'ignore'))
 
