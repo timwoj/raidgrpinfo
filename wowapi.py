@@ -66,12 +66,50 @@ class Realm(ndb.Model):
         return ''
 
 class Importer(object):
-    # These are the "Better" enchants used for quality checking on enchants
+
+    WEAPON_ENCHANTS = [
+        6227, # Ascended Vigor
+        6226, # Eternal Grace
+        6223, # Lightless Force
+        6228, # Sinful Revelation
+        #6229, # Celestial Guidance (budget enchant)
+
+        # Death Knight runeforges
+        3368, # Fallen Crusader
+        3380, # Razorice
+        6241, # Sanguination
+        6243, # Hysteria
+    ]
+
+    RING_ENCHANTS = [
+        6164, # Tenet of Crit
+        6166, # Tenet of Haste
+        6168, # Tenet of Mastery
+        6170, # Tenet of Versatility
+    ]
+
+    CHEST_ENCHANTS = [
+        6217, # Eternal Bounds
+        6214, # Eternal Skirmish
+        6230, # Eternal Stats
+        6213, # Eternal Bulwark
+        6265, # Eternal Insight
+    ]
+
+    CLOAK_ENCHANTS = [
+        6208, # Soul Vitality
+        6203, # Fortified Avoidance
+        6204, # Fortified Leech
+        6202, # Fortified Speed
+    ]
+
     ENCHANTS = {
-        'FINGER_1': [6108, 6109, 6110, 6111],
-        'FINGER_2': [6108, 6109, 6110, 6111],
-        'MAIN_HAND': [5946, 5948, 5949, 5950, 5957, 5962, 5963, 5964, 5965, 5966, 3847, 3368, 3370, 6112, 6148, 6149, 6150],
-        'OFF_HAND': [5946, 5948, 5949, 5950, 5957, 5962, 5963, 5964, 5965, 5966, 3847, 3368, 3370, 6112, 6148, 6149, 6150],
+        'CHEST': CHEST_ENCHANTS,
+        'BACK': CLOAK_ENCHANTS,
+        'FINGER_1': RING_ENCHANTS,
+        'FINGER_2': RING_ENCHANTS,
+        'MAIN_HAND': WEAPON_ENCHANTS,
+        'OFF_HAND': WEAPON_ENCHANTS
     }
 
     def load(self, realm, frealm, toonlist, data, groupstats):
@@ -229,6 +267,11 @@ class Importer(object):
                 if slot != 'OFF_HAND' or 'weapon' in item:
                     item['enchant'] = 0
                     for enchant in item.get('enchantments', []):
+
+                        # Skip non-permanent enchants
+                        if enchant.get('enchantment_slot', {}).get('id', -1) != 0:
+                            continue
+
                         enchant_id = enchant.get('enchantment_id', 0)
                         item['tooltips']['enchant'] = enchant_id
                         if enchant_id in Importer.ENCHANTS[slot] and item['enchant'] < 2:
