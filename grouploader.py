@@ -357,7 +357,7 @@ def add_character(char, results, classes):
             }
 
         offhand = False
-        twohander = False
+        twohander = None
 
         for item in items:
 
@@ -384,16 +384,16 @@ def add_character(char, results, classes):
             else:
                 template_values[slot]['set'] = 'no'
 
-            if slot == 'MAIN_HAND' and item.get('inventory_type', {}).get('type') == 'TWOHWEAPON':
-                twohander = True
-            if slot == 'OFF_HAND':
-                offhand = False
+            if slot == 'main_hand' and item.get('inventory_type', {}).get('type') == 'TWOHWEAPON':
+                twohander = item
+            if slot == 'off_hand':
+                offhand = True
 
         # if there's no offhand and the main hand is a two-hander, count it double per Blizzard
         # ilvl formulas. This breaks for classes like Fury that can normally one-hand wield
         # two-handers, but that's life.
         if twohander and not offhand:
-            avgilvleq += items['mainHand']['itemLevel']
+            avgilvleq += twohander['level']['value']
             numitems += 1
 
         if numitems != 0:
