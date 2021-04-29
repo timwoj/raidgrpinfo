@@ -59,3 +59,8 @@ def group_handler(nrealm, ngroup):
 @app.route('/edit/<nrealm>/<ngroup>')
 def edit_handler(nrealm, ngroup):
     return grouploader.edit_group(nrealm, ngroup)
+
+@app.after_request
+def add_header(response):
+    response.headers['Permissions-Policy'] = 'interest-cohort=()'
+    return response
