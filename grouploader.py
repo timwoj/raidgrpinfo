@@ -362,6 +362,7 @@ def add_character(char, results, classes):
         for item in items:
 
             slot = item['slot']['type'].encode('ascii', 'ignore').lower()
+            sockets = item.get('sockets', [])
 
             # Ignore things like shirts and tabards
             if slot not in itemslots:
@@ -381,8 +382,23 @@ def add_character(char, results, classes):
             # requirement to wear them.
             if 'profession' in item.get('requirements', {}).get('skill', {}):
                 template_values[slot]['set'] = 'crafted'
+            elif sockets:
+                for socket in sockets:
+                    if socket.get('socket_type', {}).get('type', '') == 'DOMINATION':
+                        template_values[slot]['set'] = 'dom'
+                        break
             else:
                 template_values[slot]['set'] = 'no'
+
+            if template_values[slot]['set'] == 'dom':
+                for spell in item.get('spells', []):
+                    spell_name = spell.get('spell', {}).get('name', '')
+                    if spell_name == 'Blood Link':
+                        template_values[slot]['set'] = 'db';
+                    elif spell_name == 'Winds of Winter':
+                        template_values[slot]['set'] = 'df';
+                    elif spell_name == 'Chaos Bane':
+                        template_values[slot]['set'] = 'du';
 
             if slot == 'main_hand' and item.get('inventory_type', {}).get('type') == 'TWOHWEAPON':
                 twohander = item
