@@ -7,6 +7,7 @@ import os
 import base64
 import urllib
 import traceback
+import logging
 
 from google.appengine.api import urlfetch
 from google.appengine.api import urlfetch_errors
@@ -169,7 +170,7 @@ class Importer(object):
         for entry in data:
             entry['rpc'].wait()
         end = time.time()
-        print("Time spent retrieving data: %f seconds" % (end-start))
+        logging.info("Time spent retrieving data: %f seconds" % (end-start))
 
     # Callback that handles the result of the call to the Blizzard API.  This will fill in
     # the toondata dict for the requested toon with either data from Battle.net or with an
@@ -201,7 +202,7 @@ class Importer(object):
         toondata['equipped_item_level'] = jsondata['equipped_item_level']
         toondata['covenant'] = jsondata.get('covenant_progress',{}).get('chosen_covenant',{}).get('name','None')
 
-        print("got good results for %s" % name.encode('ascii', 'ignore'))
+        logging.info("got good results for %s" % name.encode('ascii', 'ignore'))
 
         # For each toon, update the statistics for the group as a whole
         if toondata['status'] == 'main':
@@ -287,20 +288,20 @@ class Importer(object):
         toondata['load_status'] = 'nok'
 
         if isinstance(urlfetch_errors.DeadlineExceededError, exception):
-            print('urlfetch threw DeadlineExceededError on toon %s' % name.encode('ascii', 'ignore'))
+            logging.error('urlfetch threw DeadlineExceededError on toon %s' % name.encode('ascii', 'ignore'))
             toondata['reason'] = 'Timeout retrieving %s data from Battle.net for %s.  Refresh page to try again.' % (where, name)
         elif isinstance(urlfetch_errors.DownloadError, exception):
-            print('urlfetch threw DownloadError on toon %s' % name.encode('ascii', 'ignore'))
+            logging.error('urlfetch threw DownloadError on toon %s' % name.encode('ascii', 'ignore'))
             toondata['reason'] = 'Network error retrieving %s data from Battle.net for toon %s.  Refresh page to try again.' % (where, name)
         else:
-            print('urlfetch threw unknown exception on toon %s' % name.encode('ascii', 'ignore'))
+            logging.error('urlfetch threw unknown exception on toon %s' % name.encode('ascii', 'ignore'))
             toondata['reason'] = 'Unknown error retrieving %s data from Battle.net for toon %s.  Refresh page to try again.' % (where, name)
 
     # Checks response codes and error messages from the API in a common fashion.
     def check_response_status(self, response, jsondata, where, toondata):
         if response.status_code != 200 or ( 'code' in jsondata and 'detail' in jsondata ):
             code = jsondata.get('code', response.status_code)
-            print('urlfetch returned a %d status code on toon %s' % (code, toondata['name'].encode('ascii', 'ignore')))
+            logging.error('urlfetch returned a %d status code on toon %s' % (code, toondata['name'].encode('ascii', 'ignore')))
             toondata['load_status'] = 'nok'
             toondata['reason'] = 'Got a %d requesting %s from Battle.net for toon %s.  Refresh page to try again.' % (code, where, toondata['name'])
 
@@ -323,7 +324,7 @@ class Setup(object):
             classcount = self.init_classes(oauth_headers)
             return [realmcount, classcount]
         except Exception as e:
-            traceback.print_exc()
+            logging.exception('')
             return [0, 0]
 
     def init_realms(self, oauth_headers):

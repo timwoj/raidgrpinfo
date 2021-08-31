@@ -2,6 +2,7 @@
 #!/usr/bin/env python
 
 import json
+import logging
 from datetime import datetime
 
 from flask import render_template, redirect
@@ -112,15 +113,15 @@ class Groupv2(ndb.Model):
     def query_group(cls, nrealm, ngroup):
         results = memcache.get('%s_%s' % (nrealm, ngroup))
         if results is None:
-            print('group was not in memcache')
+            logging.info('group was not in memcache')
             group_result = cls.query(cls.nrealm == nrealm, cls.ngroup == ngroup).fetch(1)
 
             if group_result:
-                print('found group in datastore, adding to memcache')
+                logging.info('found group in datastore, adding to memcache')
                 results = group_result[0]
                 memcache.set('%s_%s' % (nrealm, ngroup), results)
             else:
-                print('group was not in datastore either')
+                logging.error('group was not in datastore either')
 
         return results
 
@@ -204,7 +205,7 @@ def post_group(request, nrealm, ngroup):
 
     # load the json data that includes the toon data
     jsondata = json.loads(request.form.get('json', '').strip())
-    print('number of toons saved: %d' % len(jsondata['toons']))
+    logging.info('number of toons saved: %d' % len(jsondata['toons']))
 
     # clear the old toon information and recreate it from the data from
     # the form
