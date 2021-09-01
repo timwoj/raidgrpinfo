@@ -187,7 +187,13 @@ class Importer(object):
         toondata['load_status'] = 'ok'
 
         # change the json from the response into a dict of data.
-        jsondata = json.loads(response.content)
+        try:
+            jsondata = json.loads(response.content)
+        except Exception as e:
+            toondata['load_status'] = 'nok'
+            toondata['reason'] = 'Failed to parse data from Blizzard. Refresh page to try again.'
+            logging.exception('Failed to parse response as json: %s' % response.content)
+            return
 
         # Catch HTTP errors from Blizzard. 404s really wreck everything.
         if not self.check_response_status(response, jsondata, 'profile', toondata):
