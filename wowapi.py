@@ -73,7 +73,10 @@ class Importer(object):
         6226, # Eternal Grace
         6223, # Lightless Force
         6228, # Sinful Revelation
-        #6229, # Celestial Guidance (budget enchant)
+        6229, # Celestial Guidance
+
+        # Hunter scopes
+        6196, # Optical Target Embiggener
 
         # Death Knight runeforges
         3368, # Fallen Crusader
