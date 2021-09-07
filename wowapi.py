@@ -183,7 +183,7 @@ class Importer(object):
         try:
             response = rpc.get_result()
         except Exception as e:
-            handle_request_exception(e, 'profile', toondata)
+            self.handle_request_exception(e, 'profile', toondata)
             return
 
         toondata['name'] = name
@@ -243,7 +243,7 @@ class Importer(object):
         try:
             equip_res = urlfetch.fetch("%s&locale=en_US" % jsondata['equipment']['href'], headers=oauth_headers)
         except Exception as e:
-            handle_request_exception(e, 'equipment', toondata)
+            self.handle_request_exception(e, 'equipment', toondata)
             return
 
         # change the json from the response into a dict of data.
