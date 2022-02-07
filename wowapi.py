@@ -253,7 +253,7 @@ class Importer(object):
         if not self.check_response_status(equip_res, jsondata, 'equipment', toondata):
             return;
 
-        toondata['equipped_items'] = jsondata['equipped_items']
+        toondata['equipped_items'] = jsondata.get('equipped_items', [])
 
         # Group all gems together into a comma-separated list for tooltipParams
         for item in toondata['equipped_items']:

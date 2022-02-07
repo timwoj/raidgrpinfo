@@ -205,12 +205,12 @@ def post_group(request, nrealm, ngroup):
 
     # load the json data that includes the toon data
     jsondata = json.loads(request.form.get('json', '').strip())
-    logging.info('number of toons saved: %d' % len(jsondata['toons']))
+    logging.info('number of toons saved: %d' % len(jsondata.get('toons', [])))
 
     # clear the old toon information and recreate it from the data from
     # the form
     del group.toons[:]
-    for j in jsondata['toons']:
+    for j in jsondata.get('toons', []):
         toon = Toonv2(**j)
         group.toons.append(toon)
 
