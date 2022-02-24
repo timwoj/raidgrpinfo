@@ -254,7 +254,11 @@ def load_group(results):
         'ranged': 0,
         'melee': 0,
         'tanks': 0,
-        'healers': 0
+        'healers': 0,
+        'dreadful': 0,
+        'mystic': 0,
+        'venerated': 0,
+        'zenith': 0
     }
 
     # Use the API importer to load the data for the group into a list of
@@ -281,14 +285,7 @@ def load_group(results):
         'groupavgilvl': avgilvl,
         'groupavgeqp': avgeqp,
         'toondata': data,
-        'tankcount': groupstats['tanks'],
-        'healercount': groupstats['healers'],
-        'meleecount': groupstats['melee'],
-        'rangedcount': groupstats['ranged'],
-        'clothcount': groupstats['cloth'],
-        'leathercount': groupstats['leather'],
-        'mailcount': groupstats['mail'],
-        'platecount': groupstats['plate']
+        'groupstats': groupstats
     }
 
     response += render_template('groupinfo-header.html', **template_values)

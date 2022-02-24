@@ -5,12 +5,11 @@
     <link rel="stylesheet" type="text/css" href="/static/jqwidgets/styles/jqx.base.css" />
     <link rel="stylesheet" type="text/css" href="/static/raidgroup.css"/>
     <script
-      src="https://code.jquery.com/jquery-3.3.1.min.js"
+      src="https://code.jquery.com/jquery-3.6.0.min.js"
       integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
       crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.1/js/jquery.tablesorter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/jquery.tablesorter.min.js"</script>
     <script src="/static/jqwidgets/jqxcore.js"></script>
-    <script src="/static/jqwidgets/jqxtooltip.js"></script>
     <script src="/static/jqwidgets/jqxnotification.js"></script>
     <script src="/static/jqwidgets/jqxwindow.js"></script>
     <script src="/static/grouploader.js"></script>
@@ -39,15 +38,21 @@
         Group Average equipped: {{ groupavgeqp }}<br/><br/>
       </div>
       <div>
-        Tanks:      {{ tankcount }}<br/>
-        Healers:    {{ healercount }}<br/>
-        Melee DPS:  {{ meleecount }}<br/>
-        Ranged DPS: {{ rangedcount }}<br/>
+        Tanks:      {{ groupstats.get('tanks', 0) }}<br/>
+        Healers:    {{ groupstats.get('healers', 0) }}<br/>
+        Melee DPS:  {{ groupstats.get('melee', 0) }}<br/>
+        Ranged DPS: {{ groupstats.get('ranged', 0) }}<br/>
       </div>
       <div>
-        Cloth:   {{ clothcount }}<br/>
-        Leather: {{ leathercount }}<br/>
-        Mail:    {{ mailcount }}<br/>
-        Plate:   {{ platecount }}<br/>
+        Cloth:   {{ groupstats.get('cloth', 0) }}<br/>
+        Leather: {{ groupstats.get('leather', 0) }}<br/>
+        Mail:    {{ groupstats.get('mail', 0) }}<br/>
+        Plate:   {{ groupstats.get('plate', 0) }}<br/>
+      </div>
+      <div>
+        Dreadful:  {{ groupstats.get('dreadful', 0) }}<br/>
+        Mystic:    {{ groupstats.get('mystic', 0) }}<br/>
+        Venerated: {{ groupstats.get('venerated', 0) }}<br/>
+        Zenith:    {{ groupstats.get('zenith', 0) }}<br/>
       </div>
     </div><p/>
