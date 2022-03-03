@@ -305,10 +305,10 @@ class Importer(object):
     def handle_request_exception(self, exception, where, toondata):
         toondata['load_status'] = 'nok'
 
-        if isinstance(urlfetch_errors.DeadlineExceededError, exception):
+        if isinstance(exception, urlfetch_errors.DeadlineExceededError):
             logging.error('urlfetch threw DeadlineExceededError on toon %s' % name.encode('ascii', 'ignore'))
             toondata['reason'] = 'Timeout retrieving %s data from Battle.net for %s.  Refresh page to try again.' % (where, name)
-        elif isinstance(urlfetch_errors.DownloadError, exception):
+        elif isinstance(exception, urlfetch_errors.DownloadError):
             logging.error('urlfetch threw DownloadError on toon %s' % name.encode('ascii', 'ignore'))
             toondata['reason'] = 'Network error retrieving %s data from Battle.net for toon %s.  Refresh page to try again.' % (where, name)
         else:
