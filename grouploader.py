@@ -37,6 +37,8 @@ CLASS_INDEXES = {
     'Demon Hunter': 12
 }
 
+TIER_SETS = [1496, 1497, 1498, 1499, 1500, 1501, 1502, 1503, 1504, 1505, 1506, 1507]
+
 # This is used to color the table cells on the grid display based on the ilvl
 # of the item.  It gets put into the jinja environment as a filter.
 def ilvlcolor(ilvl, quality):
@@ -380,12 +382,16 @@ def add_character(char, results, classes):
             # requirement to wear them.
             if 'profession' in item.get('requirements', {}).get('skill', {}):
                 template_values[slot]['set'] = 'crafted'
+            elif item.get('limit_category','') == 'Unique-Equipped: Shadowlands Crafted (1)':
+                template_values[slot]['set'] = 'crafted'
+            elif item.get('set',{}).get('item_set',{}).get('id', 0) in TIER_SETS:
+                template_values[slot]['set'] = 'tier'
             else:
                 template_values[slot]['set'] = 'no'
 
             if slot == 'main_hand' and item.get('inventory_type', {}).get('type') == 'TWOHWEAPON':
                 twohander = item
-            if slot == 'off_hand':
+            elif slot == 'off_hand':
                 offhand = True
 
         # if there's no offhand and the main hand is a two-hander, count it double per Blizzard

@@ -1,5 +1,5 @@
 {%- macro itemtag(itemset) -%}
-<sup>{% if itemset == 'crafted' %}C{%- endif -%}</sup>
+<sup>{% if itemset == 'crafted' %}C{%elif itemset == 'tier'%}T{%- endif -%}</sup>
 {%- endmacro -%}
 {%- macro gridcolor(itemLevel, enchant, quality) -%}
 {{ itemLevel | ilvlcolor(quality) }}{% if enchant == 0 %};border: 1px solid red{% elif enchant == 1 %};border: 1px solid blue{%- endif -%}
