@@ -2,10 +2,13 @@
 #!/usr/bin/env python
 
 from flask import Flask, render_template, request, redirect
+from google.appengine.api import wrap_wsgi_app
+
 import grouploader
 import wowapi
 
 app = Flask(__name__)
+app.wsgi_app = wrap_wsgi_app(app.wsgi_app)
 app.debug = True
 
 app.jinja_env.filters['ilvlcolor'] = grouploader.ilvlcolor

@@ -361,8 +361,7 @@ def add_character(char, results, classes):
 
         for item in items:
 
-            slot = item['slot']['type'].encode('ascii', 'ignore').lower()
-            sockets = item.get('sockets', [])
+            slot = item.get('slot',{}).get('type','').lower()
 
             # Ignore things like shirts and tabards
             if slot not in itemslots:

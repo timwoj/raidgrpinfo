@@ -1,3 +1,6 @@
 Flask
 Werkzeug
 passlib
+appengine-python-standard>=0.2.2
+requests
+requests-futures

@@ -6,11 +6,11 @@ import time
 import os
 import base64
 import urllib
-import traceback
 import logging
+import requests
 
-from google.appengine.api import urlfetch
-from google.appengine.api import urlfetch_errors
+from concurrent.futures import as_completed
+from requests_futures.sessions import FuturesSession
 from google.appengine.ext import ndb
 from google.appengine.api import memcache
 
@@ -21,15 +21,15 @@ def get_oauth_headers():
         authdata = json.load(open(path))
 
         credentials = "{}:{}".format(authdata['blizzard_client_id'], authdata['blizzard_client_secret'])
-        encoded_credentials = base64.b64encode(credentials)
+        encoded_credentials = base64.b64encode(credentials.encode('ascii')).decode('ascii')
+        headers = {'Authorization': f'Basic {encoded_credentials}'}
 
-        response = urlfetch.fetch('https://us.battle.net/oauth/token',
-                                  payload='grant_type=client_credentials',
-                                  method=urlfetch.POST,
-                                  headers={'Authorization': 'Basic ' + encoded_credentials})
+        r = requests.post('https://us.battle.net/oauth/token',
+                          data={'grant_type': 'client_credentials'},
+                          headers=headers)
 
-        if response.status_code == urlfetch.httplib.OK:
-            response_data = json.loads(response.content)
+        if r.status_code == 200:
+            response_data = r.json()
             oauth_token = response_data['access_token']
 
             # Blizzard sends an expiration time for the token in the response,
@@ -136,6 +136,9 @@ class Importer(object):
         classes = ClassEntry.get_mapping()
         oauth_headers = get_oauth_headers()
 
+        session = FuturesSession(max_workers=10)
+        futures = []
+
         # Request all of the toon data from the blizzard API and determine the
         # group's ilvls, armor type counts and token type counts.  subs are not
         # included in the counts, since they're not really part of the main
@@ -164,17 +167,20 @@ class Importer(object):
             newdata['status'] = toon.status
             newdata['role'] = toon.role
 
-            url = 'https://us.api.blizzard.com/profile/wow/character/%s/%s?namespace=profile-us&locale=en_US' % (toonrealm, urllib.quote(toonname.encode('utf-8').lower()))
+            quoted_name = urllib.parse.quote(toonname.encode('utf-8').lower())
+            url = f'https://us.api.blizzard.com/profile/wow/character/{toonrealm}/{quoted_name}?namespace=profile-us&locale=en_US'
 
             # create the rpc object for the fetch method.  the deadline
             # defaults to 5 seconds, but that seems to be too short for the
             # Blizzard API site sometimes.  setting it to 10 helps a little
             # but it makes page loads a little slower.
-            rpc = urlfetch.create_rpc(10)
-            rpc.callback = self.create_callback(rpc, toonname, newdata, groupstats, classes)
-            urlfetch.make_fetch_call(rpc, url, headers=oauth_headers)
-            newdata['rpc'] = rpc
+            future = session.get(url, headers=oauth_headers)
+            future.toonname = toonname
+            future.toondata = newdata
+            futures.append(future)
 
+            # This really shouldn't happen, but pause a half-second every
+            # hundred toons so that we don't blow through the API quota.
             toon_count = toon_count + 1
             if toon_count > 100:
                 time.sleep(0.5)
@@ -185,28 +191,24 @@ class Importer(object):
         # all of the waits finish, then we have all of the data from the
         # Blizzard API and can loop through all of it and build the page.
         start = time.time()
-        for entry in data:
-            entry['rpc'].wait()
+        for future in as_completed(futures):
+            resp = future.result()
+            self.handle_result(resp, future.toonname, future.toondata,
+                               groupstats, classes)
         end = time.time()
-        logging.info("Time spent retrieving data: %f seconds" % (end-start))
+        logging.info(f"Time spent retrieving data: {end-start} seconds")
 
     # Callback that handles the result of the call to the Blizzard API.  This will fill in
     # the toondata dict for the requested toon with either data from Battle.net or with an
     # error message to display on the page.
-    def handle_result(self, rpc, name, toondata, groupstats, classes):
-
-        try:
-            response = rpc.get_result()
-        except Exception as e:
-            self.handle_request_exception(e, 'profile', toondata)
-            return
+    def handle_result(self, response, name, toondata, groupstats, classes):
 
         toondata['name'] = name
         toondata['load_status'] = 'ok'
 
         # change the json from the response into a dict of data.
         try:
-            jsondata = json.loads(response.content)
+            jsondata = response.json()
         except Exception as e:
             toondata['load_status'] = 'nok'
             toondata['reason'] = 'Failed to parse data from Blizzard. Refresh page to try again.'
@@ -250,13 +252,14 @@ class Importer(object):
         # We're also going to need the equipment for this character so make a second request
         oauth_headers = get_oauth_headers()
         try:
-            equip_res = urlfetch.fetch("%s&locale=en_US" % jsondata['equipment']['href'], headers=oauth_headers)
+            equip_res = requests.get(f"{jsondata['equipment']['href']}&locale=en_US",
+                                     headers=oauth_headers)
         except Exception as e:
             self.handle_request_exception(e, 'equipment', toondata)
             return
 
         # change the json from the response into a dict of data.
-        jsondata = json.loads(equip_res.content)
+        jsondata = equip_res.json()
 
         # Catch HTTP errors from Blizzard. 404s really wreck everything.
         if not self.check_response_status(equip_res, jsondata, 'equipment', toondata):
@@ -298,28 +301,25 @@ class Importer(object):
                         elif enchant != 0 and item['enchant'] < 1:
                             item['enchant'] = 1
 
-    def create_callback(self, rpc, name, toondata, groupstats, classes):
-        return lambda: self.handle_result(rpc, name, toondata, groupstats, classes)
-
     # Handles exceptions from requests to the API in a common fashion
     def handle_request_exception(self, exception, where, toondata):
         toondata['load_status'] = 'nok'
 
-        if isinstance(exception, urlfetch_errors.DeadlineExceededError):
-            logging.error('urlfetch threw DeadlineExceededError on toon %s' % name.encode('ascii', 'ignore'))
-            toondata['reason'] = 'Timeout retrieving %s data from Battle.net for %s.  Refresh page to try again.' % (where, name)
-        elif isinstance(exception, urlfetch_errors.DownloadError):
-            logging.error('urlfetch threw DownloadError on toon %s' % name.encode('ascii', 'ignore'))
-            toondata['reason'] = 'Network error retrieving %s data from Battle.net for toon %s.  Refresh page to try again.' % (where, name)
+        if isinstance(exception, requests.Timeout):
+            logging.error('request timed out on toon %s' % name.encode('ascii', 'ignore'))
+            toondata['reason'] = f'Timeout retrieving {where} data from Battle.net for {name}. Refresh page to try again.'
+        elif isinstance(exception, requests.ConnectionError):
+            logging.error('request failed to connect for %s' % name.encode('ascii', 'ignore'))
+            toondata['reason'] = f'Failed to connect to Battle.net when retrieving {where} for toon {name}'
         else:
-            logging.error('urlfetch threw unknown exception on toon %s' % name.encode('ascii', 'ignore'))
-            toondata['reason'] = 'Unknown error retrieving %s data from Battle.net for toon %s.  Refresh page to try again.' % (where, name)
+            logging.error('request threw unknown exception on toon %s' % name.encode('ascii', 'ignore'))
+            toondata['reason'] = f'Unknown error retrieving {where} data from Battle.net for toon {name}.  Refresh page to try again.'
 
     # Checks response codes and error messages from the API in a common fashion.
     def check_response_status(self, response, jsondata, where, toondata):
         if response.status_code != 200 or ( 'code' in jsondata and 'detail' in jsondata ):
             code = jsondata.get('code', response.status_code)
-            logging.error('urlfetch returned a %d status code on toon %s' % (code, toondata['name'].encode('ascii', 'ignore')))
+            logging.error('request returned a %d status code on toon %s' % (code, toondata['name'].encode('ascii', 'ignore')))
             toondata['load_status'] = 'nok'
             toondata['reason'] = 'Got a %d requesting %s from Battle.net for toon %s.  Refresh page to try again.' % (code, where, toondata['name'])
 
@@ -354,9 +354,9 @@ class Setup(object):
 
         # retrieve a list of realms from the blizzard API
         url = 'https://us.api.blizzard.com/data/wow/realm/index?namespace=dynamic-us&locale=en_US&region=us'
-        response = urlfetch.fetch(url, headers=oauth_headers)
+        response = requests.get(url, headers=oauth_headers)
         if response.status_code == 200:
-            jsondata = json.loads(response.content)
+            jsondata = response.json()
         else:
             jsondata = {'realms': []}
 
@@ -376,9 +376,9 @@ class Setup(object):
 
         # retrieve a list of classes from the blizzard API
         url = 'https://us.api.blizzard.com/data/wow/playable-class/index?namespace=static-us&locale=en_US&region=us'
-        response = urlfetch.fetch(url, headers=oauth_headers)
+        response = requests.get(url, headers=oauth_headers)
         if response.status_code == 200:
-            jsondata = json.loads(response.content)
+            jsondata = response.json()
         else:
             jsondata = {'classes': []}
 
