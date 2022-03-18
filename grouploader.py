@@ -284,8 +284,8 @@ def load_group(results):
         'frealm': frealm,
         'ngroup': results.ngroup,
         'nrealm': results.nrealm,
-        'groupavgilvl': avgilvl,
-        'groupavgeqp': avgeqp,
+        'groupavgilvl': round(avgilvl, 2),
+        'groupavgeqp': round(avgeqp, 2),
         'toondata': data,
         'groupstats': groupstats
     }
