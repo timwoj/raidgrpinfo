@@ -345,7 +345,9 @@ def add_character(char, results, classes):
             'class': char['character_class']['name'],
             'status': char['status'],
             'role': char['role'],
-            'covenant': char['covenant']
+            'tiercount': 0,
+            'legendary': 'X',
+            'unity': 'X'
         }
 
         avgilvleq = 0
@@ -360,7 +362,7 @@ def add_character(char, results, classes):
         twohander = None
 
         for item in items:
-
+            print(item)
             slot = item.get('slot',{}).get('type','').lower()
 
             # Ignore things like shirts and tabards
@@ -377,6 +379,13 @@ def add_character(char, results, classes):
             template_values[slot]['bonusLists'] = item.get('bonus_list', [])
             template_values[slot]['tooltips'] = item['tooltips']
             template_values[slot]['quality'] = item['quality']['type']
+
+            if item['quality']['type'] == 'LEGENDARY':
+                if item['name'] == 'Unity' or item['name'].endswith('of Unity'):
+                    template_values['unity'] = item['level']['value']
+                else:
+                    template_values['legendary'] = item['level']['value']
+
             # TODO: how do crafted rings/necks show up here? They don't have a profession
             # requirement to wear them.
             if 'profession' in item.get('requirements', {}).get('skill', {}):
@@ -385,6 +394,7 @@ def add_character(char, results, classes):
                 template_values[slot]['set'] = 'crafted'
             elif item.get('set',{}).get('item_set',{}).get('id', 0) in TIER_SETS:
                 template_values[slot]['set'] = 'tier'
+                template_values['tiercount'] += 1
             else:
                 template_values[slot]['set'] = 'no'
 
