@@ -379,8 +379,10 @@ def add_character(char, results, classes):
             template_values[slot]['bonusLists'] = item.get('bonus_list', [])
             template_values[slot]['tooltips'] = item['tooltips']
             template_values[slot]['quality'] = item['quality']['type']
+            template_values[slot]['set'] = 'no'
 
             if item['quality']['type'] == 'LEGENDARY':
+                template_values[slot]['set'] = 'legendary'
                 if item['name'] == 'Unity' or item['name'].endswith('of Unity'):
                     template_values['unity'] = item['level']['value']
                 else:
@@ -395,8 +397,6 @@ def add_character(char, results, classes):
             elif item.get('set',{}).get('item_set',{}).get('id', 0) in TIER_SETS:
                 template_values[slot]['set'] = 'tier'
                 template_values['tiercount'] += 1
-            else:
-                template_values[slot]['set'] = 'no'
 
             if slot == 'main_hand' and item.get('inventory_type', {}).get('type') == 'TWOHWEAPON':
                 twohander = item
