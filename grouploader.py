@@ -13,9 +13,9 @@ from google.appengine.api import memcache
 from passlib.hash import sha256_crypt
 
 # Minimum ilvls and colors for the ilvl grid
-MIN_NORMAL = 252
-MIN_HEROIC = 265
-MIN_MYTHIC = 278
+MIN_NORMAL = 278
+MIN_HEROIC = 291
+MIN_MYTHIC = 304
 COLOR_LFR = '#FFB2B2'
 COLOR_NORMAL = '#FFFFB2'
 COLOR_HEROIC = '#B2FFB2'
@@ -43,7 +43,7 @@ TIER_SETS = [1496, 1497, 1498, 1499, 1500, 1501, 1502, 1503, 1504, 1505, 1506, 1
 # of the item.  It gets put into the jinja environment as a filter.
 def ilvlcolor(ilvl, quality):
     retval = ''
-    if quality == 5:
+    if quality == 'LEGENDARY':
         retval = 'background-color:'+COLOR_LEGENDARY
     elif ilvl > 0 and ilvl < MIN_NORMAL:
         retval = 'background-color:'+COLOR_LFR
