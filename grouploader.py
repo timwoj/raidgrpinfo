@@ -34,7 +34,8 @@ CLASS_INDEXES = {
     'Warlock': 9,
     'Monk': 10,
     'Druid': 11,
-    'Demon Hunter': 12
+    'Demon Hunter': 12,
+    'Evoker': 13
 }
 
 TIER_SETS = [1496, 1497, 1498, 1499, 1500, 1501, 1502, 1503, 1504, 1505, 1506, 1507]

@@ -119,6 +119,7 @@ class Importer(object):
     CLASS_INFO = {
         'Death Knight': ('plate', 'dreadful'),
         'Demon Hunter': ('leather', 'dreadful'),
+        'Evoker': ('mail', 'zenith'),
         'Druid': ('leather', 'mystic'),
         'Hunter': ('mail', 'mystic'),
         'Mage': ('cloth', 'mystic'),
