@@ -363,7 +363,6 @@ def add_character(char, results, classes):
         twohander = None
 
         for item in items:
-            print(item)
             slot = item.get('slot',{}).get('type','').lower()
 
             # Ignore things like shirts and tabards
