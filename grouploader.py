@@ -347,8 +347,6 @@ def add_character(char, results, classes):
             'status': char['status'],
             'role': char['role'],
             'tiercount': 0,
-            'legendary': 'X',
-            'unity': 'X'
         }
 
         avgilvleq = 0
@@ -380,13 +378,6 @@ def add_character(char, results, classes):
             template_values[slot]['tooltips'] = item['tooltips']
             template_values[slot]['quality'] = item['quality']['type']
             template_values[slot]['set'] = 'no'
-
-            if item['quality']['type'] == 'LEGENDARY':
-                template_values[slot]['set'] = 'legendary'
-                if item['name'] == 'Unity' or item['name'].endswith('of Unity'):
-                    template_values['unity'] = item['level']['value']
-                else:
-                    template_values['legendary'] = item['level']['value']
 
             # TODO: how do crafted rings/necks show up here? They don't have a profession
             # requirement to wear them.
