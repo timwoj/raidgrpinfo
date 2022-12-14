@@ -68,48 +68,163 @@ class Realm(ndb.Model):
 
 class Importer(object):
 
-    WEAPON_ENCHANTS = [
-        6227, # Ascended Vigor
-        6226, # Eternal Grace
-        6223, # Lightless Force
-        6228, # Sinful Revelation
-        6229, # Celestial Guidance
+    # Each quality rank has its own list to allow for adjusting whether
+    # low-rank enchants count as lesser enchants or not.
 
-        # Hunter scopes
-        6196, # Optical Target Embiggener
+    WEAPON_ENCHANTS_Q1 = [
+        6629, # Burning Devotion (Quality: 1)
+        6635, # Earthen Devotion (Quality: 1)
+        6647, # Frozen Devotion (Quality: 1)
+        6641, # Sophic Devotion (Quality: 1)
+        6653, # Wafting Devotion (Quality: 1)
+        6526, # High Intensity Thermal Scanner (Quality: 1)
+    ]
 
-        # Death Knight runeforges
+    WEAPON_ENCHANTS_Q2 = [
+        6630, # Burning Devotion (Quality: 2)
+        6636, # Earthen Devotion (Quality: 2)
+        6648, # Frozen Devotion (Quality: 2)
+        6642, # Sophic Devotion (Quality: 2)
+        6654, # Wafting Devotion (Quality: 2)
+        6527, # High Intensity Thermal Scanner (Quality: 2)
+    ]
+
+    WEAPON_ENCHANTS_Q3 = [
+        6631, # Burning Devotion (Quality: 3)
+        6637, # Earthen Devotion (Quality: 3)
+        6649, # Frozen Devotion (Quality: 3)
+        6643, # Sophic Devotion (Quality: 3)
+        6655, # Wafting Devotion (Quality: 3)
+        6528, # High Intensity Thermal Scanner (Quality: 3)
+    ]
+    
+    DEATH_KNIGHT_RUNEFORGES = [
         3368, # Fallen Crusader
         3380, # Razorice
         6241, # Sanguination
         6243, # Hysteria
     ]
 
-    RING_ENCHANTS = [
-        6164, # Tenet of Crit
-        6166, # Tenet of Haste
-        6168, # Tenet of Mastery
-        6170, # Tenet of Versatility
+    BRACER_ENCHANTS_Q1 = [
+        6572, # Devotion Of Avoidance (Quality: 1)
+        6578, # Devotion Of Leech (Quality: 1)
+        6584, # Devotion Of Speed (Quality: 1)
     ]
 
-    CHEST_ENCHANTS = [
-        6217, # Eternal Bounds
-        6214, # Eternal Skirmish
-        6230, # Eternal Stats
-        6213, # Eternal Bulwark
-        6265, # Eternal Insight
+    BRACER_ENCHANTS_Q2 = [
+        6573, # Devotion Of Avoidance (Quality: 2)
+        6579, # Devotion Of Leech (Quality: 2)
+        6585, # Devotion Of Speed (Quality: 2)
     ]
 
-    CLOAK_ENCHANTS = [
-        6208, # Soul Vitality
-        6203, # Fortified Avoidance
-        6204, # Fortified Leech
-        6202, # Fortified Speed
+    BRACER_ENCHANTS_Q3 = [
+        6574, # Devotion Of Avoidance (Quality: 3)
+        6580, # Devotion Of Leech (Quality: 3)
+        6586, # Devotion Of Speed (Quality: 3)
     ]
+
+    RING_ENCHANTS_Q1 = [
+        6548, # Devotion Of Critical Strike (Quality: 1)
+        6554, # Devotion Of Haste (Quality: 1)
+        6560, # Devotion Of Mastery (Quality: 1)
+        6566, # Devotion Of Versatility (Quality: 1)
+    ]
+
+    RING_ENCHANTS_Q2 = [
+        6549, # Devotion Of Critical Strike (Quality: 2)
+        6555, # Devotion Of Haste (Quality: 2)
+        6561, # Devotion Of Mastery (Quality: 2)
+        6567, # Devotion Of Versatility (Quality: 2)
+    ]
+
+    RING_ENCHANTS_Q3 = [
+        6550, # Devotion Of Critical Strike (Quality: 3)
+        6556, # Devotion Of Haste (Quality: 3)
+        6562, # Devotion Of Mastery (Quality: 3)
+        6568, # Devotion Of Versatility (Quality: 3)
+    ]
+
+    CLOAK_ENCHANTS_Q1 = [
+        6590, # Graceful Avoidance (Quality: 1)
+        6602, # Homebound Speed (Quality: 1)
+        6596, # Regenerative Leech (Quality: 1)
+    ]
+
+    CLOAK_ENCHANTS_Q2 = [
+        6591, # Graceful Avoidance (Quality: 2)
+        6603, # Homebound Speed (Quality: 2)
+        6597, # Regenerative Leech (Quality: 2)
+    ]
+
+    CLOAK_ENCHANTS_Q3 = [
+        6592, # Graceful Avoidance (Quality: 3)
+        6604, # Homebound Speed (Quality: 3)
+        6598, # Regenerative Leech (Quality: 3)
+    ]
+
+    LEG_ENCHANTS_Q1 = [
+        6494, # Frosted Armor Kit (Quality: 1)
+        6488, # Fierce Armor Kit (Quality: 1)
+        6542, # Temporal Spellthread (Quality: 1)
+        6539, # Frozen Spellthread (Quality: 1)
+    ]
+
+    LEG_ENCHANTS_Q2 = [
+        6495, # Frosted Armor Kit (Quality: 2)
+        6489, # Fierce Armor Kit (Quality: 2)
+        6543, # Temporal Spellthread (Quality: 2)
+        6540, # Frozen Spellthread (Quality: 2)
+    ]
+
+    LEG_ENCHANTS_Q3 = [
+        6496, # Frosted Armor Kit (Quality: 3)
+        6490, # Fierce Armor Kit (Quality: 3)
+        6544, # Temporal Spellthread (Quality: 3)
+        6541, # Frozen Spellthread (Quality: 3)
+    ]
+
+    CHEST_ENCHANTS_Q1 = [
+        6623, # Waking Stats (Quality: 1)
+    ]
+
+    CHEST_ENCHANTS_Q2 = [
+        6624, # Waking Stats (Quality: 2)
+    ]
+
+    CHEST_ENCHANTS_Q3 = [
+        6625, # Waking Stats (Quality: 3)
+    ]
+
+    FEET_ENCHANTS_Q1 = [
+        6611, # Watcher'S Loam (Quality: 1)
+        6605, # Plainsrunner'S Breeze (Quality: 1)
+    ]
+
+    FEET_ENCHANTS_Q2 = [
+        6612, # Watcher'S Loam (Quality: 2)
+        6606, # Plainsrunner'S Breeze (Quality: 2)
+    ]
+
+    FEET_ENCHANTS_Q3 = [
+        6613, # Watcher'S Loam (Quality: 3)
+        6607, # Plainsrunner'S Breeze (Quality: 3)
+    ]
+
+    # Join the lists that will count as "high" enchants.
+    CHEST_ENCHANTS = CHEST_ENCHANTS_Q1 + CHEST_ENCHANTS_Q2 + CHEST_ENCHANTS_Q3
+    CLOAK_ENCHANTS = CLOAK_ENCHANTS_Q1 + CLOAK_ENCHANTS_Q2 + CLOAK_ENCHANTS_Q3
+    BRACER_ENCHANTS = BRACER_ENCHANTS_Q1 + BRACER_ENCHANTS_Q2 + BRACER_ENCHANTS_Q3
+    LEG_ENCHANTS = LEG_ENCHANTS_Q1 + LEG_ENCHANTS_Q2 + LEG_ENCHANTS_Q3
+    FEET_ENCHANTS = FEET_ENCHANTS_Q1 + FEET_ENCHANTS_Q2 + FEET_ENCHANTS_Q3
+    RING_ENCHANTS = RING_ENCHANTS_Q1 + RING_ENCHANTS_Q2 + RING_ENCHANTS_Q3
+    WEAPON_ENCHANTS = WEAPON_ENCHANTS_Q1 + WEAPON_ENCHANTS_Q2 + WEAPON_ENCHANTS_Q3 + DEATH_KNIGHT_RUNEFORGES
 
     ENCHANTS = {
         'CHEST': CHEST_ENCHANTS,
         'BACK': CLOAK_ENCHANTS,
+        'WRIST': BRACER_ENCHANTS,
+        'LEGS': LEG_ENCHANTS,
+        'FEET': FEET_ENCHANTS,
         'FINGER_1': RING_ENCHANTS,
         'FINGER_2': RING_ENCHANTS,
         'MAIN_HAND': WEAPON_ENCHANTS,
