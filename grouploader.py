@@ -38,7 +38,7 @@ CLASS_INDEXES = {
     'Evoker': 13
 }
 
-TIER_SETS = [1496, 1497, 1498, 1499, 1500, 1501, 1502, 1503, 1504, 1505, 1506, 1507]
+TIER_SETS = [1526, 1527, 1528, 1529, 1530, 1531, 1532, 1533, 1534, 1535, 1536, 1537, 1538]
 
 # This is used to color the table cells on the grid display based on the ilvl
 # of the item.  It gets put into the jinja environment as a filter.
