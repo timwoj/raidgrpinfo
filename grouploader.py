@@ -207,7 +207,12 @@ def post_group(request, nrealm, ngroup):
     group.password = sha256_crypt.encrypt(request.form.get('pw', ''))
 
     # load the json data that includes the toon data
-    jsondata = json.loads(request.form.get('json', '').strip())
+    try:
+        jsondata = json.loads(request.form.get('json', '').strip())
+    except JSONDecodeError as e:
+        jsondata = {}
+        logging.error('failed to parse json data: %s' % e)
+
     logging.info('number of toons saved: %d' % len(jsondata.get('toons', [])))
 
     # clear the old toon information and recreate it from the data from
