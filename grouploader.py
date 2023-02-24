@@ -148,8 +148,13 @@ def edit_group(nrealm, ngroup):
                 'name': toon.name,
                 'role': toon.role,
                 'status': toon.status,
-                'realm': str([x.realm for x in realms if x.slug == toon.realm][0])
             }
+
+            try:
+                newtoon['realm'] = str([x.realm for x in realms if x.slug == toon.realm][0])
+            except IndexError as e:
+                newtoon['realm'] = ''
+                logging.error('failed to lookup realm %s for toon %s: %s' % (toon.realm, toon.name, e))
 
             toons.append(newtoon)
 
@@ -161,6 +166,12 @@ def edit_group(nrealm, ngroup):
         'toons': toons,
         'realms': realms,
     }
+
+    try:
+        template_values['realm'] = str([x.realm for x in realms if x.slug == nrealm][0])
+    except IndexError as e:
+        template_values['realm'] = ''
+        logger.error('failed to lookup realm %s for template values: %s' % (nrealm, e))
 
     output = render_template('editor.html', **template_values)
     output += render_template('pagefooter.html')
