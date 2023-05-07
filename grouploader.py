@@ -13,9 +13,9 @@ from google.appengine.api import memcache
 from passlib.hash import sha256_crypt
 
 # Minimum ilvls and colors for the ilvl grid
-MIN_NORMAL = 389
-MIN_HEROIC = 402
-MIN_MYTHIC = 415
+MIN_NORMAL = 415
+MIN_HEROIC = 428
+MIN_MYTHIC = 441
 COLOR_LFR = '#FFB2B2'
 COLOR_NORMAL = '#FFFFB2'
 COLOR_HEROIC = '#B2FFB2'
