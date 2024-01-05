@@ -78,6 +78,7 @@ class Importer(object):
         6641, # Sophic Devotion (Quality: 1)
         6653, # Wafting Devotion (Quality: 1)
         6526, # High Intensity Thermal Scanner (Quality: 1)
+        7001, # Dreaming Devotion (Quality: 1)
     ]
 
     WEAPON_ENCHANTS_Q2 = [
@@ -87,6 +88,7 @@ class Importer(object):
         6642, # Sophic Devotion (Quality: 2)
         6654, # Wafting Devotion (Quality: 2)
         6527, # High Intensity Thermal Scanner (Quality: 2)
+        7002, # Dreaming Devotion (Quality: 2)
     ]
 
     WEAPON_ENCHANTS_Q3 = [
@@ -96,8 +98,9 @@ class Importer(object):
         6643, # Sophic Devotion (Quality: 3)
         6655, # Wafting Devotion (Quality: 3)
         6528, # High Intensity Thermal Scanner (Quality: 3)
+        7003, # Dreaming Devotion (Quality: 3)
     ]
-    
+
     DEATH_KNIGHT_RUNEFORGES = [
         3368, # Fallen Crusader
         3380, # Razorice
