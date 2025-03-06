@@ -69,36 +69,61 @@ class Realm(ndb.Model):
 class Importer(object):
 
     # Each quality rank has its own list to allow for adjusting whether
-    # low-rank enchants count as lesser enchants or not.
+    # low-rank enchants count as lesser enchants or not. These spell numbers
+    # don't come from wowhead, but from the game data itself. I don't see
+    # how to generate them from the HTTP API, but they can be extracted from
+    # the game data itself.
+    #
+    # To do so, grab the simc source from github and run these commands:
+    # cd casc_extract
+    # python3 -m venv venv
+    # source venv/bin/activate
+    # pip3 install -r requirements.txt
+    # python3 casc_extract.py -m batch --cdn -o wow
+    #
+    # cd ../dbc_extract3
+    # python3 -m venv venv
+    # source venv/bin/activate
+    # pip3 install -r requirements.txt
+    # ./generate.sh 11.1.0.59538 ../casc_extract/wow (where the version number
+    #      comes from the latest version extracted by casc_extract)
+    #
+    # cat ../engine/dbc/generated/permanent_enchant.inc
 
-    WEAPON_ENCHANTS_Q1 = [
-        6629, # Burning Devotion (Quality: 1)
-        6635, # Earthen Devotion (Quality: 1)
-        6647, # Frozen Devotion (Quality: 1)
-        6641, # Sophic Devotion (Quality: 1)
-        6653, # Wafting Devotion (Quality: 1)
-        6526, # High Intensity Thermal Scanner (Quality: 1)
-        7001, # Dreaming Devotion (Quality: 1)
+    WEAPON_ENCHANTS_R1 = [
+        7449, # Authority of Air (Rank 1)
+        7452, # Authority of Fiery Resolve (Rank 1)
+        7461, # Authority of Radiant Power (Rank 1)
+        7455, # Authority of Storms (Rank 1)
+        7458, # Authority of the Depths (Rank 1)
+        7437, # Council's Guile (Rank 1)
+        7446, # Oathsworn's Tenacity (Rank 1)
+        7443, # Stonebound Artistry (Rank 1)
+        7440, # Stormrider's Fury (Rank 1)
     ]
 
-    WEAPON_ENCHANTS_Q2 = [
-        6630, # Burning Devotion (Quality: 2)
-        6636, # Earthen Devotion (Quality: 2)
-        6648, # Frozen Devotion (Quality: 2)
-        6642, # Sophic Devotion (Quality: 2)
-        6654, # Wafting Devotion (Quality: 2)
-        6527, # High Intensity Thermal Scanner (Quality: 2)
-        7002, # Dreaming Devotion (Quality: 2)
+    WEAPON_ENCHANTS_R2 = [
+        7450, # Authority of Air (Rank 2)
+        7453, # Authority of Fiery Resolve (Rank 2)
+        7462, # Authority of Radiant Power (Rank 2)
+        7456, # Authority of Storms (Rank 2)
+        7459, # Authority of the Depths (Rank 2)
+        7438, # Council's Guile (Rank 2)
+        7447, # Oathsworn's Tenacity (Rank 2)
+        7444, # Stonebound Artistry (Rank 2)
+        7441, # Stormrider's Fury (Rank 2)
     ]
 
-    WEAPON_ENCHANTS_Q3 = [
-        6631, # Burning Devotion (Quality: 3)
-        6637, # Earthen Devotion (Quality: 3)
-        6649, # Frozen Devotion (Quality: 3)
-        6643, # Sophic Devotion (Quality: 3)
-        6655, # Wafting Devotion (Quality: 3)
-        6528, # High Intensity Thermal Scanner (Quality: 3)
-        7003, # Dreaming Devotion (Quality: 3)
+    WEAPON_ENCHANTS_R3 = [
+        7451, # Authority of Air (Rank 3)
+        7453, # Authority of Fiery Resolve (Rank 3)
+        7463, # Authority of Radiant Power (Rank 3)
+        7457, # Authority of Storms (Rank 3)
+        7460, # Authority of the Depths (Rank 3)
+        7439, # Council's Guile (Rank 3)
+        7448, # Oathsworn's Tenacity (Rank 3)
+        7445, # Stonebound Artistry (Rank 3)
+        7442, # Stormrider's Fury (Rank 3)
     ]
 
     DEATH_KNIGHT_RUNEFORGES = [
@@ -108,130 +133,167 @@ class Importer(object):
         6243, # Hysteria
     ]
 
-    BRACER_ENCHANTS_Q1 = [
-        6572, # Devotion Of Avoidance (Quality: 1)
-        6578, # Devotion Of Leech (Quality: 1)
-        6584, # Devotion Of Speed (Quality: 1)
+    BRACER_ENCHANTS_R1 = [
+        7383, # Chant of Armored Avoidance (Rank 1)
+        7389, # Chant of Armored Leech (Rank 1)
+        7395, # Chant of Armored Speed (Rank 1)
     ]
 
-    BRACER_ENCHANTS_Q2 = [
-        6573, # Devotion Of Avoidance (Quality: 2)
-        6579, # Devotion Of Leech (Quality: 2)
-        6585, # Devotion Of Speed (Quality: 2)
+    BRACER_ENCHANTS_R2 = [
+        7384, # Chant of Armored Avoidance (Rank 2)
+        7390, # Chant of Armored Leech (Rank 2)
+        7396, # Chant of Armored Speed (Rank 2)
     ]
 
-    BRACER_ENCHANTS_Q3 = [
-        6574, # Devotion Of Avoidance (Quality: 3)
-        6580, # Devotion Of Leech (Quality: 3)
-        6586, # Devotion Of Speed (Quality: 3)
+    BRACER_ENCHANTS_R3 = [
+        7385, # Chant of Armored Avoidance (Rank 3)
+        7391, # Chant of Armored Leech (Rank 3)
+        7397, # Chant of Armored Speed (Rank 3)
     ]
 
-    RING_ENCHANTS_Q1 = [
-        6548, # Devotion Of Critical Strike (Quality: 1)
-        6554, # Devotion Of Haste (Quality: 1)
-        6560, # Devotion Of Mastery (Quality: 1)
-        6566, # Devotion Of Versatility (Quality: 1)
+    RING_ENCHANTS_R1 = [
+        7332, # Radiant Critical Strike (Rank 1)
+        7338, # Radiant Haste (Rank 1)
+        7344, # Radiant Mastery (Rank 1)
+        7350, # Radiant Versatility (Rank 1)
+        7468, # Cursed Critical Strike (Rank 1)
+        7471, # Cursed Haste (Rank 1)
+        7477, # Cursed Mastery (Rank 1)
+        7474, # Cursed Versatility (Rank 1)
     ]
 
-    RING_ENCHANTS_Q2 = [
-        6549, # Devotion Of Critical Strike (Quality: 2)
-        6555, # Devotion Of Haste (Quality: 2)
-        6561, # Devotion Of Mastery (Quality: 2)
-        6567, # Devotion Of Versatility (Quality: 2)
+    RING_ENCHANTS_R2 = [
+        7333, # Radiant Critical Strike (Rank 2)
+        7339, # Radiant Haste (Rank 2)
+        7345, # Radiant Mastery (Rank 2)
+        7351, # Radiant Versatility (Rank 2)
+        7469, # Cursed Critical Strike (Rank 2)
+        7472, # Cursed Haste (Rank 2)
+        7478, # Cursed Mastery (Rank 2)
+        7475, # Cursed Versatility (Rank 2)
     ]
 
-    RING_ENCHANTS_Q3 = [
-        6550, # Devotion Of Critical Strike (Quality: 3)
-        6556, # Devotion Of Haste (Quality: 3)
-        6562, # Devotion Of Mastery (Quality: 3)
-        6568, # Devotion Of Versatility (Quality: 3)
+    RING_ENCHANTS_R3 = [
+        7334, # Radiant Critical Strike (Rank 3)
+        7340, # Radiant Haste (Rank 3)
+        7346, # Radiant Mastery (Rank 3)
+        7352, # Radiant Versatility (Rank 3)
+        7470, # Cursed Critical Strike (Rank 3)
+        7473, # Cursed Haste (Rank 3)
+        7479, # Cursed Mastery (Rank 3)
+        7476, # Cursed Versatility (Rank 3)
     ]
 
-    CLOAK_ENCHANTS_Q1 = [
-        6590, # Graceful Avoidance (Quality: 1)
-        6602, # Homebound Speed (Quality: 1)
-        6596, # Regenerative Leech (Quality: 1)
+    CLOAK_ENCHANTS_R1 = [
+        7413, # Chant of Burrowing Rapidity (Rank 1)
+        7407, # Chant of Leeching Fangs (Rank 1)
+        7401, # Chant of Winged Grace (Rank 1)
     ]
 
-    CLOAK_ENCHANTS_Q2 = [
-        6591, # Graceful Avoidance (Quality: 2)
-        6603, # Homebound Speed (Quality: 2)
-        6597, # Regenerative Leech (Quality: 2)
+    CLOAK_ENCHANTS_R2 = [
+        7414, # Chant of Burrowing Rapidity (Rank 2)
+        7408, # Chant of Leeching Fangs (Rank 2)
+        7402, # Chant of Winged Grace (Rank 2)
     ]
 
-    CLOAK_ENCHANTS_Q3 = [
-        6592, # Graceful Avoidance (Quality: 3)
-        6604, # Homebound Speed (Quality: 3)
-        6598, # Regenerative Leech (Quality: 3)
+    CLOAK_ENCHANTS_R3 = [
+        7415, # Chant of Burrowing Rapidity (Rank 3)
+        7409, # Chant of Leeching Fangs (Rank 3)
+        7403, # Chant of Winged Grace (Rank 3)
     ]
 
-    LEG_ENCHANTS_Q1 = [
-        6494, # Frosted Armor Kit (Quality: 1)
-        6488, # Fierce Armor Kit (Quality: 1)
-        6542, # Temporal Spellthread (Quality: 1)
-        6539, # Frozen Spellthread (Quality: 1)
+    LEG_ENCHANTS_R1 = [
+        7652, # Charged Armor Kit (Rank 1)
+        7599, # Stormbound Armor Kit (Rank 1)
+        7593, # Defender's Armor Kit (Rank 1)
+        7532, # Sunset Spellthread (Rank 1)
+        7529, # Daybreak Spellthread (Rank 1)
+        7535, # Weavercloth Spellthread (All ranks)
+        7536,
+        7537,
+        7596, # Dual Layered Armor Kit (All ranks)
+        7597,
+        7598,
     ]
 
-    LEG_ENCHANTS_Q2 = [
-        6495, # Frosted Armor Kit (Quality: 2)
-        6489, # Fierce Armor Kit (Quality: 2)
-        6543, # Temporal Spellthread (Quality: 2)
-        6540, # Frozen Spellthread (Quality: 2)
+    LEG_ENCHANTS_R2 = [
+        7653, # Charged Armor Kit (Rank 2)
+        7600, # Stormbound Armor Kit (Rank 2)
+        7594, # Defender's Armor Kit (Rank 2)
+        7533, # Sunset Spellthread (Rank 2)
+        7530, # Daybreak Spellthread (Rank 2)
     ]
 
-    LEG_ENCHANTS_Q3 = [
-        6496, # Frosted Armor Kit (Quality: 3)
-        6490, # Fierce Armor Kit (Quality: 3)
-        6544, # Temporal Spellthread (Quality: 3)
-        6541, # Frozen Spellthread (Quality: 3)
+    LEG_ENCHANTS_R3 = [
+        7654, # Charged Armor Kit (Rank 3)
+        7601, # Stormbound Armor Kit (Rank 3)
+        7595, # Defender's Armor Kit (Rank 3)
+        7534, # Sunset Spellthread (Rank 3)
+        7531, # Daybreak Spellthread (Rank 3)
     ]
 
-    CHEST_ENCHANTS_Q1 = [
-        6623, # Waking Stats (Quality: 1)
+    CHEST_ENCHANTS_R1 = [
+        7437, # Council's Intellect (Rank 1)
+        7359, # Oathsworn's Strength (Rank 1)
+        7353, # Stormrider's Agility (Rank 1)
+        7362, # Crystalline Radiance (Rank 1)
     ]
 
-    CHEST_ENCHANTS_Q2 = [
-        6624, # Waking Stats (Quality: 2)
+    CHEST_ENCHANTS_R2 = [
+        7438, # Council's Intellect (Rank 2)
+        7360, # Oathsworn's Strength (Rank 2)
+        7354, # Stormrider's Agility (Rank 2)
+        7363, # Crystalline Radiance (Rank 2)
     ]
 
-    CHEST_ENCHANTS_Q3 = [
-        6625, # Waking Stats (Quality: 3)
+    CHEST_ENCHANTS_R3 = [
+        7439, # Council's Intellect (Rank 3)
+        7361, # Oathsworn's Strength (Rank 3)
+        7355, # Stormrider's Agility (Rank 3)
+        7364, # Crystalline Radiance (Rank 3)
     ]
 
-    FEET_ENCHANTS_Q1 = [
-        6611, # Watcher'S Loam (Quality: 1)
-        6605, # Plainsrunner'S Breeze (Quality: 1)
+    FEET_ENCHANTS_R1 = [
+        7419, # Cavalry's March (Rank 1)
+        7422, # Defender's March (Rank 1)
+        7416, # Scout's March (Rank 1)
     ]
 
-    FEET_ENCHANTS_Q2 = [
-        6612, # Watcher'S Loam (Quality: 2)
-        6606, # Plainsrunner'S Breeze (Quality: 2)
+    FEET_ENCHANTS_R2 = [
+        7420, # Cavalry's March (Rank 2)
+        7423, # Defender's March (Rank 2)
+        7417, # Scout's March (Rank 2)
     ]
 
-    FEET_ENCHANTS_Q3 = [
-        6613, # Watcher'S Loam (Quality: 3)
-        6607, # Plainsrunner'S Breeze (Quality: 3)
+    FEET_ENCHANTS_R3 = [
+        7421, # Cavalry's March (Rank 3)
+        7424, # Defender's March (Rank 3)
+        7418, # Scout's March (Rank 3)
     ]
 
-    # Join the lists that will count as "high" enchants.
-    CHEST_ENCHANTS = CHEST_ENCHANTS_Q1 + CHEST_ENCHANTS_Q2 + CHEST_ENCHANTS_Q3
-    CLOAK_ENCHANTS = CLOAK_ENCHANTS_Q1 + CLOAK_ENCHANTS_Q2 + CLOAK_ENCHANTS_Q3
-    BRACER_ENCHANTS = BRACER_ENCHANTS_Q1 + BRACER_ENCHANTS_Q2 + BRACER_ENCHANTS_Q3
-    LEG_ENCHANTS = LEG_ENCHANTS_Q1 + LEG_ENCHANTS_Q2 + LEG_ENCHANTS_Q3
-    FEET_ENCHANTS = FEET_ENCHANTS_Q1 + FEET_ENCHANTS_Q2 + FEET_ENCHANTS_Q3
-    RING_ENCHANTS = RING_ENCHANTS_Q1 + RING_ENCHANTS_Q2 + RING_ENCHANTS_Q3
-    WEAPON_ENCHANTS = WEAPON_ENCHANTS_Q1 + WEAPON_ENCHANTS_Q2 + WEAPON_ENCHANTS_Q3 + DEATH_KNIGHT_RUNEFORGES
-
+    # Join the lists that will be considered "Lesser" enchants
     ENCHANTS = {
-        'CHEST': CHEST_ENCHANTS,
-        'BACK': CLOAK_ENCHANTS,
-        'WRIST': BRACER_ENCHANTS,
-        'LEGS': LEG_ENCHANTS,
-        'FEET': FEET_ENCHANTS,
-        'FINGER_1': RING_ENCHANTS,
-        'FINGER_2': RING_ENCHANTS,
-        'MAIN_HAND': WEAPON_ENCHANTS,
-        'OFF_HAND': WEAPON_ENCHANTS
+        'CHEST': CHEST_ENCHANTS_R1 + CHEST_ENCHANTS_R2,
+        'BACK': CLOAK_ENCHANTS_R1 + CLOAK_ENCHANTS_R2,
+        'WRIST': BRACER_ENCHANTS_R1 + BRACER_ENCHANTS_R2,
+        'LEGS': LEG_ENCHANTS_R1 + LEG_ENCHANTS_R2,
+        'FEET': FEET_ENCHANTS_R1 + FEET_ENCHANTS_R2,
+        'FINGER_1': RING_ENCHANTS_R1 + RING_ENCHANTS_R2,
+        'FINGER_2': RING_ENCHANTS_R1 + RING_ENCHANTS_R2,
+        'MAIN_HAND': WEAPON_ENCHANTS_R1 + WEAPON_ENCHANTS_R2,
+        'OFF_HAND': WEAPON_ENCHANTS_R1 + WEAPON_ENCHANTS_R2
+    }
+
+    BETTER_ENCHANTS = {
+        'CHEST': CHEST_ENCHANTS_R3,
+        'BACK': CLOAK_ENCHANTS_R3,
+        'WRIST': BRACER_ENCHANTS_R3,
+        'LEGS': LEG_ENCHANTS_R3,
+        'FEET': FEET_ENCHANTS_R3,
+        'FINGER_1': RING_ENCHANTS_R3,
+        'FINGER_2': RING_ENCHANTS_R3,
+        'MAIN_HAND': WEAPON_ENCHANTS_R3 + DEATH_KNIGHT_RUNEFORGES,
+        'OFF_HAND': WEAPON_ENCHANTS_R3
     }
 
     CLASS_INFO = {
@@ -415,9 +477,9 @@ class Importer(object):
 
                         enchant_id = enchant.get('enchantment_id', 0)
                         item['tooltips']['enchant'] = enchant_id
-                        if enchant_id in Importer.ENCHANTS[slot] and item['enchant'] < 2:
+                        if enchant_id in Importer.BETTER_ENCHANTS[slot] and item['enchant'] < 2:
                             item['enchant'] = 2
-                        elif enchant != 0 and item['enchant'] < 1:
+                        elif enchant_id in Importer.ENCHANTS[slot] and item['enchant'] < 1:
                             item['enchant'] = 1
 
     # Handles exceptions from requests to the API in a common fashion
