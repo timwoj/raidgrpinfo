@@ -146,14 +146,18 @@ def edit_group(nrealm, ngroup):
         for toon in results.toons:
             newtoon = {
                 'name': toon.name,
+                'realm': '',
                 'role': toon.role,
                 'status': toon.status,
             }
 
             try:
-                newtoon['realm'] = str([x.realm for x in realms if x.slug == toon.realm][0])
+                realm_lookup = [x.realm for x in realms if x.slug == toon.realm]
+                if not realm_lookup:
+                    logging.error('Failed to lookup realm %s for toon %s' % (toon.realm, toon.name))
+                else:
+                    newtoon['realm'] = str(realm_lookup[0])
             except IndexError as e:
-                newtoon['realm'] = ''
                 logging.error('failed to lookup realm %s for toon %s: %s' % (toon.realm, toon.name, e))
 
             toons.append(newtoon)
@@ -162,13 +166,17 @@ def edit_group(nrealm, ngroup):
     template_values = {
         'group': ngroup,
         'nrealm': nrealm,
-        'realm': str([x.realm for x in realms if x.slug == nrealm][0]),
+        'realm': '',
         'toons': toons,
         'realms': realms,
     }
 
     try:
-        template_values['realm'] = str([x.realm for x in realms if x.slug == nrealm][0])
+        realm_lookup = [x.realm for x in realms if x.slug == nrealm]
+        if not realm_lookup:
+            logging.error('Failed to lookup realm %s for template values' % (nrealm))
+        else:
+            template_values['realm'] = str(realm[0])
     except IndexError as e:
         template_values['realm'] = ''
         logger.error('failed to lookup realm %s for template values: %s' % (nrealm, e))
