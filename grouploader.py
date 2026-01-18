@@ -176,7 +176,7 @@ def edit_group(nrealm, ngroup):
         if not realm_lookup:
             logging.error('Failed to lookup realm %s for template values' % (nrealm))
         else:
-            template_values['realm'] = str(realm[0])
+            template_values['realm'] = str(realm_lookup[0])
     except IndexError as e:
         template_values['realm'] = ''
         logger.error('failed to lookup realm %s for template values: %s' % (nrealm, e))
