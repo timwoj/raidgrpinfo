@@ -296,20 +296,20 @@ class Importer(object):
         'OFF_HAND': WEAPON_ENCHANTS_R3
     }
 
-    CLASS_INFO = {
-        'Death Knight': ('plate', 'dreadful'),
-        'Demon Hunter': ('leather', 'dreadful'),
-        'Evoker': ('mail', 'zenith'),
-        'Druid': ('leather', 'mystic'),
-        'Hunter': ('mail', 'mystic'),
-        'Mage': ('cloth', 'mystic'),
-        'Monk': ('leather', 'zenith'),
-        'Paladin': ('plate', 'venerated'),
-        'Priest': ('cloth', 'venerated'),
-        'Rogue': ('leather', 'zenith'),
-        'Shaman': ('mail', 'venerated'),
-        'Warlock': ('cloth', 'dreadful'),
-        'Warrior': ('plate', 'zenith')
+    CLASS_ARMOR = {
+        'Death Knight': 'plate',
+        'Demon Hunter': 'leather',
+        'Evoker': 'mail',
+        'Druid': 'leather',
+        'Hunter': 'mail',
+        'Mage': 'cloth',
+        'Monk': 'leather',
+        'Paladin': 'plate',
+        'Priest': 'cloth',
+        'Rogue': 'leather',
+        'Shaman': 'mail',
+        'Warlock': 'cloth',
+        'Warrior': 'plate'
     }
 
     def load(self, realm, frealm, toonlist, data, groupstats):
@@ -418,8 +418,8 @@ class Importer(object):
             groupstats['totalilvleq'] += jsondata['equipped_item_level']
 
             toonclass = jsondata['character_class']['name']
-            groupstats[Importer.CLASS_INFO.get(toonclass, ())[0]] += 1
-            groupstats[Importer.CLASS_INFO.get(toonclass, ())[1]] += 1
+            logging.info("%s" % toonclass)
+            groupstats[Importer.CLASS_ARMOR.get(toonclass, '')] += 1
 
             if toondata['role'] == 'dps':
                 groupstats['melee'] += 1

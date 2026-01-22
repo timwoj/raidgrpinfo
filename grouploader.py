@@ -282,10 +282,6 @@ def load_group(results):
         'melee': 0,
         'tanks': 0,
         'healers': 0,
-        'dreadful': 0,
-        'mystic': 0,
-        'venerated': 0,
-        'zenith': 0
     }
 
     # Use the API importer to load the data for the group into a list of
