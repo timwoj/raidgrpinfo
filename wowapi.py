@@ -91,39 +91,27 @@ class Importer(object):
     # cat ../engine/dbc/generated/permanent_enchant.inc
 
     WEAPON_ENCHANTS_R1 = [
-        7449, # Authority of Air (Rank 1)
-        7452, # Authority of Fiery Resolve (Rank 1)
-        7461, # Authority of Radiant Power (Rank 1)
-        7455, # Authority of Storms (Rank 1)
-        7458, # Authority of the Depths (Rank 1)
-        7437, # Council's Guile (Rank 1)
-        7446, # Oathsworn's Tenacity (Rank 1)
-        7443, # Stonebound Artistry (Rank 1)
-        7440, # Stormrider's Fury (Rank 1)
+        8038, # Acuity of The Ren'dorei (Rank 1)
+        8040, # Arcane Mastery (Rank 1)
+        7982, # Berserker's Rage (Rank 1)
+        8036, # Flames of the Sin'dorei (Rank 1)
+        7980, # Jan'alai's Precision (Rank 1)
+        7978, # Strength of Halazzi (Rank 1)
+        8008, # Worldsoul Aegis (Rank 1)
+        8006, # Worldsoul Cradle (Rank 1)
+        8010, # Worldsoul Tenacity (Rank 1)
     ]
 
     WEAPON_ENCHANTS_R2 = [
-        7450, # Authority of Air (Rank 2)
-        7453, # Authority of Fiery Resolve (Rank 2)
-        7462, # Authority of Radiant Power (Rank 2)
-        7456, # Authority of Storms (Rank 2)
-        7459, # Authority of the Depths (Rank 2)
-        7438, # Council's Guile (Rank 2)
-        7447, # Oathsworn's Tenacity (Rank 2)
-        7444, # Stonebound Artistry (Rank 2)
-        7441, # Stormrider's Fury (Rank 2)
-    ]
-
-    WEAPON_ENCHANTS_R3 = [
-        7451, # Authority of Air (Rank 3)
-        7453, # Authority of Fiery Resolve (Rank 3)
-        7463, # Authority of Radiant Power (Rank 3)
-        7457, # Authority of Storms (Rank 3)
-        7460, # Authority of the Depths (Rank 3)
-        7439, # Council's Guile (Rank 3)
-        7448, # Oathsworn's Tenacity (Rank 3)
-        7445, # Stonebound Artistry (Rank 3)
-        7442, # Stormrider's Fury (Rank 3)
+        8039, # Acuity of The Ren'dorei (Rank 2)
+        8041, # Arcane Mastery (Rank 2)
+        7983, # Berserker's Rage (Rank 2)
+        8037, # Flames of the Sin'dorei (Rank 2)
+        7981, # Jan'alai's Precision (Rank 2)
+        7979, # Strength of Halazzi (Rank 2)
+        8009, # Worldsoul Aegis (Rank 2)
+        8007, # Worldsoul Cradle (Rank 2)
+        8011, # Worldsoul Tenacity (Rank 2)
     ]
 
     DEATH_KNIGHT_RUNEFORGES = [
@@ -133,167 +121,133 @@ class Importer(object):
         6243, # Hysteria
     ]
 
-    BRACER_ENCHANTS_R1 = [
-        7383, # Chant of Armored Avoidance (Rank 1)
-        7389, # Chant of Armored Leech (Rank 1)
-        7395, # Chant of Armored Speed (Rank 1)
+    HEAD_ENCHANTS_R1 = [
+        7988, # Blessing of Speed (Rank 1)
+        7958, # Hex of Leeching (Rank 1)
+        8014, # Rune of Avoidance (Rank 1)
+        7990, # Empowered Blessing of Speed (Rank 1)
+        7960, # Empowered Hex of Leeching (Rank 1)
+        8016, # Empowered Rune of Avoidance (Rank 1)
     ]
 
-    BRACER_ENCHANTS_R2 = [
-        7384, # Chant of Armored Avoidance (Rank 2)
-        7390, # Chant of Armored Leech (Rank 2)
-        7396, # Chant of Armored Speed (Rank 2)
-    ]
-
-    BRACER_ENCHANTS_R3 = [
-        7385, # Chant of Armored Avoidance (Rank 3)
-        7391, # Chant of Armored Leech (Rank 3)
-        7397, # Chant of Armored Speed (Rank 3)
+    HEAD_ENCHANTS_R2 = [
+        7989, # Blessing of Speed (Rank 2)
+        7959, # Hex of Leeching (Rank 2)
+        8015, # Rune of Avoidance (Rank 2)
+        7991, # Empowered Blessing of Speed (Rank 2)
+        7961, # Empowered Hex of Leeching (Rank 2)
+        8017, # Empowered Rune of Avoidance (Rank 2)
     ]
 
     RING_ENCHANTS_R1 = [
-        7332, # Radiant Critical Strike (Rank 1)
-        7338, # Radiant Haste (Rank 1)
-        7344, # Radiant Mastery (Rank 1)
-        7350, # Radiant Versatility (Rank 1)
-        7468, # Cursed Critical Strike (Rank 1)
-        7471, # Cursed Haste (Rank 1)
-        7477, # Cursed Mastery (Rank 1)
-        7474, # Cursed Versatility (Rank 1)
+        7964, # Amani Mastery (Rank 1)
+        7966, # Eyes of the Eagle (Rank 1)
+        7996, # Nature's Fury (Rank 1)
+        7994, # Nature's Wrath (Rank 1)
+        8024, # Silvermoon's Alacrity (Rank 1)
+        8026, # Silvermoon's Tenacity (Rank 1)
+        8020, # Thalassian Haste (Rank 1)
+        8022, # Thalassian Versatility (Rank 1)
+        7968, # Zul'jin's Mastery (Rank 1)
     ]
 
     RING_ENCHANTS_R2 = [
-        7333, # Radiant Critical Strike (Rank 2)
-        7339, # Radiant Haste (Rank 2)
-        7345, # Radiant Mastery (Rank 2)
-        7351, # Radiant Versatility (Rank 2)
-        7469, # Cursed Critical Strike (Rank 2)
-        7472, # Cursed Haste (Rank 2)
-        7478, # Cursed Mastery (Rank 2)
-        7475, # Cursed Versatility (Rank 2)
+        7965, # Amani Mastery (Rank 2)
+        7967, # Eyes of the Eagle (Rank 2)
+        7997, # Nature's Fury (Rank 2)
+        7995, # Nature's Wrath (Rank 2)
+        8025, # Silvermoon's Alacrity (Rank 2)
+        8027, # Silvermoon's Tenacity (Rank 2)
+        8021, # Thalassian Haste (Rank 2)
+        8023, # Thalassian Versatility (Rank 2)
+        7969, # Zul'jin's Mastery (Rank 2)
     ]
 
-    RING_ENCHANTS_R3 = [
-        7334, # Radiant Critical Strike (Rank 3)
-        7340, # Radiant Haste (Rank 3)
-        7346, # Radiant Mastery (Rank 3)
-        7352, # Radiant Versatility (Rank 3)
-        7470, # Cursed Critical Strike (Rank 3)
-        7473, # Cursed Haste (Rank 3)
-        7479, # Cursed Mastery (Rank 3)
-        7476, # Cursed Versatility (Rank 3)
+    SHOULDER_ENCHANTS_R1 = [
+        7976, # Akil'zon's Swiftness (Rank 1)
+        8000, # Amirdrassil's Grace (Rank 1)
+        7970, # Flight of the Eagle (Rank 1)
+        7998, # Nature's Grace (Rank 1)
+        8030, # Silvermoon's Mending (Rank 1)
+        8028, # Thalassian Recovery (Rank 1)
     ]
 
-    CLOAK_ENCHANTS_R1 = [
-        7413, # Chant of Burrowing Rapidity (Rank 1)
-        7407, # Chant of Leeching Fangs (Rank 1)
-        7401, # Chant of Winged Grace (Rank 1)
-    ]
-
-    CLOAK_ENCHANTS_R2 = [
-        7414, # Chant of Burrowing Rapidity (Rank 2)
-        7408, # Chant of Leeching Fangs (Rank 2)
-        7402, # Chant of Winged Grace (Rank 2)
-    ]
-
-    CLOAK_ENCHANTS_R3 = [
-        7415, # Chant of Burrowing Rapidity (Rank 3)
-        7409, # Chant of Leeching Fangs (Rank 3)
-        7403, # Chant of Winged Grace (Rank 3)
+    SHOULDER_ENCHANTS_R2 = [
+        7977, # Akil'zon's Swiftness (Rank 2)
+        8001, # Amirdrassil's Grace (Rank 2)
+        7971, # Flight of the Eagle (Rank 2)
+        7999, # Nature's Grace (Rank 2)
+        8031, # Silvermoon's Mending (Rank 2)
+        8029, # Thalassian Recovery (Rank 2)
     ]
 
     LEG_ENCHANTS_R1 = [
-        7652, # Charged Armor Kit (Rank 1)
-        7599, # Stormbound Armor Kit (Rank 1)
-        7593, # Defender's Armor Kit (Rank 1)
-        7532, # Sunset Spellthread (Rank 1)
-        7529, # Daybreak Spellthread (Rank 1)
-        7535, # Weavercloth Spellthread (All ranks)
-        7536,
-        7537,
-        7596, # Dual Layered Armor Kit (All ranks)
-        7597,
-        7598,
+        8162, # Blood Knight's Armor Kit (Rank 1)
+        8158, # Forest Hunter's Armor Kit (Rank 1)
+        8160, # Thalassian Scout Armor Kit (Rank 1)
+        7936, # Arcanoweave Spellthread (Rank 1)
+        7934, # Sunfire Silk Spellthread (Rank 1)
+        7938, # Bright Linen Spellthread (Rank 1)
     ]
 
     LEG_ENCHANTS_R2 = [
-        7653, # Charged Armor Kit (Rank 2)
-        7600, # Stormbound Armor Kit (Rank 2)
-        7594, # Defender's Armor Kit (Rank 2)
-        7533, # Sunset Spellthread (Rank 2)
-        7530, # Daybreak Spellthread (Rank 2)
-    ]
-
-    LEG_ENCHANTS_R3 = [
-        7654, # Charged Armor Kit (Rank 3)
-        7601, # Stormbound Armor Kit (Rank 3)
-        7595, # Defender's Armor Kit (Rank 3)
-        7534, # Sunset Spellthread (Rank 3)
-        7531, # Daybreak Spellthread (Rank 3)
+        8163, # Blood Knight's Armor Kit (Rank 1)
+        8159, # Forest Hunter's Armor Kit (Rank 1)
+        8161, # Thalassian Scout Armor Kit (Rank 1)
+        7937, # Arcanoweave Spellthread (Rank 1)
+        7935, # Sunfire Silk Spellthread (Rank 1)
+        7939, # Bright Linen Spellthread (Rank 1)
     ]
 
     CHEST_ENCHANTS_R1 = [
-        7437, # Council's Intellect (Rank 1)
-        7359, # Oathsworn's Strength (Rank 1)
-        7353, # Stormrider's Agility (Rank 1)
-        7362, # Crystalline Radiance (Rank 1)
+        7956, # Mark of Nalorakk (Rank 1)
+        8012, # Mark of the Magister (Rank 1)
+        7984, # Mark of the Rootwarden (Rank 1)
+        7986, # Mark of the Worldsoul (Rank 1)
     ]
 
     CHEST_ENCHANTS_R2 = [
-        7438, # Council's Intellect (Rank 2)
-        7360, # Oathsworn's Strength (Rank 2)
-        7354, # Stormrider's Agility (Rank 2)
-        7363, # Crystalline Radiance (Rank 2)
-    ]
-
-    CHEST_ENCHANTS_R3 = [
-        7439, # Council's Intellect (Rank 3)
-        7361, # Oathsworn's Strength (Rank 3)
-        7355, # Stormrider's Agility (Rank 3)
-        7364, # Crystalline Radiance (Rank 3)
+        7957, # Mark of Nalorakk (Rank 2)
+        8013, # Mark of the Magister (Rank 2)
+        7985, # Mark of the Rootwarden (Rank 2)
+        7987, # Mark of the Worldsoul (Rank 2)
     ]
 
     FEET_ENCHANTS_R1 = [
-        7419, # Cavalry's March (Rank 1)
-        7422, # Defender's March (Rank 1)
-        7416, # Scout's March (Rank 1)
+        8018, # Farstrider's Hunt (Rank 1)
+        7962, # Lynx's Dexterity (Rank 1)
+        7992, # Shaladrassil's Roots (Rank 1)
     ]
 
     FEET_ENCHANTS_R2 = [
-        7420, # Cavalry's March (Rank 2)
-        7423, # Defender's March (Rank 2)
-        7417, # Scout's March (Rank 2)
-    ]
-
-    FEET_ENCHANTS_R3 = [
-        7421, # Cavalry's March (Rank 3)
-        7424, # Defender's March (Rank 3)
-        7418, # Scout's March (Rank 3)
+        8019, # Farstrider's Hunt (Rank 2)
+        7963, # Lynx's Dexterity (Rank 2)
+        7993, # Shaladrassil's Roots (Rank 2)
     ]
 
     # Join the lists that will be considered "Lesser" enchants
     ENCHANTS = {
-        'CHEST': CHEST_ENCHANTS_R1 + CHEST_ENCHANTS_R2,
-        'BACK': CLOAK_ENCHANTS_R1 + CLOAK_ENCHANTS_R2,
-        'WRIST': BRACER_ENCHANTS_R1 + BRACER_ENCHANTS_R2,
-        'LEGS': LEG_ENCHANTS_R1 + LEG_ENCHANTS_R2,
-        'FEET': FEET_ENCHANTS_R1 + FEET_ENCHANTS_R2,
-        'FINGER_1': RING_ENCHANTS_R1 + RING_ENCHANTS_R2,
-        'FINGER_2': RING_ENCHANTS_R1 + RING_ENCHANTS_R2,
-        'MAIN_HAND': WEAPON_ENCHANTS_R1 + WEAPON_ENCHANTS_R2,
-        'OFF_HAND': WEAPON_ENCHANTS_R1 + WEAPON_ENCHANTS_R2
+        'CHEST': CHEST_ENCHANTS_R1,
+        'SHOULDER': SHOULDER_ENCHANTS_R1,
+        'HEAD': HEAD_ENCHANTS_R1,
+        'LEGS': LEG_ENCHANTS_R1,
+        'FEET': FEET_ENCHANTS_R1,
+        'FINGER_1': RING_ENCHANTS_R1,
+        'FINGER_2': RING_ENCHANTS_R1,
+        'MAIN_HAND': WEAPON_ENCHANTS_R1,
+        'OFF_HAND': WEAPON_ENCHANTS_R1,
     }
 
     BETTER_ENCHANTS = {
-        'CHEST': CHEST_ENCHANTS_R3,
-        'BACK': CLOAK_ENCHANTS_R3,
-        'WRIST': BRACER_ENCHANTS_R3,
-        'LEGS': LEG_ENCHANTS_R3,
-        'FEET': FEET_ENCHANTS_R3,
-        'FINGER_1': RING_ENCHANTS_R3,
-        'FINGER_2': RING_ENCHANTS_R3,
-        'MAIN_HAND': WEAPON_ENCHANTS_R3 + DEATH_KNIGHT_RUNEFORGES,
-        'OFF_HAND': WEAPON_ENCHANTS_R3
+        'CHEST': CHEST_ENCHANTS_R2,
+        'SHOULDER': SHOULDER_ENCHANTS_R2,
+        'HEAD': HEAD_ENCHANTS_R2,
+        'LEGS': LEG_ENCHANTS_R2,
+        'FEET': FEET_ENCHANTS_R2,
+        'FINGER_1': RING_ENCHANTS_R2,
+        'FINGER_2': RING_ENCHANTS_R2,
+        'MAIN_HAND': WEAPON_ENCHANTS_R2 + DEATH_KNIGHT_RUNEFORGES,
+        'OFF_HAND': WEAPON_ENCHANTS_R2
     }
 
     CLASS_ARMOR = {
