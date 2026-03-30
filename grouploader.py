@@ -223,7 +223,7 @@ def post_group(request, nrealm, ngroup):
     group.nrealm = nrealm
     group.ngroup = ngroup
     group.groupname = request.form.get('group', '').strip()
-    group.password = sha256_crypt.encrypt(request.form.get('pw', ''))
+    group.password = sha256_crypt.hash(request.form.get('pw', ''))
 
     # load the json data that includes the toon data
     try:
