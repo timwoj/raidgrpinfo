@@ -13,9 +13,9 @@ from google.appengine.api import memcache
 from passlib.hash import sha256_crypt
 
 # Minimum ilvls and colors for the ilvl grid
-MIN_NORMAL = 246
-MIN_HEROIC = 259
-MIN_MYTHIC = 272
+MIN_NORMAL = 292
+MIN_HEROIC = 305
+MIN_MYTHIC = 318
 COLOR_LFR = '#FFB2B2'
 COLOR_NORMAL = '#FFFFB2'
 COLOR_HEROIC = '#B2FFB2'
@@ -38,7 +38,7 @@ CLASS_INDEXES = {
     'Evoker': 13
 }
 
-TIER_SETS = [1978, 1979, 1980, 1981, 1982, 1983, 1984, 1985, 1986, 1987, 1988, 1989, 1990]
+TIER_SETS = [2055,2056,2057,2058,2059,2060,2061,2062,2063,2064,2065,2066,2067]
 
 # This is used to color the table cells on the grid display based on the ilvl
 # of the item.  It gets put into the jinja environment as a filter.
